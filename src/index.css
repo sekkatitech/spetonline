@@ -1,0 +1,86 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Inter:wght@400;500;600&display=swap');
+@import "tailwindcss";
+@custom-variant dark (&:is(.dark *));
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Outfit", ui-sans-serif, system-ui, sans-serif;
+
+  /* Brand palette */
+  --color-lago-50:  #e8eef1;
+  --color-lago-100: #bfdff1;
+  --color-lago-200: #abd7f1;
+  --color-lago-300: #96cff1;
+  --color-lago-400: #6dc0f1;
+  --color-lago-500: #43b0f1;
+  --color-lago-600: #057dcd;
+  --color-lago-700: #1e3d58;
+  --color-lago-800: #112332;
+  --color-lago-900: #0a141d;
+
+  --color-accent-cyan:   #00ffff;
+  --color-accent-orange: #ff5e00;
+
+  /* Border radius */
+  --border-radius-sm:  8px;
+  --border-radius-md:  12px;
+  --border-radius-lg:  16px;
+  --border-radius-xl:  24px;
+  --border-radius-2xl: 32px;
+}
+
+/* ─── Base ──────────────────────────────────────────────────────────────────── */
+html { scroll-behavior: smooth; }
+
+body {
+  @apply bg-gray-50 dark:bg-[#0a141d] text-gray-900 dark:text-white font-sans antialiased
+         selection:bg-lago-500 selection:text-white transition-colors duration-300;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  @apply font-display tracking-tight transition-colors duration-300;
+}
+
+/* ─── Custom Scrollbar ───────────────────────────────────────────────────────── */
+::-webkit-scrollbar       { width: 8px; }
+::-webkit-scrollbar-track { @apply bg-gray-100 dark:bg-lago-900; }
+::-webkit-scrollbar-thumb { @apply bg-gray-300 dark:bg-lago-700 rounded-full border-2 border-gray-100 dark:border-lago-900; }
+::-webkit-scrollbar-thumb:hover { @apply bg-gray-400 dark:bg-lago-500; }
+
+/* ─── Navbar spacer – all pages need this top padding ───────────────────────── */
+/* Navbar (56px) + searchbar (48px) ≈ 108px total fixed header */
+.page-top { padding-top: 116px; }
+
+/* ─── Animations ─────────────────────────────────────────────────────────────── */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in-up { animation: fadeInUp 0.5s ease-out both; }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in { animation: fadeIn 0.3s ease-out both; }
+
+/* ─── Line clamp utilities ────────────────────────────────────────────────────── */
+.line-clamp-1 { overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 1; }
+.line-clamp-2 { overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+.line-clamp-3 { overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; }
+
+/* ─── Focus ring ─────────────────────────────────────────────────────────────── */
+*:focus-visible {
+  @apply outline-none ring-2 ring-lago-500 ring-offset-2 ring-offset-white dark:ring-offset-lago-900;
+}
+
+/* ─── Image loading ──────────────────────────────────────────────────────────── */
+img { @apply transition-opacity duration-300; }
+
+/* ─── Responsive container ───────────────────────────────────────────────────── */
+.container {
+  width: 100%;
+  max-width: 1400px;
+  margin-left: auto;
+  margin-right: auto;
+}

@@ -1,0 +1,280 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "Customer account information",
+      "type": "object",
+      "properties": {
+        "firstName": { "type": "string" },
+        "lastName": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "phone": { "type": "string" },
+        "role": { "type": "string", "enum": ["customer", "admin"], "default": "customer" },
+        "profileImage": { "type": "string" },
+        "isVerified": { "type": "boolean", "default": false },
+        "isActive": { "type": "boolean", "default": true },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["email", "role", "createdAt", "updatedAt"]
+    },
+    "UserAddress": {
+      "title": "User Address",
+      "description": "Delivery address for a user",
+      "type": "object",
+      "properties": {
+        "addressLine1": { "type": "string" },
+        "addressLine2": { "type": "string" },
+        "city": { "type": "string" },
+        "province": { "type": "string" },
+        "postalCode": { "type": "string" },
+        "country": { "type": "string", "default": "South Africa" },
+        "isDefault": { "type": "boolean", "default": false },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["addressLine1", "city", "country", "createdAt"]
+    },
+    "Brand": {
+      "title": "Brand",
+      "description": "Product brand definition",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "slug": { "type": "string" },
+        "logoUrl": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "slug", "createdAt"]
+    },
+    "Category": {
+      "title": "Category",
+      "description": "Product category",
+      "type": "object",
+      "properties": {
+        "parentId": { "type": "string" },
+        "name": { "type": "string" },
+        "slug": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "slug", "createdAt"]
+    },
+    "Product": {
+      "title": "Product",
+      "description": "Main product catalog entry",
+      "type": "object",
+      "properties": {
+        "brandId": { "type": "string" },
+        "categoryId": { "type": "string" },
+        "sku": { "type": "string" },
+        "productName": { "type": "string" },
+        "shortDescription": { "type": "string" },
+        "fullDescription": { "type": "string" },
+        "price": { "type": "number" },
+        "salePrice": { "type": "number" },
+        "stockQuantity": { "type": "integer", "default": 0 },
+        "featured": { "type": "boolean", "default": false },
+        "bestSeller": { "type": "boolean", "default": false },
+        "onPromotion": { "type": "boolean", "default": false },
+        "thumbnailImage": { "type": "string" },
+        "weight": { "type": "number" },
+        "status": { "type": "string", "enum": ["active", "draft", "archived"], "default": "active" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["productName", "price", "stockQuantity", "status", "createdAt", "updatedAt"]
+    },
+    "ProductImage": {
+      "title": "Product Image",
+      "description": "Additional images for a product",
+      "type": "object",
+      "properties": {
+        "imageUrl": { "type": "string" },
+        "sortOrder": { "type": "integer", "default": 0 },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["imageUrl", "createdAt"]
+    },
+    "Cart": {
+      "title": "Cart",
+      "description": "Shopping cart header",
+      "type": "object",
+      "properties": {
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["createdAt", "updatedAt"]
+    },
+    "CartItem": {
+      "title": "Cart Item",
+      "description": "Item within a shopping cart",
+      "type": "object",
+      "properties": {
+        "productId": { "type": "string" },
+        "quantity": { "type": "integer", "default": 1 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["productId", "quantity", "createdAt", "updatedAt"]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "Completed order record",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "orderNumber": { "type": "string" },
+        "subtotal": { "type": "number" },
+        "shippingAmount": { "type": "number" },
+        "taxAmount": { "type": "number" },
+        "totalAmount": { "type": "number" },
+        "paymentMethod": { "type": "string" },
+        "paymentStatus": { "type": "string", "enum": ["pending", "paid", "failed"], "default": "pending" },
+        "orderStatus": { "type": "string", "enum": ["processing", "shipped", "delivered", "cancelled"], "default": "processing" },
+        "shippingAddress": { "type": "string" },
+        "notes": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "orderNumber", "totalAmount", "paymentStatus", "orderStatus", "createdAt", "updatedAt"]
+    },
+    "OrderItem": {
+      "title": "Order Item",
+      "description": "Line item in an order",
+      "type": "object",
+      "properties": {
+        "productId": { "type": "string" },
+        "productName": { "type": "string" },
+        "quantity": { "type": "integer" },
+        "unitPrice": { "type": "number" },
+        "totalPrice": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["productId", "productName", "quantity", "unitPrice", "totalPrice", "createdAt"]
+    },
+    "Payment": {
+      "title": "Payment",
+      "description": "Transaction details for an order",
+      "type": "object",
+      "properties": {
+        "orderId": { "type": "string" },
+        "paymentProvider": { "type": "string" },
+        "transactionId": { "type": "string" },
+        "amount": { "type": "number" },
+        "currency": { "type": "string", "default": "ZAR" },
+        "paymentStatus": { "type": "string", "enum": ["pending", "successful", "failed"] },
+        "paidAt": { "type": "string", "format": "date-time" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["orderId", "amount", "paymentStatus", "createdAt"]
+    },
+    "ProductReview": {
+      "title": "Product Review",
+      "description": "Customer review of a product",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "rating": { "type": "integer" },
+        "review": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "rating", "createdAt"]
+    },
+    "Wishlist": {
+      "title": "Wishlist Item",
+      "description": "Saved product in a user's wishlist",
+      "type": "object",
+      "properties": {
+        "productId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["productId", "createdAt"]
+    },
+    "NewsletterSubscriber": {
+      "title": "Newsletter Subscriber",
+      "description": "User subscribed to newsletter",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string", "format": "email" },
+        "userId": { "type": "string" },
+        "subscribed": { "type": "boolean", "default": true },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["email", "subscribed", "createdAt"]
+    },
+    "UserActivity": {
+      "title": "User Activity",
+      "description": "Analytics activity tracking",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "productId": { "type": "string" },
+        "activityType": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["activityType", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "User accounts"
+    },
+    "/users/{userId}/addresses/{addressId}": {
+      "schema": { "$ref": "#/entities/UserAddress" },
+      "description": "User delivery addresses"
+    },
+    "/brands/{brandId}": {
+      "schema": { "$ref": "#/entities/Brand" },
+      "description": "Product brands"
+    },
+    "/categories/{categoryId}": {
+      "schema": { "$ref": "#/entities/Category" },
+      "description": "Product categories"
+    },
+    "/products/{productId}": {
+      "schema": { "$ref": "#/entities/Product" },
+      "description": "Product catalog"
+    },
+    "/products/{productId}/images/{imageId}": {
+      "schema": { "$ref": "#/entities/ProductImage" },
+      "description": "Additional product images"
+    },
+    "/products/{productId}/reviews/{reviewId}": {
+      "schema": { "$ref": "#/entities/ProductReview" },
+      "description": "Product reviews"
+    },
+    "/carts/{userId}": {
+      "schema": { "$ref": "#/entities/Cart" },
+      "description": "User shopping carts"
+    },
+    "/carts/{userId}/items/{itemId}": {
+      "schema": { "$ref": "#/entities/CartItem" },
+      "description": "Items within a user's shopping cart"
+    },
+    "/orders/{orderId}": {
+      "schema": { "$ref": "#/entities/Order" },
+      "description": "User orders"
+    },
+    "/orders/{orderId}/items/{itemId}": {
+      "schema": { "$ref": "#/entities/OrderItem" },
+      "description": "Items associated with an order"
+    },
+    "/payments/{paymentId}": {
+      "schema": { "$ref": "#/entities/Payment" },
+      "description": "Transaction records"
+    },
+    "/users/{userId}/wishlist/{itemId}": {
+      "schema": { "$ref": "#/entities/Wishlist" },
+      "description": "User's saved products"
+    },
+    "/newsletter_subscribers/{subscriberEmail}": {
+      "schema": { "$ref": "#/entities/NewsletterSubscriber" },
+      "description": "Newsletter subscribers"
+    },
+    "/user_activity/{activityId}": {
+      "schema": { "$ref": "#/entities/UserActivity" },
+      "description": "User behavioral logs"
+    }
+  }
+}
