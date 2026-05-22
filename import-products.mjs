@@ -3,19 +3,29 @@
  * Reads data.json and bulk-inserts products into Supabase
  */
 import { createClient } from '@supabase/supabase-js';
-import { readFileSync } from 'fs';
 
-// Load env vars
-const SUPABASE_URL = 'https://hxxaxyruliquidvkocei.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh4eGF4eXJ1bGlxdWlkdmtvY2VpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwMDQxMDQsImV4cCI6MjA5NDU4MDEwNH0.4xsWN9s8b-yJwy3WOm6das5zZGTxbHsRs3SQM2IkuL4';
+// Load env vars securely
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY;
+
+if (!SUPABASE_URL || !SUPABASE_KEY) {
+  console.error("❌ Missing SUPABASE_URL or SUPABASE_SERVICE_KEY environment variables.");
+  process.exit(1);
+}
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+const ESQUIRE_URL = 'https://api.esquire.co.za/api/Export?key=14&Org=esquire&ID=54531&m=30&o=descending&rm=RoundNearest&r=10&min=0';
 
-// Read the JSON file
-console.log('📖 Reading data.json...');
-const raw = readFileSync('data.json', 'utf8');
-const items = JSON.parse(raw);
-console.log(`✅ Found ${items.length} products in the data feed.`);
+async function fetchLiveProducts() {
+  console.log('📡 Fetching live data from Esquire API...');
+  const res = await fetch(ESQUIRE_URL);
+  if (!res.ok) {
+    throw new Error(`Failed to fetch from Esquire: ${res.statusText}`);
+  }
+  const items = await res.json();
+  console.log(`✅ Found ${items.length} products in the live feed.`);
+  return items;
+}
 
 // Helper: generate slug from product name
 function slugify(text) {
@@ -59,6 +69,7 @@ function transformItem(item) {
 const BATCH_SIZE = 500;
 
 async function importProducts() {
+  const items = await fetchLiveProducts();
   const rows = items.map(transformItem);
 
   // Deduplicate by ProductCode (keep first occurrence)
