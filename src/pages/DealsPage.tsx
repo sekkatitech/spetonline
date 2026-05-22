@@ -25,7 +25,7 @@ function timeRemaining(endsAt: string | null): string {
 
 export function DealsPage() {
   const { promotions, loading: promoLoading } = useActivePromotions();
-  const { products: newArrivals, loading: productsLoading } = useProducts({ sortBy: 'newest', perPage: 4 });
+  const { products: customerFavorites, loading: productsLoading } = useProducts({ skus: ['HTPNEOH86', '65P8K', 'NT23SMNFTV', 'U-RUGKING-PAD2-PRO-8-128'], perPage: 4 });
   const { products: onSale } = useProducts({ sortBy: 'newest', perPage: 8 });
 
   const onSaleFiltered = onSale.filter((p) => p.is_on_sale);
@@ -177,21 +177,21 @@ export function DealsPage() {
               ))}
             </div>
 
-            {/* New arrivals */}
+            {/* Customer Favorites */}
             <div>
               <div className="flex items-center justify-between mb-5">
                 <div className="flex items-center gap-2">
-                  <Zap className="w-5 h-5 text-accent-orange" />
-                  <h2 className="text-2xl font-display font-bold text-gray-900 dark:text-white">New Arrivals</h2>
+                  <Heart className="w-5 h-5 text-accent-orange" />
+                  <h2 className="text-2xl font-display font-bold text-gray-900 dark:text-white">Customer Favorites</h2>
                 </div>
-                <Link to="/shop?sort=newest" className="text-sm font-semibold text-lago-600 dark:text-lago-400 hover:text-lago-800 dark:hover:text-white transition-colors flex items-center gap-1">
-                  All New <ArrowRight className="w-4 h-4" />
+                <Link to="/shop" className="text-sm font-semibold text-lago-600 dark:text-lago-400 hover:text-lago-800 dark:hover:text-white transition-colors flex items-center gap-1">
+                  Shop All <ArrowRight className="w-4 h-4" />
                 </Link>
               </div>
               <div className="grid grid-cols-2 md:grid-cols-2 gap-4">
                 {productsLoading
                   ? Array.from({ length: 4 }).map((_, i) => <div key={i} className="h-64 rounded-2xl bg-gray-200 dark:bg-lago-800 animate-pulse" />)
-                  : (newArrivals.length > 0 ? newArrivals : []).map((p) => <ProductCard key={p.id} product={p} />)
+                  : (customerFavorites.length > 0 ? customerFavorites : []).map((p) => <ProductCard key={p.id} product={p} />)
                 }
               </div>
             </div>

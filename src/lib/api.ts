@@ -41,10 +41,11 @@ export interface ShopFilters {
   sortBy?: 'newest' | 'price_asc' | 'price_desc' | 'featured';
   page?: number;
   perPage?: number;
+  skus?: string[];
 }
 
 export async function fetchProducts(filters: ShopFilters = {}) {
-  const { search, brands, categories, categoryHeads, minPrice, maxPrice, inStockOnly, sortBy = 'newest', page = 1, perPage = 20 } = filters;
+  const { search, brands, categories, categoryHeads, minPrice, maxPrice, inStockOnly, sortBy = 'newest', page = 1, perPage = 20, skus } = filters;
 
   let query = supabase
     .from('products')
@@ -53,6 +54,9 @@ export async function fetchProducts(filters: ShopFilters = {}) {
 
   if (search) {
     query = query.ilike('ProductName', `%${search}%`);
+  }
+  if (skus && skus.length > 0) {
+    query = query.in('ProductCode', skus);
   }
   if (brands && brands.length > 0) {
     query = query.in('Brand', brands);
