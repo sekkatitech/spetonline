@@ -1,5 +1,5 @@
 import { motion } from 'motion/react';
-import { Tag, Clock, Percent, Zap, ArrowRight, Newspaper } from 'lucide-react';
+import { Tag, Clock, Percent, Zap, ArrowRight, Newspaper, Heart } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useActivePromotions } from '../lib/api';
 import { useProducts } from '../lib/api';
