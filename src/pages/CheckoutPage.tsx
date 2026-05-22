@@ -33,7 +33,7 @@ export function CheckoutPage() {
 
   const sub = Number(subtotal()) || 0;
   const discount = Number(promoDiscount) || 0;
-  const shipping = sub - discount >= 1500 ? 0 : 150;
+  const shipping = sub - discount >= 2500 ? 0 : 150;
   const total = sub - discount + shipping;
 
   const [useExisting, setUseExisting] = useState(false);

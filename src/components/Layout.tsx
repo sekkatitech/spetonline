@@ -37,7 +37,8 @@ export function Navbar() {
             </span>
           </div>
           <div className="flex items-center gap-4 text-lago-300 font-semibold">
-            <span>🇿🇦 Delivers Nationwide across South Africa</span>
+            <span className="text-white bg-lago-600 px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider shadow-sm animate-pulse">Free Delivery over R2500</span>
+            <span className="hidden sm:inline">🇿🇦 Delivers Nationwide across South Africa</span>
           </div>
         </div>
       </div>
