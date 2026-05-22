@@ -1,6 +1,19 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { SlidersHorizontal, X, ChevronDown, ChevronLeft, ChevronRight, Search } from 'lucide-react';
+import { SlidersHorizontal, X, ChevronDown, ChevronLeft, ChevronRight, Search, Laptop, Smartphone, Headphones, Camera, Cable, Gamepad2, Watch, Tv, Package } from 'lucide-react';
+
+const getCategoryIcon = (name: string) => {
+  const n = name.toLowerCase();
+  if (n.includes('laptop') || n.includes('computer') || n.includes('desktop') || n.includes('pc') || n.includes('mac')) return Laptop;
+  if (n.includes('phone') || n.includes('mobile')) return Smartphone;
+  if (n.includes('audio') || n.includes('headphone') || n.includes('speaker') || n.includes('sound')) return Headphones;
+  if (n.includes('camera') || n.includes('photo') || n.includes('video')) return Camera;
+  if (n.includes('cable') || n.includes('charger') || n.includes('adapter') || n.includes('power')) return Cable;
+  if (n.includes('gam') || n.includes('console')) return Gamepad2;
+  if (n.includes('watch') || n.includes('wearable')) return Watch;
+  if (n.includes('tv') || n.includes('television') || n.includes('monitor') || n.includes('screen') || n.includes('display')) return Tv;
+  return Package;
+};
 import { useProducts, useBrands, useCategories, useCategoryHeads } from '../lib/api';
 import { ProductCard, ProductSkeleton } from '../components/ProductSections';
 
@@ -212,7 +225,13 @@ export function ShopPage() {
                             onChange={() => toggleCategoryHead(name)}
                             className="w-4 h-4 rounded text-lago-600 border-gray-300 dark:border-lago-600 bg-white dark:bg-lago-800 focus:ring-lago-500"
                           />
-                          <span className="text-sm text-gray-700 dark:text-lago-100 group-hover:text-lago-600 dark:group-hover:text-white transition-colors">{name}</span>
+                          <div className="flex items-center gap-2 text-sm text-gray-700 dark:text-lago-100 group-hover:text-lago-600 dark:group-hover:text-white transition-colors">
+                            {(() => {
+                              const Icon = getCategoryIcon(name);
+                              return <Icon className="w-3.5 h-3.5 text-gray-400 group-hover:text-lago-500 transition-colors" />;
+                            })()}
+                            <span>{name}</span>
+                          </div>
                         </label>
                       ))
                   }
@@ -233,7 +252,13 @@ export function ShopPage() {
                             onChange={() => toggleCategory(cat.name)}
                             className="w-4 h-4 rounded text-lago-600 border-gray-300 dark:border-lago-600 bg-white dark:bg-lago-800 focus:ring-lago-500"
                           />
-                          <span className="text-sm text-gray-700 dark:text-lago-100 group-hover:text-lago-600 dark:group-hover:text-white transition-colors">{cat.name}</span>
+                          <div className="flex items-center gap-2 text-sm text-gray-700 dark:text-lago-100 group-hover:text-lago-600 dark:group-hover:text-white transition-colors">
+                            {(() => {
+                              const Icon = getCategoryIcon(cat.name);
+                              return <Icon className="w-3.5 h-3.5 text-gray-400 group-hover:text-lago-500 transition-colors" />;
+                            })()}
+                            <span>{cat.name}</span>
+                          </div>
                         </label>
                       ))
                   }
