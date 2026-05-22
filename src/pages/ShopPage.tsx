@@ -18,17 +18,17 @@ export function ShopPage() {
 
   const [search, setSearch] = useState(searchParams.get('search') ?? '');
   const [selectedBrands, setSelectedBrands] = useState<string[]>(
-    searchParams.get('brand') ? [decodeURIComponent(searchParams.get('brand')!)] : []
+    searchParams.get('brand') ? searchParams.get('brand')!.split(',') : []
   );
   const [selectedCategories, setSelectedCategories] = useState<string[]>(
-    searchParams.get('category') ? [decodeURIComponent(searchParams.get('category')!)] : []
+    searchParams.get('category') ? searchParams.get('category')!.split(',') : []
   );
   const [selectedCategoryHeads, setSelectedCategoryHeads] = useState<string[]>(
-    searchParams.get('categoryHead') ? [decodeURIComponent(searchParams.get('categoryHead')!)] : []
+    searchParams.get('categoryHead') ? searchParams.get('categoryHead')!.split(',') : []
   );
   const [sortBy, setSortBy] = useState<any>(searchParams.get('sort') ?? 'newest');
-  const [inStockOnly, setInStockOnly] = useState(false);
-  const [page, setPage] = useState(1);
+  const [inStockOnly, setInStockOnly] = useState(searchParams.get('inStock') === 'true');
+  const [page, setPage] = useState(parseInt(searchParams.get('page') || '1', 10) || 1);
   const PER_PAGE = 20;
 
   const { brands } = useBrands();
@@ -48,7 +48,27 @@ export function ShopPage() {
 
   const totalPages = Math.max(1, Math.ceil(total / PER_PAGE));
 
-  useEffect(() => { setPage(1); }, [search, selectedBrands, selectedCategories, selectedCategoryHeads, sortBy, inStockOnly]);
+  const [initialLoad, setInitialLoad] = useState(true);
+  useEffect(() => {
+    if (initialLoad) {
+      setInitialLoad(false);
+      return;
+    }
+    setPage(1); 
+  }, [search, selectedBrands, selectedCategories, selectedCategoryHeads, sortBy, inStockOnly]);
+
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (search) params.set('search', search);
+    if (selectedBrands.length) params.set('brand', selectedBrands.join(','));
+    if (selectedCategories.length) params.set('category', selectedCategories.join(','));
+    if (selectedCategoryHeads.length) params.set('categoryHead', selectedCategoryHeads.join(','));
+    if (sortBy !== 'newest') params.set('sort', sortBy);
+    if (inStockOnly) params.set('inStock', 'true');
+    if (page > 1) params.set('page', page.toString());
+    
+    setSearchParams(params, { replace: true });
+  }, [search, selectedBrands, selectedCategories, selectedCategoryHeads, sortBy, inStockOnly, page, setSearchParams]);
 
   function toggleBrand(name: string) {
     setSelectedBrands((prev) => prev.includes(name) ? prev.filter((b) => b !== name) : [...prev, name]);

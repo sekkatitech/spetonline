@@ -322,6 +322,7 @@ export async function createOrder(orderData: {
       vat_amount: orderData.tax_amount,
       total: orderData.total,
       promotion_id: orderData.promotion_id,
+      shipping_address: orderData.shipping_address,
     })
     .select()
     .single();

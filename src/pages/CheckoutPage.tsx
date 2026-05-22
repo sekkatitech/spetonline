@@ -129,7 +129,7 @@ export function CheckoutPage() {
 
       setPlacing(false);
       if (error) {
-        setOrderError(typeof error === 'string' ? error : 'Something went wrong. Please try again.');
+        setOrderError(typeof error === 'string' ? error : (error as any).message || JSON.stringify(error) || 'Something went wrong. Please try again.');
       } else if (order) {
         // Redirect to PayFast / Bob Pay Sandbox
         const pfForm = document.createElement('form');
