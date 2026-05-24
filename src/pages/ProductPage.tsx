@@ -41,7 +41,7 @@ export function ProductPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen pt-40 bg-gray-50 dark:bg-[#0a141d] transition-colors duration-300">
+      <div className="min-h-screen pt-44 md:pt-52 bg-gray-50 dark:bg-[#0a141d] transition-colors duration-300">
         <div className="container mx-auto px-4 md:px-6 py-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 animate-pulse">
             <div className="aspect-square bg-gray-200 dark:bg-lago-800 rounded-3xl" />
@@ -58,7 +58,7 @@ export function ProductPage() {
 
   if (!product) {
     return (
-      <div className="min-h-screen pt-40 bg-gray-50 dark:bg-[#0a141d] flex items-center justify-center">
+      <div className="min-h-screen pt-44 md:pt-52 bg-gray-50 dark:bg-[#0a141d] flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Product not found</h2>
           <Link to="/shop" className="px-6 py-3 bg-lago-600 text-white rounded-full font-semibold hover:bg-lago-700 transition-colors">
@@ -94,7 +94,7 @@ export function ProductPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#0a141d] transition-colors duration-300 pt-32 md:pt-36">
+    <div className="min-h-screen bg-gray-50 dark:bg-[#0a141d] transition-colors duration-300 pt-44 md:pt-52">
       <div className="container mx-auto px-4 md:px-6 py-8">
 
         {/* Back Button */}
