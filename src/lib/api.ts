@@ -52,43 +52,20 @@ export async function fetchProducts(filters: ShopFilters = {}) {
     .select('*', { count: 'exact' })
     .eq('is_active', true);
 
-  if (search) {
-    query = query.ilike('ProductName', `%${search}%`);
-  }
-  if (skus && skus.length > 0) {
-    query = query.in('ProductCode', skus);
-  }
-  if (brands && brands.length > 0) {
-    query = query.in('Brand', brands);
-  }
-  if (categories && categories.length > 0) {
-    query = query.in('Category', categories);
-  }
-  if (categoryHeads && categoryHeads.length > 0) {
-    query = query.in('CategoryHead', categoryHeads);
-  }
-  if (minPrice !== undefined) {
-    query = query.gte('Price', minPrice);
-  }
-  if (maxPrice !== undefined) {
-    query = query.lte('Price', maxPrice);
-  }
-  if (inStockOnly) {
-    query = query.gt('AvailableQty', 0);
-  }
+  if (search) query = query.ilike('ProductName', `%${search}%`);
+  if (skus && skus.length > 0) query = query.in('ProductCode', skus);
+  if (brands && brands.length > 0) query = query.in('Brand', brands);
+  if (categories && categories.length > 0) query = query.in('Category', categories);
+  if (categoryHeads && categoryHeads.length > 0) query = query.in('CategoryHead', categoryHeads);
+  if (minPrice !== undefined) query = query.gte('Price', minPrice);
+  if (maxPrice !== undefined) query = query.lte('Price', maxPrice);
+  if (inStockOnly) query = query.gt('AvailableQty', 0);
 
   switch (sortBy) {
-    case 'price_asc':
-      query = query.order('Price', { ascending: true });
-      break;
-    case 'price_desc':
-      query = query.order('Price', { ascending: false });
-      break;
-    case 'featured':
-      query = query.order('is_featured', { ascending: false });
-      break;
-    default:
-      query = query.order('created_at', { ascending: false });
+    case 'price_asc': query = query.order('Price', { ascending: true }); break;
+    case 'price_desc': query = query.order('Price', { ascending: false }); break;
+    case 'featured': query = query.order('is_featured', { ascending: false }); break;
+    default: query = query.order('created_at', { ascending: false });
   }
 
   const from = (page - 1) * perPage;
@@ -131,7 +108,7 @@ export async function fetchProductBySlug(slug: string) {
   return { data: data as Product | null, error };
 }
 
-// ─── Brands (distinct from products table) ──────────────────────────────────
+// ─── Brands ──────────────────────────────────────────────────────────────────
 
 export interface Brand {
   id: string;
@@ -151,7 +128,6 @@ export function useBrands() {
       .eq('is_active', true)
       .not('Brand', 'is', null)
       .then(({ data }) => {
-        // Get unique brands
         const uniqueBrands = [...new Set((data ?? []).map((d: any) => d.Brand).filter(Boolean))].sort();
         setBrands(uniqueBrands.map((name: string) => ({
           id: name,
@@ -166,7 +142,7 @@ export function useBrands() {
   return { brands, loading };
 }
 
-// ─── Categories (distinct from products table) ───────────────────────────────
+// ─── Categories ──────────────────────────────────────────────────────────────
 
 export interface Category {
   id: string;
@@ -187,7 +163,6 @@ export function useCategories() {
       .eq('is_active', true)
       .not('Category', 'is', null)
       .then(({ data }) => {
-        // Get unique categories
         const uniqueCats = [...new Set((data ?? []).map((d: any) => d.Category).filter(Boolean))].sort();
         setCategories(uniqueCats.map((name: string) => {
           const parentRow = (data ?? []).find((d: any) => d.Category === name);
@@ -206,7 +181,7 @@ export function useCategories() {
   return { categories, loading };
 }
 
-// ─── Category Heads (top-level categories) ───────────────────────────────────
+// ─── Category Heads ───────────────────────────────────────────────────────────
 
 export function useCategoryHeads() {
   const [categoryHeads, setCategoryHeads] = useState<string[]>([]);
@@ -257,18 +232,13 @@ export function useActivePromotions() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Promotions table may not exist yet, so handle gracefully
     supabase
       .from('promotions')
       .select('id, name, type, value, code, starts_at, ends_at, min_order_value')
       .eq('is_active', true)
       .then(({ data, error }) => {
-        if (error) {
-          // Table doesn't exist yet, that's fine
-          setPromotions([]);
-        } else {
-          setPromotions(data ?? []);
-        }
+        if (error) setPromotions([]);
+        else setPromotions(data ?? []);
         setLoading(false);
       });
   }, []);
@@ -285,7 +255,6 @@ export async function validatePromoCode(code: string, orderTotal: number) {
     .single();
 
   if (error || !data) return { valid: false, message: 'Invalid promo code.' };
-
   if (data.starts_at && new Date(data.starts_at) > new Date()) return { valid: false, message: 'This promo has not started yet.' };
   if (data.ends_at && new Date(data.ends_at) < new Date()) return { valid: false, message: 'This promo has expired.' };
   if (data.min_order_value && orderTotal < data.min_order_value) return { valid: false, message: `Minimum order of R${data.min_order_value.toFixed(2)} required.` };
@@ -311,30 +280,63 @@ export async function createOrder(orderData: {
   promotion_id: string | null;
   shipping_address: any;
 }) {
+  // ✅ Get the current user's email and name to populate required fields
+  const { data: { user } } = await supabase.auth.getUser();
+
+  // ✅ Pull name from shipping address (what user filled in on checkout)
+  const clientName = orderData.shipping_address?.full_name
+    || orderData.shipping_address?.shipping_full_name
+    || orderData.shipping_address?.full_name
+    || 'Customer';
+
+  const clientEmail = user?.email || '';
+  const clientPhone = orderData.shipping_address?.phone
+    || orderData.shipping_address?.shipping_phone
+    || null;
+
   const { data: order, error: orderError } = await supabase
     .from('orders')
     .insert({
       user_id: orderData.profile_id,
+      // ✅ Required fields now properly populated
+      client_name: clientName,
+      client_email: clientEmail,
+      client_phone: clientPhone,
+      // Shipping address fields (flat columns)
+      shipping_full_name: clientName,
+      shipping_phone: clientPhone,
+      shipping_address_line1: orderData.shipping_address?.address_line1 || null,
+      shipping_address_line2: orderData.shipping_address?.address_line2 || null,
+      shipping_city: orderData.shipping_address?.city || null,
+      shipping_province: orderData.shipping_address?.province || null,
+      shipping_postal_code: orderData.shipping_address?.postal_code || null,
+      shipping_country: orderData.shipping_address?.country || 'South Africa',
+      // Also store full address as JSON for reference
+      shipping_address: orderData.shipping_address,
+      // Order totals
       status: 'pending',
+      payment_status: 'unpaid',
       subtotal: orderData.subtotal,
       discount_amount: orderData.discount_amount,
       shipping: orderData.shipping_cost,
       vat_amount: orderData.tax_amount,
       total: orderData.total,
       promotion_id: orderData.promotion_id,
-      shipping_address: orderData.shipping_address,
     })
     .select()
     .single();
 
   if (orderError || !order) return { error: orderError };
 
+  // ✅ Insert order items — using actual DB column names: name, line_total
   const orderItems = orderData.items.map((item) => ({
     order_id: order.id,
     product_id: item.product_id,
+    name: item.product_name,       // DB column is "name" not "product_name"
     sku: item.sku,
     qty: item.qty,
     unit_price: item.unit_price,
+    line_total: item.unit_price * item.qty,  // DB column is "line_total" not "total"
   }));
 
   const { error: itemsError } = await supabase.from('order_items').insert(orderItems);
@@ -342,7 +344,7 @@ export async function createOrder(orderData: {
 
   const mappedOrder = {
     ...order,
-    order_number: `SPET-${order.id.slice(0, 8).toUpperCase()}`,
+    order_number: order.id,
     profile_id: order.user_id,
     shipping_cost: order.shipping,
     tax_amount: order.vat_amount,
@@ -365,7 +367,7 @@ export function useOrders(profileId: string | null) {
       .then(({ data }) => {
         const mapped = (data ?? []).map((o: any) => ({
           ...o,
-          order_number: `SPET-${o.id.slice(0, 8).toUpperCase()}`,
+          order_number: o.id,
           profile_id: o.user_id,
           shipping_cost: o.shipping,
           tax_amount: o.vat_amount,

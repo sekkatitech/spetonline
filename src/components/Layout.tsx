@@ -1,4 +1,4 @@
-import { Search, User, Heart, ShoppingCart, Menu, X, MapPin, Phone, Mail, ChevronDown, ChevronUp, Facebook, Youtube, Linkedin } from 'lucide-react';
+import { Search, User, Heart, ShoppingCart, Menu, X, MapPin, Phone, Mail, ChevronDown, ChevronUp, Facebook, Youtube, Linkedin, Truck, Instagram, Globe } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ThemeToggle } from './ThemeToggle';
@@ -22,23 +22,38 @@ export function Navbar() {
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 flex flex-col pointer-events-none">
-      {/* Top Utility Bar with Sales Support Number */}
-      <div className="pointer-events-auto bg-lago-900 dark:bg-lago-950 text-white py-2 text-xs border-b border-lago-800 hidden md:block select-none">
-        <div className="container mx-auto px-4 md:px-6 flex justify-between items-center">
-          <div className="flex items-center gap-4">
-            <span className="flex items-center gap-1.5 text-lago-200">
-              <Phone className="w-3.5 h-3.5 text-lago-400" />
-              Sales Support: <a href="tel:0870881483" className="text-white hover:underline font-bold">0870 881 483</a>
+      {/* ✅ Top Utility Bar — taller, bigger font */}
+      <div className="pointer-events-auto bg-lago-900 dark:bg-lago-950 text-white py-4 border-b border-lago-800 hidden md:block select-none">
+        <div className="container mx-auto px-4 md:px-6 grid grid-cols-3 items-center">
+
+          {/* LEFT: Phone & Email — bigger font */}
+          <div className="flex items-center gap-5 justify-start">
+            <span className="flex items-center gap-2 text-lago-200">
+              <Phone className="w-5 h-5 text-lago-400" />
+              <a href="tel:0870881483" className="text-white hover:underline font-bold text-base">0870 881 483</a>
             </span>
-            <span className="text-lago-700">|</span>
-            <span className="flex items-center gap-1.5 text-lago-200">
-              <Mail className="w-3.5 h-3.5 text-lago-400" />
-              <a href="mailto:sales@spetonline.co.za" className="text-white hover:underline">sales@spetonline.co.za</a>
+            <span className="text-lago-700 text-lg">|</span>
+            <span className="flex items-center gap-2 text-lago-200">
+              <Mail className="w-5 h-5 text-lago-400" />
+              <a href="mailto:sales@spetonline.co.za" className="text-white hover:underline text-base">sales@spetonline.co.za</a>
             </span>
           </div>
-          <div className="flex items-center gap-4 text-lago-300 font-semibold">
-            <span className="text-white bg-lago-600 px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider shadow-sm animate-pulse">Free Delivery over R2500</span>
-            <span className="hidden sm:inline">🇿🇦 Delivers Nationwide across South Africa</span>
+
+          {/* ✅ MIDDLE: Free Delivery — centered, van icon, bigger text */}
+          <div className="flex items-center justify-center gap-3 text-white font-bold">
+            <div className="flex items-center justify-center w-10 h-10 rounded-full bg-lago-700 border border-lago-600">
+              <Truck className="w-5 h-5 text-white" />
+            </div>
+            <div className="flex flex-col leading-tight">
+              <span className="text-base font-extrabold uppercase tracking-wider text-white">Free Delivery</span>
+              <span className="text-xs text-lago-300 font-normal tracking-wide">on orders over R2,500</span>
+            </div>
+          </div>
+
+          {/* RIGHT: Nationwide delivery */}
+          <div className="flex items-center gap-3 justify-end text-lago-300 font-medium">
+            <MapPin className="w-5 h-5 text-lago-400" />
+            <span className="text-sm">Delivers Nationwide across South Africa</span>
           </div>
         </div>
       </div>
@@ -180,122 +195,102 @@ export function Footer() {
     <>
       <LegalModal docKey={legalDoc} onClose={() => setLegalDoc(null)} />
 
-      <footer style={{ backgroundColor: '#1e3d58' }} className="pt-16 pb-8 border-t border-lago-700">
-        <div className="container mx-auto px-4 md:px-6">
+      <footer className="w-full mt-auto">
 
-          {/* Main grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 mb-14">
+        {/* ✅ TOP PART: BLACK — Logo, links, contact */}
+        <div className="bg-[#111111] pt-16 pb-14 border-t-4 border-lago-600">
+          <div className="container mx-auto px-4 md:px-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10">
 
-            {/* Brand col */}
-            <div className="lg:col-span-2">
-              <img src="/logo-main2.png" alt="SPET Online" className="h-12 w-auto object-contain mb-5" />
-              <p className="text-lago-200 mb-6 max-w-sm text-sm leading-relaxed">
-                SPET Online — your trusted South African online technology retailer.
-              </p>
-              {/* Contact info */}
-              <div className="space-y-3 mb-6 text-sm">
-                <div className="flex items-start gap-3 text-lago-200">
-                  <MapPin className="w-4 h-4 text-lago-400 mt-0.5 flex-shrink-0" />
-                  <span>Pretoria, Gauteng, South Africa</span>
+              {/* Logo & Intro */}
+              <div className="lg:col-span-2">
+                <img src="/logo-main.png" alt="SPET Online" className="h-16 w-auto object-contain mb-6 bg-white p-2 rounded-xl" />
+                <p className="text-gray-400 mb-8 max-w-sm text-sm leading-relaxed">
+                  SPET Online — your trusted South African online technology retailer.
+                </p>
+                <div className="flex items-center gap-3">
+                  {[
+                    { label: 'Facebook', icon: <Facebook className="w-4 h-4" />, href: 'https://www.facebook.com/SPET.GROUP' },
+                    { label: 'Instagram', icon: <Instagram className="w-4 h-4" />, href: 'https://www.instagram.com/sekkatitech/' },
+                    { label: 'LinkedIn', icon: <Linkedin className="w-4 h-4" />, href: 'https://www.linkedin.com/in/sekkati-technology/' },
+                  ].map((s) => (
+                    <a href={s.href} target="_blank" rel="noopener noreferrer" key={s.label} aria-label={s.label} className="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center text-gray-400 hover:bg-lago-600 hover:text-white cursor-pointer transition-colors border border-gray-700">
+                      {s.icon}
+                    </a>
+                  ))}
                 </div>
-                <div className="flex items-start gap-3 text-lago-200">
-                  <Phone className="w-4 h-4 text-lago-400 mt-0.5 flex-shrink-0" />
-                  <div>
-                    <p className="font-semibold text-white">Sales: <a href="tel:0870881483" className="hover:underline">0870 881 483</a></p>
-                    <p className="text-xs text-lago-300">Support: <a href="tel:+27743507142" className="hover:underline">+27 74 350 7142</a></p>
+              </div>
+
+              {/* Need Help? */}
+              <div>
+                <h4 className="text-white font-bold mb-6 text-sm uppercase tracking-wider">Need Help?</h4>
+                <div className="space-y-4 text-sm">
+                  <div className="flex items-start gap-3 text-gray-400">
+                    <MapPin className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
+                    <span>Pretoria, Gauteng, South Africa</span>
+                  </div>
+                  <div className="flex items-start gap-3 text-gray-400">
+                    <Phone className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p className="font-semibold text-white mb-0.5">Sales: <a href="tel:0870881483" className="hover:text-lago-400 transition-colors">0870 881 483</a></p>
+                      <p className="text-xs text-gray-500">Support: <a href="tel:+27743507142" className="hover:text-lago-400 transition-colors">+27 74 350 7142</a></p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 text-gray-400">
+                    <Mail className="w-4 h-4 text-gray-500 flex-shrink-0" />
+                    <a href="mailto:sales@spetonline.co.za" className="hover:text-white transition-colors">sales@spetonline.co.za</a>
+                  </div>
+                  <div className="flex items-start gap-3 text-gray-400 pt-1">
+                    <Globe className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
+                    <div className="flex flex-col gap-1">
+                      <a href="https://www.sekkatitech.co.za" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">www.sekkatitech.co.za</a>
+                      <a href="https://www.spetonline.co.za" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">www.spetonline.co.za</a>
+                    </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-3 text-lago-200">
-                  <Mail className="w-4 h-4 text-lago-400 flex-shrink-0" />
-                  <a href="mailto:sales@spetonline.co.za" className="hover:text-white transition-colors">sales@spetonline.co.za</a>
-                </div>
               </div>
-              {/* Social */}
-              <div className="flex items-center gap-3">
-                {[
-                  { label: 'Facebook', icon: <Facebook className="w-4 h-4" />, href: 'https://facebook.com' },
-                  {
-                    label: 'TikTok',
-                    icon: (
-                      <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
-                        <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.02 1.59 4.23.87 1.02 2.03 1.76 3.32 2.13.01 1.34-.01 2.68.01 4.02-1.2-.13-2.38-.59-3.39-1.28-.9-.63-1.63-1.46-2.1-2.43-.04 2.85.02 5.71-.03 8.56-.09 1.63-.58 3.24-1.47 4.61-1.3 1.98-3.52 3.25-5.92 3.26-2.22.02-4.43-.91-5.88-2.6-1.57-1.83-2.12-4.38-1.49-6.72.51-1.95 1.78-3.66 3.51-4.66 1.45-.84 3.12-1.18 4.77-.96v4.06c-.85-.18-1.74-.08-2.52.31-.9.46-1.56 1.34-1.74 2.33-.31 1.64.67 3.33 2.27 3.69 1.25.29 2.62-.2 3.31-1.25.43-.64.59-1.42.57-2.19-.02-3.41-.01-6.82-.01-10.23z" />
-                      </svg>
-                    ),
-                    href: 'https://tiktok.com'
-                  },
-                  { label: 'YouTube', icon: <Youtube className="w-4 h-4" />, href: 'https://youtube.com' },
-                  { label: 'LinkedIn', icon: <Linkedin className="w-4 h-4" />, href: 'https://linkedin.com' },
-                ].map((s) => (
-                  <a href={s.href} target="_blank" rel="noopener noreferrer" key={s.label} aria-label={s.label} className="w-9 h-9 rounded-full bg-lago-800/60 flex items-center justify-center text-lago-300 hover:bg-lago-600 hover:text-white cursor-pointer transition-colors border border-lago-700">
-                    {s.icon}
-                  </a>
-                ))}
+
+              {/* Shop Links */}
+              <div>
+                <h4 className="text-white font-bold mb-6 text-sm uppercase tracking-wider">Shop</h4>
+                <ul className="space-y-3">
+                  {[
+                    { label: 'All Products', to: '/shop' },
+                    { label: 'Categories', to: '/categories' },
+                    { label: 'Deals & Promos', to: '/deals' },
+                    { label: 'Brands', to: '/shop' },
+                  ].map((l) => (
+                    <li key={l.label}><Link to={l.to} className="text-gray-400 hover:text-white hover:translate-x-1 inline-block transform transition-all text-sm">{l.label}</Link></li>
+                  ))}
+                </ul>
               </div>
-            </div>
 
-            {/* Shop links */}
-            <div>
-              <h4 className="text-white font-semibold mb-5 text-sm uppercase tracking-wider">Shop</h4>
-              <ul className="space-y-3">
-                {[
-                  { label: 'All Products', to: '/shop' },
-                  { label: 'Categories', to: '/categories' },
-                  { label: 'Deals & Promos', to: '/deals' },
-                  { label: 'Brands', to: '/shop' },
-                ].map((l) => (
-                  <li key={l.label}><Link to={l.to} className="text-lago-300 hover:text-white transition-colors text-sm">{l.label}</Link></li>
-                ))}
-              </ul>
-            </div>
+              {/* Customer Links */}
+              <div>
+                <h4 className="text-white font-bold mb-6 text-sm uppercase tracking-wider">Customer</h4>
+                <ul className="space-y-3">
+                  {[
+                    { label: 'My Account', to: '/account' },
+                    { label: 'Track Order', to: '/account' },
+                    { label: 'Wishlist', to: '/account' },
+                    { label: 'Support', to: '/account' },
+                  ].map((l) => (
+                    <li key={l.label}><Link to={l.to} className="text-gray-400 hover:text-white hover:translate-x-1 inline-block transform transition-all text-sm">{l.label}</Link></li>
+                  ))}
+                </ul>
+              </div>
 
-            {/* Customer links */}
-            <div>
-              <h4 className="text-white font-semibold mb-5 text-sm uppercase tracking-wider">Customer</h4>
-              <ul className="space-y-3">
-                {[
-                  { label: 'My Account', to: '/account' },
-                  { label: 'Track Order', to: '/account' },
-                  { label: 'Wishlist', to: '/account' },
-                  { label: 'Support', to: '/account' },
-                ].map((l) => (
-                  <li key={l.label}><Link to={l.to} className="text-lago-300 hover:text-white transition-colors text-sm">{l.label}</Link></li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Legal links */}
-            <div>
-              <h4 className="text-white font-semibold mb-5 text-sm uppercase tracking-wider">Legal</h4>
-              <ul className="space-y-3">
-                {([
-                  { label: 'Privacy Policy (POPIA)', key: 'privacy' },
-                  { label: 'Terms & Conditions', key: 'terms' },
-                  { label: 'Return & Refund Policy', key: 'returns' },
-                  { label: 'Warranty Policy', key: 'warranty' },
-                  { label: 'Cancellation Policy', key: 'cancellation' },
-                  { label: 'Pricing Policy', key: 'pricing' },
-                  { label: 'Disclaimer', key: 'disclaimer' },
-                  { label: 'FAQ', key: 'faq' },
-                ] as { label: string; key: LegalKey }[]).map((l) => (
-                  <li key={l.key}>
-                    <button
-                      onClick={() => setLegalDoc(l.key)}
-                      className="text-lago-300 hover:text-white transition-colors text-sm text-left"
-                    >
-                      {l.label}
-                    </button>
-                  </li>
-                ))}
-              </ul>
             </div>
           </div>
+        </div>
 
-          {/* Payment logos */}
-          <div className="border-t border-lago-700/50 pt-8 mb-8">
-            <p className="text-lago-400 text-xs font-semibold uppercase tracking-widest text-center mb-5">Secure payment methods</p>
-            <div className="flex flex-wrap justify-center items-center gap-3 md:gap-4">
+        {/* ✅ MIDDLE PART: BLUE — Payment logos (same blue, no change) */}
+        <div style={{ backgroundColor: '#1e3d58' }} className="py-6 border-b border-lago-800 shadow-inner">
+          <div className="container mx-auto px-4 md:px-6 flex flex-col md:flex-row items-center justify-center gap-6">
+            <span className="text-lago-200 text-[11px] font-bold uppercase tracking-[0.2em] hidden md:inline-block">Secured By</span>
+            <div className="flex flex-wrap justify-center items-center gap-3">
               {paymentLogos.map((logo) => (
-                <div key={logo.alt} className="h-8 bg-white rounded-md px-2 flex items-center justify-center">
+                <div key={logo.alt} className="h-9 bg-white rounded flex items-center justify-center px-3 shadow-sm border border-gray-200">
                   <img
                     src={logo.src}
                     alt={logo.alt}
@@ -306,29 +301,49 @@ export function Footer() {
               ))}
             </div>
           </div>
+        </div>
 
-          {/* Bottom bar */}
-          <div className="border-t border-lago-700/50 pt-6 flex flex-col md:flex-row items-center justify-between gap-3">
-            <p className="text-lago-400 text-xs">© 2026 SPET Online. All rights reserved.</p>
-            <p className="text-lago-500 text-xs">VAT included on all prices · Delivers across South Africa</p>
-          </div>
+        {/* ✅ BOTTOM PART: WHITE background — legal links + copyright in dark text */}
+        <div className="bg-white py-8 border-t border-gray-200">
+          <div className="container mx-auto px-4 md:px-6">
 
-          {/* Legal Registration Bar */}
-          <div className="border-t border-lago-700/30 mt-6 pt-6">
-            <div className="text-center space-y-1">
-              <p className="text-lago-300 text-[11px] font-semibold tracking-wide uppercase">
-                SEKKATI PETROLEUM ENERGY AND TECHNOLOGY (PTY) LTD
-              </p>
-              <div className="flex flex-wrap justify-center items-center gap-x-4 gap-y-1 text-lago-400 text-[10px]">
-                <span>Registration Number: 2013/228320/07</span>
-                <span className="hidden sm:inline text-lago-600">·</span>
-                <span>Trading as: SPET ONLINE</span>
-                <span className="hidden sm:inline text-lago-600">·</span>
-                <span>BEE Level: —</span>
-                <span className="hidden sm:inline text-lago-600">·</span>
-                <span>Tax No: —</span>
+            {/* Legal links — horizontal line, dark text on white */}
+            <div className="flex flex-wrap justify-center items-center gap-x-6 gap-y-3 mb-6">
+              <div className="w-full flex flex-wrap justify-center items-center gap-x-0 gap-y-2">
+                {([
+                  { label: 'Privacy Policy', key: 'privacy' },
+                  { label: 'Terms & Conditions', key: 'terms' },
+                  { label: 'Return Policy', key: 'returns' },
+                  { label: 'Warranty Policy', key: 'warranty' },
+                  { label: 'FAQ', key: 'faq' }
+                ] as const).map((l, i, arr) => (
+                  <span key={l.key} className="flex items-center">
+                    <button
+                      onClick={() => setLegalDoc(l.key as LegalKey)}
+                      className="text-gray-700 hover:text-lago-600 text-[13px] font-semibold transition-colors px-3 py-1"
+                    >
+                      {l.label}
+                    </button>
+                    {i < arr.length - 1 && (
+                      <span className="text-gray-300 text-sm select-none">|</span>
+                    )}
+                  </span>
+                ))}
               </div>
             </div>
+
+            {/* Copyright — dark text on white */}
+            <div className="text-center space-y-2 border-t border-gray-100 pt-6">
+              <p className="text-gray-600 text-[13px] font-medium">
+                Copyright © 2013–2026 SEKKATI PETROLEUM ENERGY AND TECHNOLOGY (PTY) LTD. All rights reserved.
+              </p>
+              <div className="flex flex-wrap justify-center items-center gap-x-3 gap-y-1 text-gray-400 text-xs">
+                <span>Registration Number: 2013/228320/07</span>
+                <span className="hidden sm:inline text-gray-300">|</span>
+                <span>Trading as: SPET ONLINE</span>
+              </div>
+            </div>
+
           </div>
         </div>
       </footer>

@@ -59,8 +59,7 @@ export function CheckoutPage() {
   const [orderError, setOrderError] = useState<string | null>(null);
 
   const [form, setForm] = useState({
-    first_name: profile?.first_name ?? '',
-    last_name: profile?.last_name ?? '',
+    full_name: profile ? `${profile.first_name ?? ''} ${profile.last_name ?? ''}`.trim() : '',
     phone: profile?.phone ?? '',
     address_line1: '',
     address_line2: '',
@@ -84,8 +83,8 @@ export function CheckoutPage() {
     const errs: Record<string, string> = {};
     if (useExisting && selectedAddr) return errs;
 
-    if (!form.first_name.trim()) errs.first_name = 'First name is required';
-    if (!form.last_name.trim()) errs.last_name = 'Last name is required';
+    if (!form.full_name.trim()) errs.full_name = 'Full name is required';
+    else if (form.full_name.trim().split(/\s+/).length < 2) errs.full_name = 'Please enter first and last name';
 
     if (!form.phone.trim()) errs.phone = 'Phone number is required';
     else if (!/^(\+27|0)[0-9]{9,}$/.test(form.phone.replace(/\s/g, ''))) errs.phone = 'Enter a valid SA phone number (e.g. 082 000 0000)';
@@ -115,15 +114,12 @@ export function CheckoutPage() {
     setPlacing(true);
 
     try {
-      let shippingAddress: any = { 
-        ...form, 
-        full_name: `${form.first_name} ${form.last_name}`.trim() 
-      };
+      let shippingAddress = form;
       if (useExisting && selectedAddr) {
         const addr = addresses.find((a) => a.id === selectedAddr);
         if (addr) shippingAddress = addr as any;
       } else if (form.save_address && user) {
-        await saveAddress({ ...shippingAddress, profile_id: user.id, is_default: addresses.length === 0 });
+        await saveAddress({ ...form, profile_id: user.id, is_default: addresses.length === 0 });
       }
 
       const { order, error } = await createOrder({
@@ -154,8 +150,8 @@ export function CheckoutPage() {
           merchant_key: '46f0cd694581a',
           return_url: returnUrl,
           cancel_url: cancelUrl,
-          name_first: form.first_name.trim() || 'Customer',
-          name_last: form.last_name.trim() || 'Name',
+          name_first: form.full_name.split(' ')[0] || 'Customer',
+          name_last: form.full_name.split(' ').slice(1).join(' ') || 'Name',
           email_address: user?.email || 'test@example.com',
           m_payment_id: order.order_number,
           amount: total.toFixed(2),
@@ -285,15 +281,10 @@ export function CheckoutPage() {
                 )}
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-bold text-gray-500 dark:text-lago-400 uppercase tracking-wide mb-1.5">First Name *</label>
-                    <input value={form.first_name} onChange={field('first_name')} data-error={!!errors.first_name || undefined} className={inputClass('first_name')} placeholder="First name" />
-                    {errors.first_name && <p className="mt-1.5 text-xs font-semibold text-red-500 dark:text-red-400">{errors.first_name}</p>}
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-gray-500 dark:text-lago-400 uppercase tracking-wide mb-1.5">Last Name *</label>
-                    <input value={form.last_name} onChange={field('last_name')} data-error={!!errors.last_name || undefined} className={inputClass('last_name')} placeholder="Last name" />
-                    {errors.last_name && <p className="mt-1.5 text-xs font-semibold text-red-500 dark:text-red-400">{errors.last_name}</p>}
+                  <div className="md:col-span-2">
+                    <label className="block text-xs font-bold text-gray-500 dark:text-lago-400 uppercase tracking-wide mb-1.5">Full Name *</label>
+                    <input value={form.full_name} onChange={field('full_name')} data-error={!!errors.full_name || undefined} className={inputClass('full_name')} placeholder="First and last name" />
+                    {errors.full_name && <p className="mt-1.5 text-xs font-semibold text-red-500 dark:text-red-400">{errors.full_name}</p>}
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-gray-500 dark:text-lago-400 uppercase tracking-wide mb-1.5">Phone Number *</label>

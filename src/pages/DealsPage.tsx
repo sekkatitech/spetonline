@@ -188,10 +188,14 @@ export function DealsPage() {
                   Shop All <ArrowRight className="w-4 h-4" />
                 </Link>
               </div>
-              <div className="grid grid-cols-2 md:grid-cols-2 gap-4">
+              <div className="flex overflow-x-auto gap-4 pb-4 snap-x snap-mandatory">
                 {productsLoading
-                  ? Array.from({ length: 4 }).map((_, i) => <div key={i} className="h-64 rounded-2xl bg-gray-200 dark:bg-lago-800 animate-pulse" />)
-                  : (customerFavorites.length > 0 ? customerFavorites : []).map((p) => <ProductCard key={p.id} product={p} />)
+                  ? Array.from({ length: 4 }).map((_, i) => <div key={i} className="w-[240px] shrink-0 h-64 rounded-2xl bg-gray-200 dark:bg-lago-800 animate-pulse snap-start" />)
+                  : (customerFavorites.length > 0 ? customerFavorites : []).map((p) => (
+                      <div key={p.id} className="w-[240px] md:w-[260px] shrink-0 snap-start">
+                        <ProductCard product={p} />
+                      </div>
+                    ))
                 }
               </div>
             </div>
