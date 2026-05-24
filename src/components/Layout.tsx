@@ -198,14 +198,14 @@ export function Footer() {
       <footer className="w-full mt-auto">
 
         {/* ✅ TOP PART: BLACK — Logo, links, contact */}
-        <div className="bg-[#111111] pt-16 pb-14 border-t-4 border-lago-600">
+        <div className="bg-[#111111] pt-12 pb-10 md:pt-16 md:pb-14 border-t-4 border-lago-600">
           <div className="container mx-auto px-4 md:px-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 md:gap-10">
 
               {/* Logo & Intro */}
               <div className="lg:col-span-2">
-                <img src="/logo-main.png" alt="SPET Online" className="h-16 w-auto object-contain mb-6 bg-white p-2 rounded-xl" />
-                <p className="text-gray-400 mb-8 max-w-sm text-sm leading-relaxed">
+                <img src="/logo-main.png" alt="SPET Online" className="h-14 md:h-16 w-auto object-contain mb-5 md:mb-6 bg-white p-2 rounded-xl" />
+                <p className="text-gray-400 mb-6 md:mb-8 max-w-sm text-sm leading-relaxed">
                   SPET Online — your trusted South African online technology retailer.
                 </p>
                 <div className="flex items-center gap-3">
@@ -222,12 +222,12 @@ export function Footer() {
               </div>
 
               {/* Need Help? */}
-              <div>
-                <h4 className="text-white font-bold mb-6 text-sm uppercase tracking-wider">Need Help?</h4>
+              <div className="lg:col-span-1">
+                <h4 className="text-white font-bold mb-5 md:mb-6 text-sm uppercase tracking-wider">Need Help?</h4>
                 <div className="space-y-4 text-sm">
                   <div className="flex items-start gap-3 text-gray-400">
                     <MapPin className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
-                    <span>Pretoria, Gauteng, South Africa</span>
+                    <span className="leading-snug">Pretoria, Gauteng, South Africa</span>
                   </div>
                   <div className="flex items-start gap-3 text-gray-400">
                     <Phone className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
@@ -238,46 +238,49 @@ export function Footer() {
                   </div>
                   <div className="flex items-center gap-3 text-gray-400">
                     <Mail className="w-4 h-4 text-gray-500 flex-shrink-0" />
-                    <a href="mailto:sales@spetonline.co.za" className="hover:text-white transition-colors">sales@spetonline.co.za</a>
+                    <a href="mailto:sales@spetonline.co.za" className="hover:text-white transition-colors break-all">sales@spetonline.co.za</a>
                   </div>
                   <div className="flex items-start gap-3 text-gray-400 pt-1">
                     <Globe className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
-                    <div className="flex flex-col gap-1">
-                      <a href="https://www.sekkatitech.co.za" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">www.sekkatitech.co.za</a>
-                      <a href="https://www.spetonline.co.za" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">www.spetonline.co.za</a>
+                    <div className="flex flex-col gap-1.5 overflow-hidden">
+                      <a href="https://www.sekkatitech.co.za" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors truncate">www.sekkatitech.co.za</a>
+                      <a href="https://www.spetonline.co.za" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors truncate">www.spetonline.co.za</a>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Shop Links */}
-              <div>
-                <h4 className="text-white font-bold mb-6 text-sm uppercase tracking-wider">Shop</h4>
-                <ul className="space-y-3">
-                  {[
-                    { label: 'All Products', to: '/shop' },
-                    { label: 'Categories', to: '/categories' },
-                    { label: 'Deals & Promos', to: '/deals' },
-                    { label: 'Brands', to: '/shop' },
-                  ].map((l) => (
-                    <li key={l.label}><Link to={l.to} className="text-gray-400 hover:text-white hover:translate-x-1 inline-block transform transition-all text-sm">{l.label}</Link></li>
-                  ))}
-                </ul>
-              </div>
+              {/* Shop & Customer Links - Side by Side on Mobile */}
+              <div className="lg:col-span-2 grid grid-cols-2 gap-6 md:gap-10">
+                {/* Shop Links */}
+                <div>
+                  <h4 className="text-white font-bold mb-5 md:mb-6 text-sm uppercase tracking-wider">Shop</h4>
+                  <ul className="space-y-3">
+                    {[
+                      { label: 'All Products', to: '/shop' },
+                      { label: 'Categories', to: '/categories' },
+                      { label: 'Deals & Promos', to: '/deals' },
+                      { label: 'Brands', to: '/shop' },
+                    ].map((l) => (
+                      <li key={l.label}><Link to={l.to} className="text-gray-400 hover:text-white hover:translate-x-1 inline-block transform transition-all text-sm">{l.label}</Link></li>
+                    ))}
+                  </ul>
+                </div>
 
-              {/* Customer Links */}
-              <div>
-                <h4 className="text-white font-bold mb-6 text-sm uppercase tracking-wider">Customer</h4>
-                <ul className="space-y-3">
-                  {[
-                    { label: 'My Account', to: '/account' },
-                    { label: 'Track Order', to: '/account' },
-                    { label: 'Wishlist', to: '/account' },
-                    { label: 'Support', to: '/account' },
-                  ].map((l) => (
-                    <li key={l.label}><Link to={l.to} className="text-gray-400 hover:text-white hover:translate-x-1 inline-block transform transition-all text-sm">{l.label}</Link></li>
-                  ))}
-                </ul>
+                {/* Customer Links */}
+                <div>
+                  <h4 className="text-white font-bold mb-5 md:mb-6 text-sm uppercase tracking-wider">Customer</h4>
+                  <ul className="space-y-3">
+                    {[
+                      { label: 'My Account', to: '/account' },
+                      { label: 'Track Order', to: '/account' },
+                      { label: 'Wishlist', to: '/account' },
+                      { label: 'Support', to: '/account' },
+                    ].map((l) => (
+                      <li key={l.label}><Link to={l.to} className="text-gray-400 hover:text-white hover:translate-x-1 inline-block transform transition-all text-sm">{l.label}</Link></li>
+                    ))}
+                  </ul>
+                </div>
               </div>
 
             </div>
