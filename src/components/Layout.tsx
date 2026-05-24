@@ -238,13 +238,13 @@ export function Footer() {
                   </div>
                   <div className="flex items-center gap-3 text-gray-400">
                     <Mail className="w-4 h-4 text-gray-500 flex-shrink-0" />
-                    <a href="mailto:sales@spetonline.co.za" className="hover:text-white transition-colors break-all">sales@spetonline.co.za</a>
+                    <a href="mailto:sales@spetonline.co.za" className="hover:text-white transition-colors break-words min-w-0 flex-1">sales@spetonline.co.za</a>
                   </div>
                   <div className="flex items-start gap-3 text-gray-400 pt-1">
                     <Globe className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
-                    <div className="flex flex-col gap-1.5 overflow-hidden">
-                      <a href="https://www.sekkatitech.co.za" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors truncate">www.sekkatitech.co.za</a>
-                      <a href="https://www.spetonline.co.za" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors truncate">www.spetonline.co.za</a>
+                    <div className="flex flex-col gap-1.5 min-w-0 flex-1">
+                      <a href="https://www.sekkatitech.co.za" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors break-words">www.sekkatitech.co.za</a>
+                      <a href="https://www.spetonline.co.za" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors break-words">www.spetonline.co.za</a>
                     </div>
                   </div>
                 </div>
