@@ -166,7 +166,7 @@ export function DealsPage() {
                 { img: '/images/tv-specials.jpg', label: 'TV Specials' },
                 { img: '/images/gaming-gear.jpg', label: 'Gaming Gear' },
               ].map((banner, i) => (
-                <Link key={i} to="/shop" className="group relative rounded-2xl overflow-hidden aspect-video block border border-gray-200 dark:border-lago-800">
+                <Link key={i} to="/shop" className="group relative rounded-2xl overflow-hidden block border border-gray-200 dark:border-lago-800" style={{ height: '300px' }}>
                   <img src={banner.img} alt={banner.label} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
                   <div className="absolute bottom-0 left-0 right-0 p-3 flex items-center justify-between">

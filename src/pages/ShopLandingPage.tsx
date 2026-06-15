@@ -27,7 +27,7 @@ function BannerCarousel() {
   }, [next]);
 
   return (
-    <div className="relative w-full overflow-hidden bg-gray-900" style={{ height: '230px' }}>
+    <div className="relative w-full overflow-hidden bg-gray-900" style={{ height: '210px' }}>
       {BANNERS.map((banner, i) => (
         <div
           key={i}

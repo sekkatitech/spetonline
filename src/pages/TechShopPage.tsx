@@ -173,7 +173,7 @@ export function TechShopPage() {
   const [products,           setProducts]           = useState<any[]>([]);
   const [loading,            setLoading]            = useState(true);
   const [total,              setTotal]              = useState(0);
-  const [page,               setPage]               = useState(1);
+ const [page,                 setPage]              = useState(1);
   const [search,             setSearch]             = useState('');
   const [sortBy,             setSortBy]             = useState('newest');
   const [inStockOnly,        setInStockOnly]        = useState(false);
