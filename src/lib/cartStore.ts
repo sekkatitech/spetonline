@@ -10,6 +10,7 @@ export interface CartItem {
   image: string;
   sku: string;
   qty: number;
+  supplier: 'esquire' | 'syntech';  // ← added: tells server which table to verify price in
 }
 
 interface CartStore {

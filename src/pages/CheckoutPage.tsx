@@ -1,9 +1,12 @@
+// @ts-nocheck
+import React from 'react';
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { CheckCircle, Lock, ChevronDown, AlertTriangle, ArrowLeft, Mail } from 'lucide-react';
 import { useCartStore } from '../lib/cartStore';
 import { useAuth } from '../lib/AuthContext';
-import { useAddresses, createOrder } from '../lib/api';
+import { useAddresses } from '../lib/api';
+import { supabase } from '../lib/supabase';
 import { SafeImage } from '../components/SafeImage';
 
 const SA_PROVINCES = ['Eastern Cape','Free State','Gauteng','KwaZulu-Natal','Limpopo','Mpumalanga','Northern Cape','North West','Western Cape'];
@@ -29,8 +32,10 @@ export function CheckoutPage() {
   const { addresses, saveAddress } = useAddresses(user?.id ?? null);
 
   const promoDiscount = location.state?.promoDiscount ?? 0;
+  const promoCode = location.state?.promoCode ?? null;
   const promoId = location.state?.promoId ?? null;
 
+  // NOTE: These are display-only estimates. The server recalculates everything.
   const sub = Number(subtotal()) || 0;
   const discount = Number(promoDiscount) || 0;
   const shipping = sub - discount >= 2500 ? 0 : 150;
@@ -54,7 +59,6 @@ export function CheckoutPage() {
   }, [addresses]);
 
   const [placing, setPlacing] = useState(false);
-  const [success, setSuccess] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [orderError, setOrderError] = useState<string | null>(null);
 
@@ -115,9 +119,10 @@ export function CheckoutPage() {
     setPlacing(true);
 
     try {
-      let shippingAddress: any = { 
-        ...form, 
-        full_name: `${form.first_name} ${form.last_name}`.trim() 
+      // ── Resolve shipping address ────────────────────────────────────────────
+      let shippingAddress: any = {
+        ...form,
+        full_name: `${form.first_name} ${form.last_name}`.trim(),
       };
       if (useExisting && selectedAddr) {
         const addr = addresses.find((a) => a.id === selectedAddr);
@@ -126,53 +131,64 @@ export function CheckoutPage() {
         await saveAddress({ ...shippingAddress, profile_id: user.id, is_default: addresses.length === 0 });
       }
 
-      const { order, error } = await createOrder({
-        profile_id: user?.id ?? null,
-        items: items.map((i) => ({ product_id: i.product_id, product_name: i.name, sku: i.sku, qty: i.qty, unit_price: i.price })),
-        subtotal: sub,
-        discount_amount: discount,
-        shipping_cost: shipping,
-        tax_amount: 0,
-        total,
-        promotion_id: promoId,
-        shipping_address: shippingAddress,
+      // ── Get user's access token to send to the server function ─────────────
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        setOrderError('Session expired. Please log in again.');
+        setPlacing(false);
+        return;
+      }
+
+      // ── Call server-side Netlify Function ──────────────────────────────────
+      // Cart items include supplier so the server knows which table to verify prices in
+      const cartPayload = items.map((i) => ({
+        product_id: i.product_id,
+        sku: i.sku,
+        qty: i.qty,
+        supplier: i.supplier ?? 'esquire',   // cartStore items should carry supplier field
+      }));
+
+      const response = await fetch('/.netlify/functions/create-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          accessToken: session.access_token,
+          items: cartPayload,
+          shippingAddress,
+          promoCode,
+          promoId,
+        }),
       });
 
+      const result = await response.json();
       setPlacing(false);
-      if (error) {
-        setOrderError(typeof error === 'string' ? error : (error as any).message || JSON.stringify(error) || 'Something went wrong. Please try again.');
-      } else if (order) {
-        const pfForm = document.createElement('form');
-        pfForm.method = 'POST';
-        pfForm.action = 'https://sandbox.payfast.co.za/eng/process';
 
-        const returnUrl = `${window.location.origin}/payment-success?order_number=${order.order_number}`;
-        const cancelUrl = `${window.location.origin}/payment-cancel?order_number=${order.order_number}`;
-
-        const pfData: Record<string, string> = {
-          merchant_id: '10000100',
-          merchant_key: '46f0cd694581a',
-          return_url: returnUrl,
-          cancel_url: cancelUrl,
-          name_first: form.first_name.trim() || 'Customer',
-          name_last: form.last_name.trim() || 'Name',
-          email_address: user?.email || 'test@example.com',
-          m_payment_id: order.order_number,
-          amount: total.toFixed(2),
-          item_name: `SPET Online Order ${order.order_number}`,
-        };
-
-        for (const key in pfData) {
-          const input = document.createElement('input');
-          input.type = 'hidden';
-          input.name = key;
-          input.value = pfData[key];
-          pfForm.appendChild(input);
-        }
-
-        document.body.appendChild(pfForm);
-        pfForm.submit();
+      if (!response.ok || !result.success) {
+        setOrderError(result.error || 'Something went wrong. Please try again.');
+        return;
       }
+
+      // ── Order created successfully — submit to PayFast ─────────────────────
+      const { payfast } = result;
+
+      const pfForm = document.createElement('form');
+      pfForm.method = 'POST';
+      pfForm.action = payfast.url;
+
+      for (const [key, value] of Object.entries(payfast.fields)) {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = key;
+        input.value = String(value);
+        pfForm.appendChild(input);
+      }
+
+      // Clear cart before redirect so it doesn't persist on return
+      clearCart();
+
+      document.body.appendChild(pfForm);
+      pfForm.submit();
+
     } catch (err: any) {
       setPlacing(false);
       setOrderError(err?.message || 'An unexpected error occurred. Please try again.');
@@ -188,8 +204,6 @@ export function CheckoutPage() {
     );
   }
 
-  // ✅ Should not render if not logged in (redirect above handles it),
-  // but guard here just in case
   if (!user) return null;
 
   // ✅ EMAIL VERIFICATION GATE

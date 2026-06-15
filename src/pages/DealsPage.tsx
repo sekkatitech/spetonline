@@ -162,9 +162,9 @@ export function DealsPage() {
             {/* Promo banners */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {[
-                { img: '/images/banner-promo-picture-1.png', label: 'Laptop Deals' },
-                { img: '/images/banner-promo-picture-2.png', label: 'TV Specials' },
-                { img: '/images/banner-promo-picture-3.png', label: 'Gaming Gear' },
+                { img: '/images/laptop-deals.jpg', label: 'Laptop Deals' },
+                { img: '/images/tv-specials.jpg', label: 'TV Specials' },
+                { img: '/images/gaming-gear.jpg', label: 'Gaming Gear' },
               ].map((banner, i) => (
                 <Link key={i} to="/shop" className="group relative rounded-2xl overflow-hidden aspect-video block border border-gray-200 dark:border-lago-800">
                   <img src={banner.img} alt={banner.label} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />

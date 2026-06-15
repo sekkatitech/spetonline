@@ -1,7 +1,9 @@
+import React from 'react';
 import { useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { Eye, EyeOff, Mail, Lock, User } from 'lucide-react';
 import { useAuth } from '../lib/AuthContext';
+import { supabase } from '../lib/supabase';
 
 export function AuthPage() {
   const [mode, setMode] = useState<'login' | 'register'>('login');
@@ -35,6 +37,12 @@ export function AuthPage() {
     } else {
       const { error } = await signUp(email, password, firstName, lastName);
       if (error) { setError(error.message); setLoading(false); return; }
+      
+      // Trigger Welcome Email
+      supabase.functions.invoke('send-mailtrap', {
+        body: { type: 'welcome', payload: { email, first_name: firstName } }
+      }).catch(err => console.error("Failed to trigger welcome email:", err));
+
       setSuccess('Account created! Please check your email to verify your account, then log in.');
       setMode('login');
     }

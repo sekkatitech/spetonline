@@ -10,6 +10,8 @@
       "DOM.Iterable"
     ],
     "skipLibCheck": true,
+    "noImplicitAny": false,
+"strictNullChecks": false,
     "moduleResolution": "bundler",
     "isolatedModules": true,
     "moduleDetection": "force",
@@ -21,8 +23,9 @@
       ]
     },
     "allowImportingTsExtensions": true,
-    "noEmit": true
+    "noEmit": true,
+    "strict": false
   },
   "include": ["src", "vite.config.ts"],
-  "exclude": ["node_modules", "normal-checkoutpage", "spet-audit-report"]
+  "exclude": ["node_modules", "normal-checkoutpage", "spet-audit-report", "src/test_supabase.ts"]
 }

@@ -5,6 +5,7 @@ import { supabase } from './supabase';
 
 export interface Product {
   id: string;
+  // ── Esquire fields ──────────────────────────────
   ProductName: string;
   ProductCode: string;
   Category: string | null;
@@ -28,6 +29,15 @@ export interface Product {
   is_featured: boolean;
   is_on_sale: boolean;
   sale_price: number | null;
+  // ── Syntech fields (optional) ───────────────────
+  name?: string;
+  sku?: string;
+  brand?: string;
+  price_display?: number;
+  price_rrp?: number;
+  stock_qty?: number;
+  thumbnail_url?: string | null;
+  is_clearance?: boolean;
 }
 
 export interface ShopFilters {

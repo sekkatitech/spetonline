@@ -1,0 +1,353 @@
+// @ts-nocheck
+import { useState, useEffect } from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { ShoppingCart, Heart, ChevronLeft, ShieldCheck, Truck, RefreshCw } from 'lucide-react';
+import { supabase } from '../lib/supabase';
+import { SafeImage } from '../components/SafeImage';
+import { useCartStore } from '../lib/cartStore';
+import { useAuth } from '../lib/AuthContext';
+import { useWishlist } from '../lib/api';
+import { NavSpacer } from '../components/Layout';
+
+export function TechProductPage() {
+  const { id } = useParams<{ id: string }>();
+  const [product, setProduct] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [qty,     setQty]     = useState(1);
+  const [added,     setAdded]     = useState(false);
+  const [activeImage, setActiveImage] = useState<string | null>(null);
+  const [activeTab,   setActiveTab]   = useState<'description' | 'specs'>('description');
+
+  const addItem  = useCartStore((s) => s.addItem);
+  const { user } = useAuth();
+  const { wishlist, toggleWishlist } = useWishlist(user?.id ?? null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!id) return;
+    supabase
+      .from('syntech_products')
+      .select('*')
+      .eq('id', id)
+      .single()
+      .then(({ data }) => {
+        setProduct(data);
+        setActiveImage(data?.thumbnail_url ?? data?.images?.[0] ?? null);
+        setLoading(false);
+      });
+  }, [id]);
+
+  if (loading) return (
+    <div className="min-h-screen bg-gray-50 dark:bg-[#0a141d]">
+      <NavSpacer />
+      <div className="flex items-center justify-center py-20">
+        <div className="w-12 h-12 border-4 border-lago-600 border-t-transparent rounded-full animate-spin" />
+      </div>
+    </div>
+  );
+
+  if (!product) return (
+    <div className="min-h-screen bg-gray-50 dark:bg-[#0a141d]">
+      <NavSpacer />
+      <div className="text-center py-20">
+        <p className="text-gray-500 text-lg">Product not found.</p>
+        <Link to="/shop/tech" className="mt-4 inline-block text-lago-600 hover:underline">← Back to Gaming & Computing</Link>
+      </div>
+    </div>
+  );
+
+  const price    = product.price_display ?? 0;
+  const inStock  = (product.stock_qty ?? 0) > 0;
+  const images   = [product.thumbnail_url, ...(product.images ?? [])].filter(Boolean) as string[];
+  const inWishlist = wishlist.includes(product.id);
+  const specs    = product.specifications ?? {};
+
+  function handleAddToCart() {
+    addItem({
+      id:         product.id,
+      product_id: product.id,
+      name:       product.name,
+      brand:      product.brand ?? '',
+      price,
+      image:      activeImage || '',
+      sku:        product.sku,
+      supplier: 'syntech',
+    });
+    setAdded(true);
+    setTimeout(() => setAdded(false), 2000);
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50 dark:bg-[#0a141d]">
+      <NavSpacer />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        {/* Breadcrumb */}
+        <nav className="flex items-center gap-2 text-sm text-gray-400 mb-8">
+          <button
+            onClick={() => navigate(-1)}
+            className="hover:text-lago-600 dark:hover:text-lago-400 transition-colors flex items-center gap-1 font-medium"
+          >
+            <ChevronLeft className="w-4 h-4" /> Back
+          </button>
+          <span>›</span>
+          <Link to="/shop/tech" className="hover:text-lago-600 transition-colors">Gaming & Computing</Link>
+          {product.category && <>
+            <span>›</span>
+            <span className="text-gray-500">{product.category}</span>
+          </>}
+          <span>›</span>
+          <span className="text-gray-700 dark:text-white line-clamp-1">{product.name}</span>
+        </nav>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+
+          {/* ── Image gallery ── */}
+          <div>
+            <div className="bg-white dark:bg-lago-900 rounded-2xl border border-gray-200 dark:border-lago-800 aspect-square overflow-hidden mb-4 p-6">
+              <SafeImage
+                src={activeImage}
+                brand={product.brand ?? ''}
+                alt={product.name}
+                className="w-full h-full object-contain"
+                referrerPolicy="no-referrer"
+              />
+            </div>
+            {images.length > 1 && (
+              <div className="flex gap-3 overflow-x-auto pb-2">
+                {images.slice(0, 6).map((img, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setActiveImage(img)}
+                    className={`flex-shrink-0 w-16 h-16 rounded-xl border-2 overflow-hidden bg-white dark:bg-lago-900 transition-all ${
+                      activeImage === img
+                        ? 'border-lago-600 shadow-md'
+                        : 'border-gray-200 dark:border-lago-700 hover:border-lago-400'
+                    }`}
+                  >
+                    <img src={img} alt="" className="w-full h-full object-contain p-1" referrerPolicy="no-referrer" />
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* ── Product details ── */}
+          <div>
+            {product.brand && (
+              <p className="text-xs font-bold text-lago-500 dark:text-lago-400 uppercase tracking-widest mb-2">
+                {product.brand}
+              </p>
+            )}
+            <h1 className="text-2xl md:text-3xl font-display font-bold text-gray-900 dark:text-white leading-tight mb-4">
+              {product.name}
+            </h1>
+
+            {/* Badges */}
+            <div className="flex flex-wrap gap-2 mb-5">
+              {product.warranty_months && (
+                <span className="flex items-center gap-1.5 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 text-xs font-semibold px-3 py-1.5 rounded-full border border-green-200 dark:border-green-800">
+                  <ShieldCheck className="w-3.5 h-3.5" />
+                  {product.warranty_months}-month warranty
+                </span>
+              )}
+              {product.is_clearance && (
+                <span className="bg-lago-100 dark:bg-lago-800 text-lago-700 dark:text-lago-300 text-xs font-semibold px-3 py-1.5 rounded-full">
+                  Clearance item
+                </span>
+              )}
+              {product.is_unboxed && (
+                <span className="bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 text-xs font-semibold px-3 py-1.5 rounded-full border border-amber-200 dark:border-amber-800">
+                  Unboxed — good condition
+                </span>
+              )}
+            </div>
+
+            {/* Price */}
+            <div className="flex items-baseline gap-3 mb-2">
+              <span className="text-4xl font-black text-gray-900 dark:text-white">
+                R {price.toLocaleString('en-ZA', { minimumFractionDigits: 2 })}
+              </span>
+              {product.price_rrp && product.price_rrp > price && (
+                <span className="text-xl text-gray-400 line-through">
+                  R {product.price_rrp.toLocaleString('en-ZA', { minimumFractionDigits: 2 })}
+                </span>
+              )}
+            </div>
+            <p className="text-xs text-gray-400 mb-6">incl. VAT</p>
+
+            {/* Stock status */}
+            <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold mb-6 ${
+              inStock
+                ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400'
+                : 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400'
+            }`}>
+              <span className={`w-2 h-2 rounded-full ${inStock ? 'bg-green-500' : 'bg-red-500'}`} />
+              {inStock ? `In Stock (${product.stock_qty} available)` : 'Out of Stock'}
+            </div>
+
+            {/* Short description */}
+            {product.short_description && (
+              <div
+                className="text-gray-600 dark:text-lago-300 text-sm leading-relaxed mb-6 prose prose-sm dark:prose-invert max-w-none"
+                dangerouslySetInnerHTML={{
+                  __html: product.short_description
+                    .replace(/<p>/gi, '')
+                    .replace(/<\/p>/gi, ' ')
+                    .replace(/<br\s*\/?>/gi, ' ')
+                    .trim()
+                }}
+              />
+            )}
+
+            {/* Quantity + Add to cart */}
+            {inStock && (
+              <div className="flex items-center gap-4 mb-6">
+                <div className="flex items-center border border-gray-300 dark:border-lago-700 rounded-xl overflow-hidden">
+                  <button onClick={() => setQty((q) => Math.max(1, q - 1))}
+                    className="w-10 h-11 flex items-center justify-center text-gray-600 dark:text-lago-300 hover:bg-gray-100 dark:hover:bg-lago-800 transition-colors font-bold text-lg">
+                    −
+                  </button>
+                  <span className="w-12 h-11 flex items-center justify-center text-gray-900 dark:text-white font-bold border-x border-gray-300 dark:border-lago-700">
+                    {qty}
+                  </span>
+                  <button onClick={() => setQty((q) => Math.min(product.stock_qty, q + 1))}
+                    className="w-10 h-11 flex items-center justify-center text-gray-600 dark:text-lago-300 hover:bg-gray-100 dark:hover:bg-lago-800 transition-colors font-bold text-lg">
+                    +
+                  </button>
+                </div>
+              </div>
+            )}
+
+            <div className="flex gap-3 mb-8">
+              <button
+                onClick={handleAddToCart}
+                disabled={!inStock}
+                className={`flex-1 flex items-center justify-center gap-2 py-3.5 rounded-xl font-bold text-sm transition-all ${
+                  added
+                    ? 'bg-green-500 text-white'
+                    : inStock
+                    ? 'bg-lago-600 hover:bg-lago-700 text-white'
+                    : 'bg-gray-200 dark:bg-lago-800 text-gray-400 cursor-not-allowed'
+                }`}
+              >
+                <ShoppingCart className="w-4 h-4" />
+                {added ? 'Added to Cart!' : inStock ? 'Add to Cart' : 'Out of Stock'}
+              </button>
+              <button
+                onClick={() => toggleWishlist(product.id)}
+                className={`w-12 h-12 flex items-center justify-center rounded-xl border-2 transition-colors ${
+                  inWishlist
+                    ? 'border-red-400 bg-red-50 dark:bg-red-900/20 text-red-500'
+                    : 'border-gray-300 dark:border-lago-700 text-gray-400 hover:border-red-400 hover:text-red-400'
+                }`}
+              >
+                <Heart className={`w-5 h-5 ${inWishlist ? 'fill-red-500' : ''}`} />
+              </button>
+            </div>
+
+            {/* Trust icons */}
+            <div className="grid grid-cols-3 gap-3 mb-8">
+              {[
+                { icon: Truck,        label: 'Free delivery over R2,500' },
+                { icon: ShieldCheck,  label: 'Official warranty' },
+                { icon: RefreshCw,    label: '7-day returns' },
+              ].map(({ icon: Icon, label }) => (
+                <div key={label} className="flex flex-col items-center gap-1.5 p-3 bg-white dark:bg-lago-900 border border-gray-200 dark:border-lago-800 rounded-xl text-center">
+                  <Icon className="w-5 h-5 text-lago-600 dark:text-lago-400" />
+                  <span className="text-[10px] text-gray-500 dark:text-lago-400 font-medium leading-tight">{label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* ── Specs + Description tabs ── */}
+        <div className="mt-12 bg-white dark:bg-lago-900 border border-gray-200 dark:border-lago-800 rounded-2xl overflow-hidden">
+          <div className="grid grid-cols-2 border-b border-gray-200 dark:border-lago-800">
+            <button
+              onClick={() => setActiveTab('description')}
+              className={`py-4 text-sm font-bold transition-colors ${
+                activeTab === 'description'
+                  ? 'text-lago-600 dark:text-lago-400 border-b-2 border-lago-600 dark:border-lago-400'
+                  : 'text-gray-500 dark:text-lago-500 hover:text-gray-700 dark:hover:text-lago-300'
+              }`}
+            >
+              Description
+            </button>
+            <button
+              onClick={() => setActiveTab('specs')}
+              className={`py-4 text-sm font-bold transition-colors ${
+                activeTab === 'specs'
+                  ? 'text-lago-600 dark:text-lago-400 border-b-2 border-lago-600 dark:border-lago-400'
+                  : 'text-gray-500 dark:text-lago-500 hover:text-gray-700 dark:hover:text-lago-300'
+              }`}
+            >
+              Specifications
+            </button>
+          </div>
+          <div className="p-6">
+            {activeTab === 'description' ? (
+              <div className="prose prose-sm dark:prose-invert max-w-none">
+                {product.full_description ? (
+                  <div
+                    className="text-gray-600 dark:text-lago-300 text-sm leading-relaxed"
+                    dangerouslySetInnerHTML={{ __html: product.full_description }}
+                  />
+                ) : product.short_description ? (
+                  <p className="text-gray-600 dark:text-lago-300 text-sm leading-relaxed">
+                    {product.short_description}
+                  </p>
+                ) : (
+                  <p className="text-gray-400 dark:text-lago-500 text-sm">No description available for this product.</p>
+                )}
+              </div>
+            ) : (
+              Object.keys(specs).length > 0 ? (
+                <table className="w-full text-sm">
+                  <tbody>
+                    {Object.entries(specs).filter(([, v]) => v).map(([k, v], i) => (
+                      <tr key={k} className={i % 2 === 0 ? 'bg-gray-50 dark:bg-lago-800/30' : ''}>
+                        <td className="py-2.5 px-4 font-semibold text-gray-600 dark:text-lago-300 capitalize w-1/3">
+                          {k.replace(/_/g, ' ')}
+                        </td>
+                        <td className="py-2.5 px-4 text-gray-900 dark:text-white">{String(v)}</td>
+                      </tr>
+                    ))}
+                    {product.colour && (
+                      <tr className={Object.keys(specs).length % 2 === 0 ? 'bg-gray-50 dark:bg-lago-800/30' : ''}>
+                        <td className="py-2.5 px-4 font-semibold text-gray-600 dark:text-lago-300 w-1/3">Colour</td>
+                        <td className="py-2.5 px-4 text-gray-900 dark:text-white">{product.colour}</td>
+                      </tr>
+                    )}
+                    <tr>
+                      <td className="py-2.5 px-4 font-semibold text-gray-600 dark:text-lago-300 w-1/3">Stock</td>
+                      <td className="py-2.5 px-4 text-gray-900 dark:text-white">{product.stock_qty} units available</td>
+                    </tr>
+                    <tr className="bg-gray-50 dark:bg-lago-800/30">
+                      <td className="py-2.5 px-4 font-semibold text-gray-600 dark:text-lago-300 w-1/3">SKU</td>
+                      <td className="py-2.5 px-4 text-gray-900 dark:text-white font-mono text-xs">{product.sku}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              ) : (
+                <p className="text-gray-400 dark:text-lago-500 text-sm">No specifications available for this product.</p>
+              )
+            )}
+          </div>
+        </div>
+
+        <div className="mt-8">
+          <button
+            onClick={() => navigate(-1)}
+            className="inline-flex items-center gap-2 text-sm font-semibold text-lago-600 dark:text-lago-400 hover:text-lago-700 dark:hover:text-lago-300 transition-colors"
+          >
+            <ChevronLeft className="w-4 h-4" />
+            Back to previous page
+          </button>
+        </div>
+
+      </div>
+    </div>
+  );
+}

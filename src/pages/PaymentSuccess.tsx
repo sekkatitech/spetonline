@@ -3,6 +3,8 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { CheckCircle } from 'lucide-react';
 import { useCartStore } from '../lib/cartStore';
 
+import { supabase } from '../lib/supabase';
+
 export function PaymentSuccess() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -12,9 +14,16 @@ export function PaymentSuccess() {
   useEffect(() => {
     // Clear the cart once the payment is successful
     clearCart();
-    // In a real app, you would also use the PayFast ITN (notify_url) to verify
-    // the payment signature on your backend and update the order status.
-  }, [clearCart]);
+
+    // Trigger the Mailtrap Order Confirmation email
+    const sent = sessionStorage.getItem(`email_sent_${orderNumber}`);
+    if (orderNumber && orderNumber !== 'Unknown' && !sent) {
+      sessionStorage.setItem(`email_sent_${orderNumber}`, 'true');
+      supabase.functions.invoke('send-mailtrap', {
+        body: { type: 'order', payload: { order_number: orderNumber } }
+      }).catch(err => console.error("Failed to trigger order email:", err));
+    }
+  }, [clearCart, orderNumber]);
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#0a141d] pt-40 flex items-center justify-center transition-colors duration-300 px-4">

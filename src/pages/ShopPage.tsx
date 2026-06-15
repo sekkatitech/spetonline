@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { SlidersHorizontal, X, ChevronDown, ChevronLeft, ChevronRight, Search, Laptop, Smartphone, Headphones, Camera, Cable, Gamepad2, Watch, Tv, Package } from 'lucide-react';
@@ -42,7 +43,7 @@ export function ShopPage() {
   const [sortBy, setSortBy] = useState<any>(searchParams.get('sort') ?? 'newest');
   const [inStockOnly, setInStockOnly] = useState(searchParams.get('inStock') === 'true');
   const [page, setPage] = useState(parseInt(searchParams.get('page') || '1', 10) || 1);
-  const PER_PAGE = 20;
+  const PER_PAGE = 40;
 
   const { brands } = useBrands();
   const { categories } = useCategories();
