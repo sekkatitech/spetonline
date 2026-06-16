@@ -152,7 +152,7 @@ export function ShopLandingPage() {
           Shop SPET Online
         </h1>
         <p className="text-gray-500 dark:text-lago-400 text-lg">
-          Choose your section or browse featured products below
+          Choose your section or browse featured products below. A Valid TV License is required for purchasing a TV in the Republic of South Africa.
         </p>
       </div>
 

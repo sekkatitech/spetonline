@@ -169,11 +169,11 @@ function TechProductCard({ product }: { product: any }) {
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 export function TechShopPage() {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams]             = useSearchParams();
   const [products,           setProducts]           = useState<any[]>([]);
   const [loading,            setLoading]            = useState(true);
   const [total,              setTotal]              = useState(0);
- const [page,                 setPage]              = useState(1);
+  const [page,                 setPage]             = useState(() => parseInt(searchParams.get('page') || '1', 10));
   const [search,             setSearch]             = useState('');
   const [sortBy,             setSortBy]             = useState('newest');
   const [inStockOnly,        setInStockOnly]        = useState(false);
@@ -191,18 +191,13 @@ export function TechShopPage() {
     return !!searchParams.get('category') || !!searchParams.get('brand');
   });
 
-  // Load categories
+  // Sync page number to URL so back button preserves position
   useEffect(() => {
-    supabase
-      .from('syntech_products')
-      .select('category')
-      .eq('is_active', true)
-      .not('category', 'is', null)
-      .then(({ data }) => {
-        const unique = [...new Set((data ?? []).map((d: any) => d.category).filter(Boolean))].sort();
-        setCategories(unique as string[]);
-      });
-  }, []);
+    const params = new URLSearchParams(searchParams);
+    if (page > 1) params.set('page', page.toString());
+    else params.delete('page');
+    setSearchParams(params, { replace: true });
+  }, [page]);
 
   // Load products
   useEffect(() => {
