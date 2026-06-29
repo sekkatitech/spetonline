@@ -27,6 +27,8 @@ import EnterpriseProductsPage from './pages/EnterpriseProductsPage'
 import EnterpriseProductDetailPage from './pages/EnterpriseProductDetailPage'
 import EnterpriseQuotesPage from './pages/EnterpriseQuotesPage'
 import EnterpriseOrdersPage from './pages/EnterpriseOrdersPage'
+import EnterpriseProcurementListsPage from './pages/EnterpriseProcurementListsPage'
+import EnterpriseAccountPage from './pages/EnterpriseAccountPage'
 
 // Scroll to top on route change
 function ScrollToTop() {
@@ -57,10 +59,12 @@ function AppShell() {
           <Route path="/enterprise/register" element={<EnterpriseRegisterPage />} />
           <Route path="/enterprise/login" element={<EnterpriseLoginPage />} />
           <Route path="/enterprise/dashboard" element={<EnterpriseDashboard />} />
+          <Route path="/enterprise/lists" element={<EnterpriseProcurementListsPage />} />
           <Route path="/enterprise/products" element={<EnterpriseProductsPage />} />
           <Route path="/enterprise/products/:source/:id" element={<EnterpriseProductDetailPage />} />
           <Route path="/enterprise/quotes" element={<EnterpriseQuotesPage />} />
           <Route path="/enterprise/orders" element={<EnterpriseOrdersPage />} />
+          <Route path="/enterprise/account" element={<EnterpriseAccountPage />} />
           {/* ── Product, deals, account ── */}
           <Route path="/product/:slug"   element={<ProductPage />} />
           <Route path="/categories"      element={<CategoriesPage />} />
