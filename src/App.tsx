@@ -19,6 +19,14 @@ import { CategoriesPage }   from './pages/CategoriesPage';
 import { PaymentSuccess }   from './pages/PaymentSuccess';
 import { PaymentCancel }    from './pages/PaymentCancel';
 import { SearchPage }       from './pages/SearchPage';
+import EnterprisePage       from './pages/EnterprisePage'
+import EnterpriseRegisterPage from './pages/EnterpriseRegisterPage'
+import EnterpriseLoginPage from './pages/EnterpriseLoginPage'
+import EnterpriseDashboard from './pages/EnterpriseDashboard'
+import EnterpriseProductsPage from './pages/EnterpriseProductsPage' 
+import EnterpriseProductDetailPage from './pages/EnterpriseProductDetailPage'
+import EnterpriseQuotesPage from './pages/EnterpriseQuotesPage'
+import EnterpriseOrdersPage from './pages/EnterpriseOrdersPage'
 
 // Scroll to top on route change
 function ScrollToTop() {
@@ -28,10 +36,13 @@ function ScrollToTop() {
 }
 
 function AppShell() {
+  const { pathname } = useLocation();
+  const isEnterprise = pathname.startsWith('/enterprise');
+
   return (
     <>
       <ScrollToTop />
-      <Navbar />
+      {!isEnterprise && <Navbar />}
       <main>
         <Routes>
           <Route path="/"                element={<HomePage />} />
@@ -42,7 +53,14 @@ function AppShell() {
           <Route path="/shop/tech"       element={<TechShopPage />} />
           <Route path="/shop/tech/product/:id" element={<TechProductPage />} />
           <Route path="/b2b"             element={<B2BPage />} />
-
+          <Route path="/enterprise"      element={<EnterprisePage />} />
+          <Route path="/enterprise/register" element={<EnterpriseRegisterPage />} />
+          <Route path="/enterprise/login" element={<EnterpriseLoginPage />} />
+          <Route path="/enterprise/dashboard" element={<EnterpriseDashboard />} />
+          <Route path="/enterprise/products" element={<EnterpriseProductsPage />} />
+          <Route path="/enterprise/products/:source/:id" element={<EnterpriseProductDetailPage />} />
+          <Route path="/enterprise/quotes" element={<EnterpriseQuotesPage />} />
+          <Route path="/enterprise/orders" element={<EnterpriseOrdersPage />} />
           {/* ── Product, deals, account ── */}
           <Route path="/product/:slug"   element={<ProductPage />} />
           <Route path="/categories"      element={<CategoriesPage />} />
@@ -68,7 +86,7 @@ function AppShell() {
           } />
         </Routes>
       </main>
-      <Footer />
+      {!isEnterprise && <Footer />}
     </>
   );
 }

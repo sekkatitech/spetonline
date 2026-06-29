@@ -113,7 +113,7 @@ export function CategoriesPage() {
         className="relative w-full flex flex-col items-center justify-center text-center px-4"
        style={{
           height: '100vh',
-          backgroundImage: 'url(/images/gaming-fullbanner.jpg)',
+          backgroundImage: 'url(/images/store-hero.png)',
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundAttachment: 'fixed',

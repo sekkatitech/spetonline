@@ -12,9 +12,9 @@ import {
 
 // ── Nav link with active indicator ───────────────────────────────────────────
 function NavLink({
-  to, children, className = '', onClick,
+  to, children, className = '', onClick, transparent,
 }: {
-  to: string; children: React.ReactNode; className?: string; onClick?: () => void;
+  to: string; children: React.ReactNode; className?: string; onClick?: () => void; transparent?: boolean;
 }) {
   const { pathname } = useLocation();
 
@@ -29,8 +29,12 @@ function NavLink({
       onClick={onClick}
       className={`text-base font-semibold transition-colors pb-1 ${
         isActive
-          ? 'text-lago-600 dark:text-lago-400 border-b-2 border-lago-500'
-          : 'text-gray-700 dark:text-lago-100 hover:text-lago-600 dark:hover:text-white border-b-2 border-transparent'
+          ? transparent
+            ? 'text-white border-b-2 border-white/70'
+            : 'text-lago-600 dark:text-lago-400 border-b-2 border-lago-500'
+          : transparent
+            ? 'text-white/90 hover:text-white border-b-2 border-transparent'
+            : 'text-gray-700 dark:text-lago-100 hover:text-lago-600 dark:hover:text-white border-b-2 border-transparent'
       } ${className}`}
     >
       {children}
@@ -45,11 +49,15 @@ export function NavSpacer() {
 
 // ── Navbar ────────────────────────────────────────────────────────────────────
 export function Navbar() {
-  const [isScrolled,      setIsScrolled]      = useState(false);
-  const [mobileMenuOpen,  setMobileMenuOpen]  = useState(false);
-  const navigate    = useNavigate();
-  const totalItems  = useCartStore((s) => s.totalItems());
-  const { user }    = useAuth();
+  const [isScrolled,     setIsScrolled]     = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const navigate   = useNavigate();
+  const totalItems = useCartStore((s) => s.totalItems());
+  const { pathname } = useLocation();
+
+  // On the home page, start transparent and become solid on scroll
+  const isHeroPage    = pathname === '/';
+  const isTransparent = isHeroPage && !isScrolled;
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
@@ -61,30 +69,38 @@ export function Navbar() {
     <header className="fixed top-0 left-0 right-0 z-50 flex flex-col pointer-events-none">
 
       {/* ── Top utility bar ── */}
-      <div className="pointer-events-auto bg-lago-900 dark:bg-lago-950 text-white py-4 border-b border-lago-800 hidden md:block select-none">
+      <div className={`pointer-events-auto transition-all duration-300 py-4 border-b hidden md:block select-none ${
+        isTransparent
+          ? 'bg-transparent border-white/10'
+          : 'bg-lago-900 dark:bg-lago-950 border-lago-800'
+      }`}>
         <div className="container mx-auto px-4 md:px-6 grid grid-cols-3 items-center">
           <div className="flex items-center gap-5 justify-start">
-            <span className="flex items-center gap-2 text-lago-200">
-              <Phone className="w-5 h-5 text-lago-400" />
+            <span className="flex items-center gap-2">
+              <Phone className={`w-5 h-5 ${isTransparent ? 'text-white/60' : 'text-lago-400'}`} />
               <a href="tel:0870881483" className="text-white hover:underline font-bold text-base">0870 881 483</a>
             </span>
-            <span className="text-lago-700 text-lg">|</span>
-            <span className="flex items-center gap-2 text-lago-200">
-              <Mail className="w-5 h-5 text-lago-400" />
+            <span className={`text-lg ${isTransparent ? 'text-white/20' : 'text-lago-700'}`}>|</span>
+            <span className="flex items-center gap-2">
+              <Mail className={`w-5 h-5 ${isTransparent ? 'text-white/60' : 'text-lago-400'}`} />
               <a href="mailto:sales@spetonline.co.za" className="text-white hover:underline text-base">sales@spetonline.co.za</a>
             </span>
           </div>
           <div className="flex items-center justify-center gap-3 text-white font-bold">
-            <div className="flex items-center justify-center w-10 h-10 rounded-full bg-lago-700 border border-lago-600">
+            <div className={`flex items-center justify-center w-10 h-10 rounded-full border ${
+              isTransparent ? 'bg-white/10 border-white/20' : 'bg-lago-700 border-lago-600'
+            }`}>
               <Truck className="w-5 h-5 text-white" />
             </div>
             <div className="flex flex-col leading-tight">
               <span className="text-base font-extrabold uppercase tracking-wider text-white">Free Delivery</span>
-              <span className="text-xs text-lago-300 font-normal tracking-wide">on orders over R2,500</span>
+              <span className={`text-xs font-normal tracking-wide ${isTransparent ? 'text-white/60' : 'text-lago-300'}`}>
+                on orders over R2,500
+              </span>
             </div>
           </div>
-          <div className="flex items-center gap-3 justify-end text-lago-300 font-medium">
-            <MapPin className="w-5 h-5 text-lago-400" />
+          <div className={`flex items-center gap-3 justify-end font-medium ${isTransparent ? 'text-white/70' : 'text-lago-300'}`}>
+            <MapPin className={`w-5 h-5 ${isTransparent ? 'text-white/50' : 'text-lago-400'}`} />
             <span className="text-sm">Delivers Nationwide across South Africa</span>
           </div>
         </div>
@@ -94,13 +110,15 @@ export function Navbar() {
       <div className={`pointer-events-auto transition-all duration-300 ${
         isScrolled
           ? 'bg-white/95 dark:bg-lago-900/95 backdrop-blur-md border-b border-gray-200 dark:border-lago-800 py-3 shadow-sm'
-          : 'bg-white/90 dark:bg-transparent py-4 md:py-5 backdrop-blur-sm dark:backdrop-blur-none border-b border-gray-200/50 dark:border-transparent'
+          : isTransparent
+            ? 'bg-transparent py-4 md:py-5 border-b border-transparent'
+            : 'bg-white/90 dark:bg-transparent py-4 md:py-5 backdrop-blur-sm dark:backdrop-blur-none border-b border-gray-200/50 dark:border-transparent'
       }`}>
         <div className="container mx-auto px-4 md:px-6">
           <div className="flex items-center justify-between pointer-events-auto">
 
             <button
-              className="md:hidden text-gray-600 dark:text-lago-100 hover:text-gray-900 dark:hover:text-white"
+              className={`md:hidden ${isTransparent ? 'text-white' : 'text-gray-600 dark:text-lago-100 hover:text-gray-900 dark:hover:text-white'}`}
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               aria-label="Toggle menu"
             >
@@ -109,26 +127,28 @@ export function Navbar() {
 
             <Link to="/" className="flex-shrink-0">
               <img
-                src="/main-logo.png"
+                src="/logo-main.png"
                 alt="SPET Online"
-                className="h-16 md:h-20 w-auto object-contain"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).style.display = 'none';
-                }}
+                className={`h-16 md:h-20 w-auto object-contain transition-all duration-300 ${isTransparent ? 'brightness-200' : ''}`}
+                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
               />
             </Link>
 
             <nav className="hidden md:flex items-center gap-8">
-              <NavLink to="/">Home</NavLink>
-              <NavLink to="/shop">Shop</NavLink>
-              <NavLink to="/categories">Categories</NavLink>
-              <NavLink to="/b2b" className="flex items-center gap-1.5">
+              <NavLink to="/" transparent={isTransparent}>Home</NavLink>
+              <NavLink to="/shop" transparent={isTransparent}>Shop</NavLink>
+              <NavLink to="/categories" transparent={isTransparent}>Categories</NavLink>
+              <NavLink to="/b2b" transparent={isTransparent} className="flex items-center gap-1.5">
                 <Building2 className="w-4 h-4" />
-                B2B
+                B2B Enterprise
               </NavLink>
               <Link
                 to="/deals"
-                className="text-base font-semibold text-accent-orange hover:text-orange-700 dark:hover:text-white transition-colors flex items-center gap-1.5"
+                className={`text-base font-semibold transition-colors flex items-center gap-1.5 ${
+                  isTransparent
+                    ? 'text-orange-300 hover:text-white'
+                    : 'text-accent-orange hover:text-orange-700 dark:hover:text-white'
+                }`}
               >
                 Deals
                 <span className="flex w-2 h-2 rounded-full bg-accent-orange animate-pulse" />
@@ -145,30 +165,42 @@ export function Navbar() {
                 }}
               >
                 <div className="absolute left-3 flex items-center pointer-events-none">
-                  <Search className="w-4 h-4 text-gray-400 dark:text-lago-500" />
+                  <Search className={`w-4 h-4 ${isTransparent ? 'text-white/60' : 'text-gray-400 dark:text-lago-500'}`} />
                 </div>
                 <input
                   name="search"
                   type="text"
                   placeholder="Search products..."
-                  className="w-52 bg-white dark:bg-lago-900 border border-gray-300 dark:border-lago-700 text-gray-900 dark:text-white rounded-full py-2 pl-9 pr-16 focus:outline-none focus:border-lago-500 focus:w-72 transition-all duration-300 shadow-sm dark:shadow-none text-sm"
+                  className={`w-52 border rounded-full py-2 pl-9 pr-16 focus:outline-none focus:w-72 transition-all duration-300 text-sm ${
+                    isTransparent
+                      ? 'bg-white/15 border-white/30 text-white placeholder-white/50 focus:border-white/60 backdrop-blur-sm'
+                      : 'bg-white dark:bg-lago-900 border-gray-300 dark:border-lago-700 text-gray-900 dark:text-white focus:border-lago-500 shadow-sm dark:shadow-none'
+                  }`}
                 />
                 <button
                   type="submit"
-                  className="absolute right-1 top-1 bottom-1 bg-lago-600 hover:bg-lago-700 text-white px-3 rounded-full font-semibold transition-colors text-xs"
+                  className={`absolute right-1 top-1 bottom-1 text-white px-3 rounded-full font-semibold transition-colors text-xs ${
+                    isTransparent ? 'bg-white/20 hover:bg-white/30' : 'bg-lago-600 hover:bg-lago-700'
+                  }`}
                 >
                   Go
                 </button>
               </form>
 
               <ThemeToggle />
-              <Link to="/account" className="hidden md:block text-gray-600 dark:text-lago-100 hover:text-lago-600 dark:hover:text-white transition-colors" aria-label="Account">
+              <Link to="/account"
+                className={`hidden md:block transition-colors ${isTransparent ? 'text-white/80 hover:text-white' : 'text-gray-600 dark:text-lago-100 hover:text-lago-600 dark:hover:text-white'}`}
+                aria-label="Account">
                 <User className="w-5 h-5" />
               </Link>
-              <Link to="/account" className="hidden md:block text-gray-600 dark:text-lago-100 hover:text-lago-600 dark:hover:text-white transition-colors" aria-label="Wishlist">
+              <Link to="/account"
+                className={`hidden md:block transition-colors ${isTransparent ? 'text-white/80 hover:text-white' : 'text-gray-600 dark:text-lago-100 hover:text-lago-600 dark:hover:text-white'}`}
+                aria-label="Wishlist">
                 <Heart className="w-5 h-5" />
               </Link>
-              <Link to="/cart" className="text-gray-600 dark:text-lago-100 hover:text-lago-600 dark:hover:text-white transition-colors relative" aria-label="Cart">
+              <Link to="/cart"
+                className={`transition-colors relative ${isTransparent ? 'text-white/80 hover:text-white' : 'text-gray-600 dark:text-lago-100 hover:text-lago-600 dark:hover:text-white'}`}
+                aria-label="Cart">
                 <ShoppingCart className="w-5 h-5" />
                 {totalItems > 0 && (
                   <span className="absolute -top-2 -right-2 w-5 h-5 bg-lago-600 text-[10px] font-bold flex items-center justify-center rounded-full text-white">
@@ -189,7 +221,7 @@ export function Navbar() {
             <Link to="/shop"       onClick={() => setMobileMenuOpen(false)} className="font-medium text-gray-700 dark:text-lago-100 border-b border-gray-100 dark:border-lago-800 pb-3">Shop</Link>
             <Link to="/categories" onClick={() => setMobileMenuOpen(false)} className="font-medium text-gray-700 dark:text-lago-100 border-b border-gray-100 dark:border-lago-800 pb-3">Categories</Link>
             <Link to="/b2b"        onClick={() => setMobileMenuOpen(false)} className="font-medium text-gray-700 dark:text-lago-100 border-b border-gray-100 dark:border-lago-800 pb-3 flex items-center gap-2">
-              <Building2 className="w-4 h-4" /> B2B
+              <Building2 className="w-4 h-4" /> B2B Enterprise
             </Link>
             <Link to="/deals"      onClick={() => setMobileMenuOpen(false)} className="font-semibold text-accent-orange">Deals 🔥</Link>
             <div className="flex gap-6 mt-1 pt-3 border-t border-gray-100 dark:border-lago-800">
@@ -238,15 +270,12 @@ export function Footer() {
     { src: '/payment-logos/amex.png',                          alt: 'American Express' },
   ];
 
-  // ── Fix: these keys must match what LegalKey allows in legalContent.ts ──
-  // If your LegalKey type doesn't include these keys, add them there too.
-  // Using 'unknown as' cast avoids the type mismatch until legalContent.ts is updated.
-const legalLinks: [LegalKey, string][] = [
-    ['privacy'      as LegalKey, 'Privacy Policy'],
-    ['terms'        as LegalKey, 'Terms & Conditions'],
-    ['returns'      as LegalKey, 'Returns Policy'],
-    ['warranty'     as LegalKey, 'Warranty Policy'],
-    ['faq'          as LegalKey, 'FAQ'],
+  const legalLinks: [LegalKey, string][] = [
+    ['privacy'  as LegalKey, 'Privacy Policy'],
+    ['terms'    as LegalKey, 'Terms & Conditions'],
+    ['returns'  as LegalKey, 'Returns Policy'],
+    ['warranty' as LegalKey, 'Warranty Policy'],
+    ['faq'      as LegalKey, 'FAQ'],
   ];
 
   return (
@@ -263,7 +292,7 @@ const legalLinks: [LegalKey, string][] = [
               {/* Col 1: Logo + tagline */}
               <div className="md:col-span-1">
                 <img
-                  src="/main-logo.png"
+                  src="/logo-main.png"
                   alt="SPET Online"
                   className="h-14 w-auto object-contain mb-4 brightness-200"
                   onError={(e) => {
@@ -361,7 +390,7 @@ const legalLinks: [LegalKey, string][] = [
           </div>
         </div>
 
-       {/* Section 2: Navy — payment logos */}
+        {/* Section 2: Navy — payment logos */}
         <div className="bg-[#1e3a5f] py-5">
           <div className="container mx-auto px-4 md:px-6">
             <div className="flex flex-col md:flex-row items-center justify-center gap-4">

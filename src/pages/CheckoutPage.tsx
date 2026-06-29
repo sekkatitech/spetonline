@@ -372,7 +372,7 @@ export function CheckoutPage() {
                 ))}
               </div>
               <p className="text-xs text-gray-500 dark:text-lago-400">
-                🔒 All transactions are processed securely via <strong>Bob Pay</strong>. SPET Online never stores your card details.
+                🔒 All transactions are processed securely via <strong>PayFast</strong>. SPET Online never stores your card details.
               </p>
             </div>
           </div>

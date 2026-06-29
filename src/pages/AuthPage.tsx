@@ -6,7 +6,7 @@ import { useAuth } from '../lib/AuthContext';
 import { supabase } from '../lib/supabase';
 
 export function AuthPage() {
-  const [mode, setMode] = useState<'login' | 'register'>('login');
+  const [mode, setMode] = useState<'login' | 'register' | 'forgot'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [firstName, setFirstName] = useState('');
@@ -34,10 +34,10 @@ export function AuthPage() {
       if (error) { setError(error.message); setLoading(false); return; }
       // ✅ Go back to where the user came from (e.g. /checkout)
       navigate(redirectTo);
-    } else {
+    } else if (mode === 'register') {
       const { error } = await signUp(email, password, firstName, lastName);
       if (error) { setError(error.message); setLoading(false); return; }
-      
+
       // Trigger Welcome Email
       supabase.functions.invoke('send-mailtrap', {
         body: { type: 'welcome', payload: { email, first_name: firstName } }
@@ -45,9 +45,21 @@ export function AuthPage() {
 
       setSuccess('Account created! Please check your email to verify your account, then log in.');
       setMode('login');
+    } else if (mode === 'forgot') {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (error) { setError(error.message); setLoading(false); return; }
+      setSuccess('If that email is registered, a password reset link is on its way. Check your inbox.');
     }
     setLoading(false);
   }
+
+  const titles: Record<typeof mode, string> = {
+    login: 'Sign In',
+    register: 'Create Account',
+    forgot: 'Reset Password',
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#0a141d] pt-32 md:pt-36 flex items-center justify-center px-4 transition-colors duration-300">
@@ -60,26 +72,33 @@ export function AuthPage() {
 
           <div className="p-8">
             {/* ✅ Show a helpful message when redirected from checkout */}
-            {redirectTo.includes('checkout') && (
+            {mode !== 'forgot' && redirectTo.includes('checkout') && (
               <div className="mb-6 p-4 rounded-xl bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 text-sm text-blue-700 dark:text-blue-300 font-medium text-center">
                 Please sign in or create an account to complete your order.
               </div>
             )}
 
-            {/* Tabs */}
-            <div className="flex rounded-xl bg-gray-100 dark:bg-lago-800 p-1 mb-8">
-              {(['login', 'register'] as const).map((m) => (
-                <button
-                  key={m}
-                  onClick={() => { setMode(m); setError(''); setSuccess(''); }}
-                  className={`flex-1 py-2.5 rounded-lg text-sm font-bold capitalize transition-all ${
-                    mode === m ? 'bg-white dark:bg-lago-700 shadow-sm text-lago-600 dark:text-white' : 'text-gray-500 dark:text-lago-400 hover:text-gray-700 dark:hover:text-white'
-                  }`}
-                >
-                  {m === 'login' ? 'Sign In' : 'Create Account'}
-                </button>
-              ))}
-            </div>
+            {/* Tabs — hidden while resetting password */}
+            {mode !== 'forgot' ? (
+              <div className="flex rounded-xl bg-gray-100 dark:bg-lago-800 p-1 mb-8">
+                {(['login', 'register'] as const).map((m) => (
+                  <button
+                    key={m}
+                    onClick={() => { setMode(m); setError(''); setSuccess(''); }}
+                    className={`flex-1 py-2.5 rounded-lg text-sm font-bold capitalize transition-all ${
+                      mode === m ? 'bg-white dark:bg-lago-700 shadow-sm text-lago-600 dark:text-white' : 'text-gray-500 dark:text-lago-400 hover:text-gray-700 dark:hover:text-white'
+                    }`}
+                  >
+                    {m === 'login' ? 'Sign In' : 'Create Account'}
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <div className="mb-8 text-center">
+                <h1 className="text-lg font-bold text-gray-900 dark:text-white">{titles[mode]}</h1>
+                <p className="text-sm text-gray-500 dark:text-lago-400 mt-1">Enter your email and we'll send you a reset link.</p>
+              </div>
+            )}
 
             {error && (
               <div className="mb-5 p-3 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-sm text-red-600 dark:text-red-400 font-medium">
@@ -117,32 +136,57 @@ export function AuthPage() {
                 </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-gray-500 dark:text-lago-400 uppercase tracking-wide mb-1.5">Password</label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                  <input type={showPw ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} className={inputClass + ' pl-9 pr-10'} placeholder="••••••••" autoComplete={mode === 'login' ? 'current-password' : 'new-password'} />
-                  <button type="button" onClick={() => setShowPw(!showPw)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-lago-200 transition-colors">
-                    {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
+              {mode !== 'forgot' && (
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="block text-xs font-bold text-gray-500 dark:text-lago-400 uppercase tracking-wide">Password</label>
+                    {mode === 'login' && (
+                      <button
+                        type="button"
+                        onClick={() => { setMode('forgot'); setError(''); setSuccess(''); }}
+                        className="text-xs font-semibold text-lago-600 dark:text-lago-400 hover:underline"
+                      >
+                        Forgot password?
+                      </button>
+                    )}
+                  </div>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <input type={showPw ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} className={inputClass + ' pl-9 pr-10'} placeholder="••••••••" autoComplete={mode === 'login' ? 'current-password' : 'new-password'} />
+                    <button type="button" onClick={() => setShowPw(!showPw)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-lago-200 transition-colors">
+                      {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
                 </div>
-              </div>
+              )}
 
               <button
                 type="submit"
                 disabled={loading}
                 className="w-full py-3.5 rounded-xl bg-lago-600 hover:bg-lago-700 text-white font-bold transition-colors disabled:opacity-60 shadow-lg shadow-lago-600/20 mt-2"
               >
-                {loading ? 'Please wait...' : mode === 'login' ? 'Sign In' : 'Create Account'}
+                {loading ? 'Please wait...' : mode === 'forgot' ? 'Send Reset Link' : titles[mode]}
               </button>
+
+              {mode === 'forgot' && (
+                <button
+                  type="button"
+                  onClick={() => { setMode('login'); setError(''); setSuccess(''); }}
+                  className="w-full text-center text-sm font-semibold text-lago-600 dark:text-lago-400 hover:underline mt-1"
+                >
+                  ← Back to Sign In
+                </button>
+              )}
             </form>
 
-            <p className="text-center text-xs text-gray-500 dark:text-lago-400 mt-6 leading-relaxed">
-              By continuing you agree to our{' '}
-              <span className="text-lago-600 dark:text-lago-400 font-semibold cursor-pointer hover:underline">Terms & Conditions</span>
-              {' '}and{' '}
-              <span className="text-lago-600 dark:text-lago-400 font-semibold cursor-pointer hover:underline">Privacy Policy</span>
-            </p>
+            {mode !== 'forgot' && (
+              <p className="text-center text-xs text-gray-500 dark:text-lago-400 mt-6 leading-relaxed">
+                By continuing you agree to our{' '}
+                <span className="text-lago-600 dark:text-lago-400 font-semibold cursor-pointer hover:underline">Terms & Conditions</span>
+                {' '}and{' '}
+                <span className="text-lago-600 dark:text-lago-400 font-semibold cursor-pointer hover:underline">Privacy Policy</span>
+              </p>
+            )}
           </div>
         </div>
 

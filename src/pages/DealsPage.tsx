@@ -44,7 +44,7 @@ export function DealsPage() {
       {/* Hero banner */}
       <section className="relative overflow-hidden mb-12">
         <div className="absolute inset-0">
-          <img src="/images/hero-picture-promo.png" alt="Deals" className="w-full h-full object-cover opacity-40 dark:opacity-30" />
+          <img src="/images/xiaomi-bike-banner.jpg" alt="Deals" className="w-full h-full object-cover opacity-60 dark:opacity-10" />
           <div className="absolute inset-0 bg-gradient-to-r from-[#0a141d] via-[#0a141d]/80 to-[#0a141d]/60" />
         </div>
         <div className="container mx-auto px-4 md:px-6 py-16 md:py-20 relative z-10">

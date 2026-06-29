@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ShoppingCart, Heart, ChevronLeft, ShieldCheck, Truck, RefreshCw } from 'lucide-react';
+import { ShoppingCart, Heart, ChevronLeft, ShieldCheck, Truck, RefreshCw, Tag } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { SafeImage } from '../components/SafeImage';
 import { useCartStore } from '../lib/cartStore';
@@ -62,6 +62,10 @@ export function TechProductPage() {
   const inWishlist = wishlist.includes(product.id);
   const specs    = product.specifications ?? {};
 
+  // Sale: either explicitly flagged OR price is below RRP
+  const isOnSale = product.is_on_sale || (product.price_rrp && product.price_rrp > price);
+  const savings  = isOnSale && product.price_rrp ? Math.round(((product.price_rrp - price) / product.price_rrp) * 100) : 0;
+
   function handleAddToCart() {
     addItem({
       id:         product.id,
@@ -103,7 +107,16 @@ export function TechProductPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
 
           {/* ── Image gallery ── */}
-          <div>
+          <div className="relative">
+            {/* Sale ribbon on image */}
+            {isOnSale && (
+              <div className="absolute top-4 left-4 z-10">
+                <span className="flex items-center gap-1.5 bg-red-500 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg shadow-red-500/30">
+                  <Tag className="w-3 h-3" />
+                  {savings > 0 ? `${savings}% OFF` : 'SALE'}
+                </span>
+              </div>
+            )}
             <div className="bg-white dark:bg-lago-900 rounded-2xl border border-gray-200 dark:border-lago-800 aspect-square overflow-hidden mb-4 p-6">
               <SafeImage
                 src={activeImage}
@@ -145,6 +158,13 @@ export function TechProductPage() {
 
             {/* Badges */}
             <div className="flex flex-wrap gap-2 mb-5">
+              {/* SALE badge — prominent, shown first */}
+              {isOnSale && (
+                <span className="flex items-center gap-1.5 bg-red-500 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-sm">
+                  <Tag className="w-3.5 h-3.5" />
+                  {savings > 0 ? `${savings}% OFF — SALE` : 'ON SALE'}
+                </span>
+              )}
               {product.warranty_months && (
                 <span className="flex items-center gap-1.5 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 text-xs font-semibold px-3 py-1.5 rounded-full border border-green-200 dark:border-green-800">
                   <ShieldCheck className="w-3.5 h-3.5" />
@@ -165,12 +185,17 @@ export function TechProductPage() {
 
             {/* Price */}
             <div className="flex items-baseline gap-3 mb-2">
-              <span className="text-4xl font-black text-gray-900 dark:text-white">
+              <span className={`text-4xl font-black ${isOnSale ? 'text-red-500' : 'text-gray-900 dark:text-white'}`}>
                 R {price.toLocaleString('en-ZA', { minimumFractionDigits: 2 })}
               </span>
-              {product.price_rrp && product.price_rrp > price && (
+              {isOnSale && product.price_rrp && product.price_rrp > price && (
                 <span className="text-xl text-gray-400 line-through">
                   R {product.price_rrp.toLocaleString('en-ZA', { minimumFractionDigits: 2 })}
+                </span>
+              )}
+              {isOnSale && savings > 0 && (
+                <span className="text-sm font-bold text-red-500 bg-red-50 dark:bg-red-900/20 px-2 py-0.5 rounded-lg">
+                  Save R {(product.price_rrp - price).toLocaleString('en-ZA', { minimumFractionDigits: 2 })}
                 </span>
               )}
             </div>
