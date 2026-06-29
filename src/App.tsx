@@ -22,7 +22,7 @@ import { SearchPage }       from './pages/SearchPage';
 import EnterprisePage       from './pages/EnterprisePage'
 import EnterpriseRegisterPage from './pages/EnterpriseRegisterPage'
 import EnterpriseLoginPage from './pages/EnterpriseLoginPage'
-import EnterpriseDashboard from './pages/EnterpriseDashboard'
+import EnterpriseDashboard from './pages/Enterprisedashboard'
 import EnterpriseProductsPage from './pages/EnterpriseProductsPage' 
 import EnterpriseProductDetailPage from './pages/EnterpriseProductDetailPage'
 import EnterpriseQuotesPage from './pages/EnterpriseQuotesPage'
