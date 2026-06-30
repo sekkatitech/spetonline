@@ -218,14 +218,13 @@ exports.handler = async (event) => {
 
     // ── 8. Insert order items ─────────────────────────────────────────────────
     const orderItems = verifiedItems.map((item) => ({
-      order_id: order.id,
-      product_id: item.product_id,
-      name: item.product_name,
-      sku: item.sku,
-      qty: item.qty,
-      unit_price: item.unit_price,
-      line_total: item.line_total,
-    }));
+    order_id: order.id,
+    product_id: item.product_id,
+    name: item.product_name,
+    sku: item.sku,
+    qty: item.qty,
+    unit_price: item.unit_price,
+   }));
 
     const { error: itemsError } = await supabase.from('order_items').insert(orderItems);
     if (itemsError) {
