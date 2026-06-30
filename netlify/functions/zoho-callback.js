@@ -70,7 +70,7 @@ exports.handler = async (event) => {
       body: `
         <html>
           <body style="font-family:sans-serif;max-width:500px;margin:80px auto;text-align:center">
-            <h2 style="color:#2e7d32">✓ Zoho Books Connected!</h2>
+            <h2 style="color:#2e7d32">Zoho Books Connected!</h2>
             <p>SPET Online is now connected to your Zoho Books account.</p>
             <p style="color:#666;font-size:14px">Tokens stored securely. You can close this tab.</p>
             <a href="https://spetonline-dashboard.netlify.app/finances" 
