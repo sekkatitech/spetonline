@@ -51,16 +51,22 @@ exports.handler = async (event) => {
     // Store tokens in Supabase (zoho_tokens table)
     const expiresAt = new Date(Date.now() + tokens.expires_in * 1000).toISOString();
 
+    // Build upsert data — only include refresh_token if Zoho returned one
+    // (Zoho skips refresh_token on repeat authorizations)
+    const upsertData = {
+      id:           1,
+      access_token: tokens.access_token,
+      expires_at:   expiresAt,
+      scope:        tokens.scope,
+      updated_at:   new Date().toISOString(),
+    };
+    if (tokens.refresh_token) {
+      upsertData.refresh_token = tokens.refresh_token;
+    }
+
     const { error: dbError } = await supabase
       .from('zoho_tokens')
-      .upsert({
-        id:            1, // single row — always upsert same row
-        access_token:  tokens.access_token,
-        refresh_token: tokens.refresh_token,
-        expires_at:    expiresAt,
-        scope:         tokens.scope,
-        updated_at:    new Date().toISOString(),
-      }, { onConflict: 'id' });
+      .upsert(upsertData, { onConflict: 'id' });
 
     if (dbError) throw new Error(`DB error: ${dbError.message}`);
 
