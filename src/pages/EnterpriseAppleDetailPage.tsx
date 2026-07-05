@@ -124,7 +124,7 @@ export default function EnterpriseAppleDetailPage() {
               padding: 32, cursor: 'zoom-out',
             }}
           >
-            <img src={zoomSrc} alt="Zoomed product view" style={{ maxWidth: '92%', maxHeight: '92%', objectFit: 'contain', borderRadius: 12, background: '#fff' }} />
+            <img src={zoomSrc} alt="Zoomed product view" style={{ width: '92vw', height: '88vh', objectFit: 'contain', borderRadius: 12, background: '#fff', padding: 24, boxSizing: 'border-box' }} />
             <button
               onClick={() => setZoomSrc(null)}
               style={{ position: 'fixed', top: 20, right: 24, fontSize: 28, background: 'none', border: 'none', color: '#fff', cursor: 'pointer' }}

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import AppleCategoryLanding, { IPAD_LANDING } from '../components/AppleCategoryLanding'
 
 // ── Types ──────────────────────────────────────────────────────────────────
 const APPLE_LOGO = '/enterprice-images/apple.com-logo.png'
@@ -499,6 +500,15 @@ export default function EnterpriseApplePage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const activeCategory = searchParams.get('cat') || 'Mac'
   const setActiveCategory = (cat: string) => setSearchParams(cat === 'Mac' ? {} : { cat })
+  const activeSub = searchParams.get('sub') || ''
+  const setActiveSub = (sub: string) => {
+    const next: Record<string, string> = { view: 'shop' }
+    if (activeCategory !== 'Mac') next.cat = activeCategory
+    if (sub) next.sub = sub
+    setSearchParams(next)
+  }
+  const view = searchParams.get('view') || ''
+  const showLanding = activeCategory === 'iPad' && !activeSub && view !== 'shop'
   const [products, setProducts] = useState<AppleProduct[]>([])
   const [loading, setLoading] = useState(true)
   const [filters, setFilters] = useState({ search: '', colour: '', storage: '', status: '' })
@@ -552,6 +562,7 @@ export default function EnterpriseApplePage() {
 
   const filteredProducts = products.filter(p => {
     if (filters.search && !p.name.toLowerCase().includes(filters.search.toLowerCase()) && !p.sku.toLowerCase().includes(filters.search.toLowerCase())) return false
+    if (activeSub && p.category_sub !== activeSub) return false
     if (filters.colour && p.specs?.colour !== filters.colour) return false
     if (filters.storage && p.specs?.storage !== filters.storage) return false
     if (filters.status && p.status !== filters.status) return false
@@ -694,7 +705,17 @@ export default function EnterpriseApplePage() {
       <div style={{ maxWidth: 1200, margin: '0 auto', padding: '48px 24px 80px' }}>
 
         {/* Category hero */}
-        <CategoryHero cat={currentCat} productCount={products.length} />
+        
+        {showLanding ? (
+          <AppleCategoryLanding
+            config={IPAD_LANDING}
+            onShop={sub => setSearchParams({ cat: 'iPad', sub })}
+            onBrowseAll={() => setSearchParams({ cat: 'iPad', view: 'shop' })}
+          />
+        ) : (
+        <>
+        
+        <CategoryHero cat={currentCat} productCount={products.length} /> 
 
         {/* Category subtitle */}
         <div style={{ marginBottom: 32 }}>
@@ -738,6 +759,8 @@ export default function EnterpriseApplePage() {
               ))}
             </div>
           </>
+        )}
+        </>
         )}
       </div>
 
