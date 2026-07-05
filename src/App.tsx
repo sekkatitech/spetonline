@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useLocation, Link, useNavigationType } from 'react-router-dom';
 import { useEffect } from 'react';
 import { Navbar, Footer } from './components/Layout';
 import { AuthProvider } from './lib/AuthContext';
@@ -33,10 +33,13 @@ import EnterpriseApplePage from './pages/EnterpriseApplePage'
 import EnterpriseAppleDetailPage from './pages/EnterpriseAppleDetailPage'
 
 
-// Scroll to top on route change
+// Scroll to top on forward navigation only — back/forward restores position
 function ScrollToTop() {
   const { pathname } = useLocation();
-  useEffect(() => { window.scrollTo(0, 0); }, [pathname]);
+  const navType = useNavigationType();
+  useEffect(() => {
+    if (navType !== 'POP') window.scrollTo(0, 0);
+  }, [pathname, navType]);
   return null;
 }
 

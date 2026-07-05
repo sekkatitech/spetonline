@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 
 // ── Types ──────────────────────────────────────────────────────────────────
@@ -479,7 +479,9 @@ function QuoteSidebar({
 // ── Main page ──────────────────────────────────────────────────────────────
 export default function EnterpriseApplePage() {
   const navigate = useNavigate()
-  const [activeCategory, setActiveCategory] = useState('Mac')
+  const [searchParams, setSearchParams] = useSearchParams()
+  const activeCategory = searchParams.get('cat') || 'Mac'
+  const setActiveCategory = (cat: string) => setSearchParams(cat === 'Mac' ? {} : { cat })
   const [products, setProducts] = useState<AppleProduct[]>([])
   const [loading, setLoading] = useState(true)
   const [filters, setFilters] = useState({ search: '', colour: '', storage: '', status: '' })

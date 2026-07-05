@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowRight, Grid3x3, Zap, Home } from 'lucide-react';
 import { useCategories, useCategoryHeads } from '../lib/api';
 import { SafeImage } from '../components/SafeImage';
@@ -93,7 +93,9 @@ export function CategoriesPage() {
   const { categories: syntechCats, loading: syntechLoading } = useSyntechCategories();
   const navigate = useNavigate();
 
-  const [activeTab, setActiveTab] = useState<'home' | 'gaming'>('home');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeTab: 'home' | 'gaming' = searchParams.get('tab') === 'gaming' ? 'gaming' : 'home';
+  const setActiveTab = (tab: 'home' | 'gaming') => setSearchParams(tab === 'home' ? {} : { tab });
 
   // Group categories by CategoryHead
   const categoryMap = new Map<string, typeof categories>();
