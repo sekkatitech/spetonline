@@ -642,7 +642,7 @@ export default function EnterpriseProductsPage() {
                   {key:'enterprise',label:'Enterprise'},
                   {key:'apple',label:' Apple'},
                 ] as const).map(s=>(
-                  <button key={s.key} onClick={()=>setSource(s.key)} style={{padding:'5px 12px',borderRadius:6,border:'none',background:source===s.key?(s.key==='apple'?'#1d1d1f':E.primary):'none',color:source===s.key?E.onPrimary:E.onSurfaceVariant,fontSize:12,fontWeight:source===s.key?600:400,cursor:'pointer',fontFamily:'inherit'}}>
+                  <button key={s.key} onClick={()=>s.key==='apple'?navigate('/enterprise/apple'):setSource(s.key)} style={{padding:'5px 12px',borderRadius:6,border:'none',background:source===s.key?(s.key==='apple'?'#1d1d1f':E.primary):'none',color:source===s.key?E.onPrimary:E.onSurfaceVariant,fontSize:12,fontWeight:source===s.key?600:400,cursor:'pointer',fontFamily:'inherit'}}>
                     {s.label}
                   </button>
                 ))}

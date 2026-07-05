@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 
 // ── Types ──────────────────────────────────────────────────────────────────
+const APPLE_LOGO = '/enterprice-images/apple.com-logo.png'
 interface AppleProduct {
   id: string
   sku: string
@@ -15,6 +16,7 @@ interface AppleProduct {
   status: string
   specs: Record<string, string> | null
   thumbnail_url: string | null
+  image_urls: string[] | null
 }
 
 // ── Apple brand tokens ─────────────────────────────────────────────────────
@@ -125,16 +127,25 @@ function getSubtitle(product: AppleProduct): string {
 }
 
 // ── Product image via Core/Apple CDN lookup ────────────────────────────────
-function AppleProductImage({ sku, name, category }: { sku: string; name: string; category: string }) {
+function AppleProductImage({ imageUrl, name }: { imageUrl: string | null; name: string }) {
   const [imgError, setImgError] = useState(false)
 
-  // Apple product images from Core Group CDN pattern
-  const src = `https://cdsassets.apple.com/live/BZGVET9P/images/apple-og-image.png`
-
-  const ICONS: Record<string, string> = {
-    Mac: '💻', iPhone: '📱', iPad: '⬜', Watch: '⌚',
-    AirPods: '🎧', 'Apple TV': '📺', HomePod: '🔊',
-    Accessories: '🔌', 'Watch Accessories': '⌚',
+  if (imageUrl && !imgError) {
+    return (
+      <div style={{
+        width: '100%', aspectRatio: '1/1',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        background: A.offwhite, borderRadius: 12, overflow: 'hidden',
+      }}>
+        <img
+          src={imageUrl}
+          alt={name}
+          loading="lazy"
+          onError={() => setImgError(true)}
+          style={{ width: '100%', height: '100%', objectFit: 'contain', padding: 12, boxSizing: 'border-box' }}
+        />
+      </div>
+    )
   }
 
   return (
@@ -142,9 +153,13 @@ function AppleProductImage({ sku, name, category }: { sku: string; name: string;
       width: '100%', aspectRatio: '1/1',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       background: A.offwhite, borderRadius: 12,
-      fontSize: 64, userSelect: 'none',
     }}>
-      {ICONS[category] || '📦'}
+      <img
+        src={APPLE_LOGO}
+        alt={name}
+        loading="lazy"
+        style={{ width: '38%', maxWidth: 90, opacity: 0.3, objectFit: 'contain' }}
+      />
     </div>
   )
 }
@@ -155,6 +170,7 @@ function AppleProductCard({ product, onAddToQuote }: {
   onAddToQuote: (p: AppleProduct) => void
 }) {
   const [hovered, setHovered] = useState(false)
+  const navigate = useNavigate()
   const displayName = cleanName(product.name)
   const subtitle = getSubtitle(product)
 
@@ -162,6 +178,7 @@ function AppleProductCard({ product, onAddToQuote }: {
     <div
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
+      onClick={() => navigate(`/enterprise/apple/${product.id}`)}
       style={{
         background: A.white,
         borderRadius: 18,
@@ -174,7 +191,7 @@ function AppleProductCard({ product, onAddToQuote }: {
       }}
     >
       {/* Product image */}
-      <AppleProductImage sku={product.sku} name={product.name} category={product.category_main} />
+     <AppleProductImage imageUrl={product.thumbnail_url || product.image_urls?.[0] || null} name={product.name} />
 
       {/* Info */}
       <div style={{ marginTop: 20, flex: 1 }}>

@@ -41,6 +41,7 @@ export default function EnterpriseAppleDetailPage() {
   const [qty, setQty] = useState(1)
   const [showFullDesc, setShowFullDesc] = useState(false)
   const [heroError, setHeroError] = useState(false)
+  const [zoomSrc, setZoomSrc] = useState<string | null>(null)
 
   useEffect(() => {
     if (!id) return
@@ -113,6 +114,24 @@ export default function EnterpriseAppleDetailPage() {
       <div style={{ maxWidth: 1180, margin: '0 auto', padding: '24px 24px 80px' }}>
 
         <button onClick={() => { if (window.history.length > 1) navigate(-1); else navigate('/enterprise/products'); }} style={backLink}>← Back</button>
+        {zoomSrc && (
+          <div
+            onClick={() => setZoomSrc(null)}
+            style={{
+              position: 'fixed', inset: 0, zIndex: 1000,
+              background: 'rgba(0,0,0,0.85)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              padding: 32, cursor: 'zoom-out',
+            }}
+          >
+            <img src={zoomSrc} alt="Zoomed product view" style={{ maxWidth: '92%', maxHeight: '92%', objectFit: 'contain', borderRadius: 12, background: '#fff' }} />
+            <button
+              onClick={() => setZoomSrc(null)}
+              style={{ position: 'fixed', top: 20, right: 24, fontSize: 28, background: 'none', border: 'none', color: '#fff', cursor: 'pointer' }}
+              aria-label="Close zoom"
+            >✕</button>
+          </div>
+        )}
 
         <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1.15fr) minmax(0,1fr)', gap: 56, alignItems: 'start' }}>
 
@@ -120,12 +139,12 @@ export default function EnterpriseAppleDetailPage() {
           <div>
             <div style={imgPanel}>
               {hero && !heroError
-                ? <img src={hero} alt={cleanName(product.name)} onError={() => setHeroError(true)} style={imgTag} />
+                ? <img src={hero} alt={cleanName(product.name)} onError={() => setHeroError(true)} onClick={() => setZoomSrc(hero)} style={{ ...imgTag, cursor: 'zoom-in' }} />
                 : <img src={APPLE_LOGO} alt="Apple" style={{ width: '38%', height: '38%', objectFit: 'contain', opacity: 0.9 }} />}
             </div>
             {gallery.slice(1).map((url, i) => (
               <div key={i} style={{ ...imgPanel, marginTop: 20 }}>
-                <img src={url} alt={`${cleanName(product.name)} view ${i + 2}`} style={imgTag} loading="lazy" />
+                <img src={url} alt={`${cleanName(product.name)} view ${i + 2}`} style={{ ...imgTag, cursor: 'zoom-in' }} loading="lazy" onClick={() => setZoomSrc(url)} />
               </div>
             ))}
           </div>
