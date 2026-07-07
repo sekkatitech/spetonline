@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { X, Check, ClipboardList } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 
 // ── Design tokens ──
@@ -109,7 +110,7 @@ function StatusTimeline({ status }: { status: string }) {
   if (isDeclined) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 0' }}>
-        <div style={{ width: 24, height: 24, borderRadius: '50%', background: E.redBg, border: `2px solid ${E.red}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12 }}>✕</div>
+        <div style={{ width: 24, height: 24, borderRadius: '50%', background: E.redBg, border: `2px solid ${E.red}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: E.red }}><X size={13} /></div>
         <span style={{ fontSize: 12, color: E.red, fontWeight: 500 }}>This quote was declined</span>
       </div>
     )
@@ -133,7 +134,7 @@ function StatusTimeline({ status }: { status: string }) {
                 fontSize: 10, fontWeight: 700,
                 color: done || active ? E.onPrimary : E.outline,
               }}>
-                {done ? '✓' : i + 1}
+                {done ? <Check size={14} /> : i + 1}
               </div>
               <span style={{
                 fontSize: 9, fontWeight: 500, textTransform: 'uppercase',
@@ -568,7 +569,7 @@ export default function EnterpriseQuotesPage() {
           {/* Empty state */}
           {!loading && filtered.length === 0 && (
             <div style={{ textAlign: 'center', padding: '64px 24px' }}>
-              <div style={{ fontSize: 48, marginBottom: 16, opacity: 0.2 }}>📋</div>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16, opacity: 0.2 }}><ClipboardList size={48} /></div>
               <div style={{ fontSize: 16, fontWeight: 600, color: E.onSurface, marginBottom: 8 }}>
                 {filter === 'all' ? 'No quotes yet' : `No ${filter} quotes`}
               </div>

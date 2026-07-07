@@ -44,7 +44,7 @@ function NavLink({
 
 // ── NavSpacer ─────────────────────────────────────────────────────────────────
 export function NavSpacer() {
-  return <div className="h-[136px]" aria-hidden="true" />;
+  return <div className="h-[194px]" aria-hidden="true" />;
 }
 
 // ── Navbar ────────────────────────────────────────────────────────────────────
@@ -294,7 +294,7 @@ export function Footer() {
                 <img
                   src="/logo-main.png"
                   alt="SPET Online"
-                  className="h-14 w-auto object-contain mb-4 brightness-200"
+                  className="h-14 w-auto object-contain mb-4 bg-white rounded-lg p-2"
                   onError={(e) => {
                     const el = e.target as HTMLImageElement;
                     el.style.display = 'none';
@@ -373,18 +373,17 @@ export function Footer() {
                     <span>Nationwide delivery across South Africa</span>
                   </li>
                 </ul>
-                <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-4">
+                <Link to="/enterprise" className="block bg-gray-800/50 hover:bg-gray-800 border border-gray-700 hover:border-lago-500 rounded-xl p-4 transition-colors">
                   <p className="text-white font-semibold text-sm mb-1 flex items-center gap-2">
                     <Building2 className="w-4 h-4 text-lago-400" /> Business & Schools
                   </p>
                   <p className="text-gray-400 text-xs leading-relaxed mb-2">
-                    B2B portal coming soon — dedicated pricing for schools and businesses.
+                    Dedicated pricing, formal quotes, and credit terms for schools and businesses.
                   </p>
-                  <a href="mailto:sales@spetonline.co.za?subject=B2B Enquiry"
-                    className="text-lago-400 hover:text-lago-300 text-xs font-semibold transition-colors">
-                    Register interest →
-                  </a>
-                </div>
+                  <span className="text-lago-400 text-xs font-semibold">
+                    Visit Enterprise Portal →
+                  </span>
+                </Link>
               </div>
             </div>
           </div>

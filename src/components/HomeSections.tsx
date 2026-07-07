@@ -1,6 +1,7 @@
 import { motion } from 'motion/react';
-import { Truck, ShieldCheck, Zap, RefreshCw, HeadphonesIcon, ArrowRight, Mail } from 'lucide-react';
+import { Truck, ShieldCheck, Zap, RefreshCw, HeadphonesIcon, ArrowRight, Mail, CheckCircle } from 'lucide-react';
 import { useState } from 'react';
+import { supabase } from '../lib/supabase';
 
 export function Hero() {
   return (
@@ -64,44 +65,42 @@ export function Hero() {
   );
 }
 
-// Brand-to-domain mapping for logo.dev API
+// Brand-to-domain mapping for logo.dev API.
+// `name` is the display label; `filterName` (if different) is the exact value
+// stored in products.Brand so the /shop?brand= link actually returns results.
+// `href` overrides the default shop-filter link entirely (used for Apple,
+// whose products live in the dedicated Enterprise Apple portal, not the
+// general catalog). Every entry below was checked against real stock counts —
+// brands with zero active products in the catalog were removed rather than
+// linking to a dead-end empty results page.
 const BRAND_DATA = [
-  { name: 'Samsung', domain: 'samsung.com' },
-  { name: 'HP', domain: 'hp.com' },
-  { name: 'Dell', domain: 'dell.com' },
-  { name: 'Lenovo', domain: 'lenovo.com' },
-  { name: 'ASUS', domain: 'asus.com' },
-  { name: 'Apple', domain: 'apple.com' },
-  { name: 'LG', domain: 'lg.com' },
-  { name: 'Sony', domain: 'sony.com' },
-  { name: 'Microsoft', domain: 'microsoft.com' },
-  { name: 'Logitech', domain: 'logitech.com' },
   { name: 'TP-Link', domain: 'tp-link.com' },
-  { name: 'Epson', domain: 'epson.com' },
-  { name: 'Canon', domain: 'canon.com' },
   { name: 'Hisense', domain: 'hisense.com' },
-  { name: 'Acer', domain: 'acer.com' },
-  { name: 'MSI', domain: 'msi.com' },
-  { name: 'Razer', domain: 'razer.com' },
-  { name: 'Intel', domain: 'intel.com' },
-  { name: 'AMD', domain: 'amd.com' },
+  { name: 'LG', domain: 'lg.com', filterName: 'LG Electronics' },
+  { name: 'Logitech', domain: 'logitech.com' },
+  { name: 'HP', domain: 'hp.com' },
+  { name: 'Asus', domain: 'asus.com' },
+  { name: 'Dell', domain: 'dell.com' },
+  { name: 'Toshiba', domain: 'toshiba.com' },
+  { name: 'Sony', domain: 'sony.com', filterName: 'Sony Playstation' },
+  { name: 'Epson', domain: 'epson.com' },
+  { name: 'Hikvision', domain: 'hikvision.com', filterName: 'HIKvision' },
   { name: 'Seagate', domain: 'seagate.com' },
-  { name: 'Western Digital', domain: 'westerndigital.com' },
-  { name: 'Kingston', domain: 'kingston.com' },
-  { name: 'Corsair', domain: 'corsair.com' },
-  { name: 'Xiaomi', domain: 'xiaomi.com' },
-  { name: 'Huawei', domain: 'huawei.com' },
-  { name: 'Brother', domain: 'brother.com' },
-  { name: 'Hikvision', domain: 'hikvision.com' },
   { name: 'Dahua', domain: 'dahua.com' },
-  { name: 'Ubiquiti', domain: 'ui.com' },
-  { name: 'D-Link', domain: 'dlink.com' },
-  { name: 'Netgear', domain: 'netgear.com' },
-  { name: 'SteelSeries', domain: 'steelseries.com' },
-  { name: 'HyperX', domain: 'hyperx.com' },
-  { name: 'BenQ', domain: 'benq.com' },
+  { name: 'Microsoft', domain: 'microsoft.com' },
+  { name: 'TCL', domain: 'tcl.com' },
+  { name: 'Skyworth', domain: 'skyworth.com' },
+  { name: 'TRENDnet', domain: 'trendnet.com' },
+  { name: 'Kingston', domain: 'kingston.com' },
+  { name: 'Western Digital', domain: 'westerndigital.com' },
+  { name: 'Razer', domain: 'razer.com' },
+  { name: 'MSI', domain: 'msi.com' },
+  { name: 'AMD', domain: 'amd.com' },
+  { name: 'Brother', domain: 'brother.com' },
   { name: 'ViewSonic', domain: 'viewsonic.com' },
-  { name: 'Bose', domain: 'bose.com' },
+  { name: 'BenQ', domain: 'benq.com' },
+  { name: 'Xbox', domain: 'xbox.com' },
+  { name: 'Apple', domain: 'apple.com', href: '/enterprise/apple' },
 ];
 
 const LOGO_API_TOKEN = 'pk_RSkNTnvvScKErzhoXO5UUg';
@@ -133,7 +132,7 @@ export function BrandShowcase() {
           {currentBrands.map((brand) => (
             <motion.a
               key={brand.name}
-              href={`/shop?brand=${encodeURIComponent(brand.name)}`}
+              href={brand.href ?? `/shop?brand=${encodeURIComponent(brand.filterName ?? brand.name)}`}
               initial={{ opacity: 0, y: 15 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -333,6 +332,33 @@ export function AccountBenefits() {
 }
 
 export function Newsletter() {
+  const [email, setEmail] = useState('');
+  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [message, setMessage] = useState('');
+
+  const handleSubmit = async (e: { preventDefault: () => void }) => {
+    e.preventDefault();
+    if (status === 'loading') return;
+    setStatus('loading');
+    const { error } = await supabase
+      .from('newsletter_subscribers')
+      .insert({ email: email.trim().toLowerCase(), source: 'homepage' });
+
+    if (error) {
+      if (error.code === '23505') {
+        setStatus('success');
+        setMessage("You're already subscribed — thanks for being with us!");
+      } else {
+        setStatus('error');
+        setMessage('Something went wrong. Please try again.');
+      }
+      return;
+    }
+    setStatus('success');
+    setMessage("You're subscribed! Watch your inbox for exclusive deals.");
+    setEmail('');
+  };
+
   return (
     <section className="py-20 bg-gray-50 dark:bg-lago-800 border-y border-gray-200 dark:border-lago-700 transition-colors duration-300">
       <div className="container mx-auto px-4 md:px-6">
@@ -346,19 +372,36 @@ export function Newsletter() {
           <p className="text-gray-600 dark:text-lago-200 mb-10 text-lg">
             Join our newsletter for early access to sales, new product drops, and insider tech news.
           </p>
-          <form className="flex flex-col sm:flex-row gap-3 max-w-xl mx-auto" onSubmit={(e) => e.preventDefault()}>
-            <div className="flex-grow">
-              <input
-                type="email"
-                placeholder="Enter your email address"
-                className="w-full h-14 bg-white dark:bg-[#0a141d] border border-gray-300 dark:border-lago-700 rounded-full px-6 text-gray-900 dark:text-white focus:outline-none focus:border-lago-500 focus:ring-1 focus:ring-lago-500 transition-all shadow-sm"
-                required
-              />
+
+          {status === 'success' ? (
+            <div className="flex items-center justify-center gap-3 max-w-xl mx-auto h-14 px-6 rounded-full bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-300 font-semibold">
+              <CheckCircle className="w-5 h-5 flex-shrink-0" />
+              <span>{message}</span>
             </div>
-            <button type="submit" className="h-14 px-8 rounded-full bg-lago-600 dark:bg-white text-white dark:text-[#0a141d] font-bold hover:bg-lago-700 dark:hover:bg-lago-100 transition-colors flex-shrink-0">
-              Subscribe
-            </button>
-          </form>
+          ) : (
+            <form className="flex flex-col sm:flex-row gap-3 max-w-xl mx-auto" onSubmit={handleSubmit}>
+              <div className="flex-grow">
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Enter your email address"
+                  className="w-full h-14 bg-white dark:bg-[#0a141d] border border-gray-300 dark:border-lago-700 rounded-full px-6 text-gray-900 dark:text-white focus:outline-none focus:border-lago-500 focus:ring-1 focus:ring-lago-500 transition-all shadow-sm"
+                  required
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={status === 'loading'}
+                className="h-14 px-8 rounded-full bg-lago-600 dark:bg-white text-white dark:text-[#0a141d] font-bold hover:bg-lago-700 dark:hover:bg-lago-100 transition-colors flex-shrink-0 disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {status === 'loading' ? 'Subscribing…' : 'Subscribe'}
+              </button>
+            </form>
+          )}
+          {status === 'error' && (
+            <p className="text-red-600 dark:text-red-400 text-sm mt-4">{message}</p>
+          )}
           <p className="text-gray-500 dark:text-lago-400 text-xs mt-4">
             By subscribing you agree to our Terms & Conditions and Privacy Policy.
           </p>

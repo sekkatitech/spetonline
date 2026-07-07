@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { Check } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 
 // ── Design tokens ──
@@ -85,8 +86,8 @@ export default function EnterpriseLoginPage() {
         return
       }
 
-      // 3. Approved — go to dashboard
-      navigate('/enterprise/dashboard')
+      // 3. Approved — go to the enterprise home/showcase page
+      navigate('/enterprise/home')
 
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Login failed. Please try again.'
@@ -172,8 +173,8 @@ export default function EnterpriseLoginPage() {
                 width: 20, height: 20, borderRadius: '50%',
                 background: 'rgba(255,255,255,0.12)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 11, color: '#fff', flexShrink: 0,
-              }}>✓</div>
+                color: '#fff', flexShrink: 0,
+              }}><Check size={11} /></div>
               <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.65)' }}>{f}</span>
             </div>
           ))}

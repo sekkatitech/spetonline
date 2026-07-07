@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { Package } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 
 // ── Design tokens ──
@@ -341,7 +342,7 @@ export default function EnterpriseProductDetailPage() {
 
           ) : !product ? (
             <div style={{ textAlign: 'center', padding: '80px 24px' }}>
-              <div style={{ fontSize: 48, marginBottom: 16, opacity: 0.2 }}>📦</div>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16, opacity: 0.2 }}><Package size={48} /></div>
               <div style={{ fontSize: 18, fontWeight: 600, color: E.onSurface, marginBottom: 8 }}>Product not found</div>
               <button
                 onClick={() => navigate('/enterprise/products')}
@@ -373,7 +374,7 @@ export default function EnterpriseProductDetailPage() {
                       style={{ width: '85%', height: '85%', objectFit: 'contain' }}
                     />
                   ) : (
-                    <div style={{ fontSize: 64, opacity: 0.15 }}>📦</div>
+                    <div style={{ opacity: 0.15 }}><Package size={64} /></div>
                   )}
                   <div style={{ position: 'absolute', top: 12, left: 12 }}>
                     <SourceBadge source={product.source} />

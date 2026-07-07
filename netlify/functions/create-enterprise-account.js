@@ -24,6 +24,7 @@ exports.handler = async (event) => {
     const data = JSON.parse(event.body || '{}');
     const {
       company_name, registration_number, vat_number, industry, company_size, website,
+      id_document_url, company_registration_document_url, proof_of_address_document_url,
       contact_first_name, contact_last_name, contact_email, contact_phone, contact_role,
       physical_address, city, province, postal_code, password
     } = data;
@@ -52,6 +53,9 @@ exports.handler = async (event) => {
         industry: industry,
         company_size: company_size,
         website: website?.trim() || null,
+        id_document_url: id_document_url || null,
+        company_registration_document_url: company_registration_document_url || null,
+        proof_of_address_document_url: proof_of_address_document_url || null,
         physical_address: physical_address.trim(),
         city: city.trim(),
         province: province,

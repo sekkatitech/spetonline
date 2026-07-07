@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { ClipboardList } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 
 // ── Design tokens ──
@@ -331,7 +332,7 @@ function ListCard({ list, expanded, onToggle, onDelete, onConvertToQuote, onDele
             </div>
           ) : (
             <div style={{ padding: '32px 20px', textAlign: 'center' }}>
-              <div style={{ fontSize: 28, opacity: 0.2, marginBottom: 8 }}>📋</div>
+              <div style={{ display: 'flex', justifyContent: 'center', opacity: 0.2, marginBottom: 8 }}><ClipboardList size={28} /></div>
               <div style={{ fontSize: 13, color: E.onSurfaceVariant, marginBottom: 12 }}>
                 This list is empty. Add products from the catalog.
               </div>
@@ -725,7 +726,7 @@ export default function EnterpriseProcurementListsPage() {
           {/* Empty state */}
           {!loading && lists.length === 0 && (
             <div style={{ textAlign: 'center', padding: '64px 24px' }}>
-              <div style={{ fontSize: 48, marginBottom: 16, opacity: 0.2 }}>📋</div>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16, opacity: 0.2 }}><ClipboardList size={48} /></div>
               <div style={{ fontSize: 16, fontWeight: 600, color: E.onSurface, marginBottom: 8 }}>No lists yet</div>
               <p style={{ fontSize: 13, color: E.onSurfaceVariant, marginBottom: 24, lineHeight: 1.65 }}>
                 Create your first procurement list to save products for repeat ordering.

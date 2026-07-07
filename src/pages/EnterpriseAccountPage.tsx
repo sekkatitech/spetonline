@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { Check } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 
 const E = {
@@ -709,8 +710,8 @@ export default function EnterpriseAccountPage() {
               <div style={{ marginTop: 24, padding: '16px', background: E.surfaceLow, borderRadius: 8 }}>
                 <div style={{ fontSize: 12, fontWeight: 600, color: E.onSurface, marginBottom: 8 }}>Security tips</div>
                 {['Use at least 8 characters', 'Mix uppercase, lowercase, numbers and symbols', 'Never share your password with anyone', 'Use a unique password for this account'].map(tip => (
-                  <div key={tip} style={{ fontSize: 12, color: E.onSurfaceVariant, padding: '3px 0', display: 'flex', gap: 6 }}>
-                    <span style={{ color: E.green }}>✓</span> {tip}
+                  <div key={tip} style={{ fontSize: 12, color: E.onSurfaceVariant, padding: '3px 0', display: 'flex', gap: 6, alignItems: 'flex-start' }}>
+                    <span style={{ color: E.green, marginTop: 1, flexShrink: 0 }}><Check size={13} /></span> {tip}
                   </div>
                 ))}
               </div>

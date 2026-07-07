@@ -10,10 +10,11 @@ import { NavSpacer } from '../components/Layout';
 
 // ── Rotating banner carousel ─────────────────────────────────────────────────
 const BANNERS = [
-  { src: '/images/network-banner.jpg',  alt: 'Network & Accessories' },
-  { src: '/images/expreso-banner.jpg',  alt: 'Home Appliances' },
-  { src: '/images/xiaomi-banner.jpg',   alt: 'Xiaomi Products' },
-  { src: '/images/gaming-banner.jpg',   alt: 'Computing Power' },
+  { src: '/images/acer-banner.jpg',    alt: 'Acer Nitro Gaming Laptops' },
+  { src: '/images/intel-banner.jpg',   alt: 'Intel Gaming' },
+  { src: '/images/ipad-banner.jpg',    alt: 'Apple iPad' },
+  { src: '/images/ipadpro-banner.jpg', alt: 'Apple iPad Pro' },
+  { src: '/images/scooter-banner.jpg', alt: 'Xiaomi Electric Scooter 6 Ultra' },
 ];
 function BannerCarousel() {
   const [current, setCurrent] = useState(0);
@@ -27,29 +28,31 @@ function BannerCarousel() {
   }, [next]);
 
   return (
-    <div className="relative w-full overflow-hidden bg-gray-900" style={{ height: '210px' }}>
-      {BANNERS.map((banner, i) => (
-        <div
-          key={i}
-          className={`absolute inset-0 transition-opacity duration-700 ${
-            i === current ? 'opacity-100 z-10' : 'opacity-0 z-0'
-          }`}
-        >
-          <img src={banner.src} alt={banner.alt} className="w-full h-full object-cover object-center" />
-        </div>
-      ))}
-      <button onClick={prev} className="absolute left-3 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-black/40 hover:bg-black/60 text-white flex items-center justify-center transition-colors" aria-label="Previous banner">
-        <ChevronLeft className="w-4 h-4" />
-      </button>
-      <button onClick={next} className="absolute right-3 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-black/40 hover:bg-black/60 text-white flex items-center justify-center transition-colors" aria-label="Next banner">
-        <ChevronRight className="w-4 h-4" />
-      </button>
-      <div className="absolute bottom-2 left-1/2 -translate-x-1/2 z-20 flex gap-1.5">
-        {BANNERS.map((_, i) => (
-          <button key={i} onClick={() => setCurrent(i)}
-            className={`rounded-full transition-all duration-300 ${i === current ? 'w-5 h-2 bg-white' : 'w-2 h-2 bg-white/50 hover:bg-white/80'}`}
-            aria-label={`Go to banner ${i + 1}`} />
+    <div className="container mx-auto px-4 md:px-6 pt-4">
+      <div className="relative w-full overflow-hidden bg-gray-900 rounded-2xl aspect-[25/7]">
+        {BANNERS.map((banner, i) => (
+          <div
+            key={i}
+            className={`absolute inset-0 transition-opacity duration-700 ${
+              i === current ? 'opacity-100 z-10' : 'opacity-0 z-0'
+            }`}
+          >
+            <img src={banner.src} alt={banner.alt} className="w-full h-full object-cover object-center" />
+          </div>
         ))}
+        <button onClick={prev} className="absolute left-3 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-black/40 hover:bg-black/60 text-white flex items-center justify-center transition-colors" aria-label="Previous banner">
+          <ChevronLeft className="w-4 h-4" />
+        </button>
+        <button onClick={next} className="absolute right-3 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-black/40 hover:bg-black/60 text-white flex items-center justify-center transition-colors" aria-label="Next banner">
+          <ChevronRight className="w-4 h-4" />
+        </button>
+        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 z-20 flex gap-1.5">
+          {BANNERS.map((_, i) => (
+            <button key={i} onClick={() => setCurrent(i)}
+              className={`rounded-full transition-all duration-300 ${i === current ? 'w-5 h-2 bg-white' : 'w-2 h-2 bg-white/50 hover:bg-white/80'}`}
+              aria-label={`Go to banner ${i + 1}`} />
+          ))}
+        </div>
       </div>
     </div>
   );

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { X } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 
 // ── Apple tokens (matches EnterpriseProductsPage) ──
@@ -33,11 +34,6 @@ interface AppleProduct {
   image_urls: string[] | null
   short_description: string | null; full_description: string | null
   weight_kg: number | null
-}
-
-const CAT_ICONS: Record<string, string> = {
-  Mac: '💻', iPhone: '📱', iPad: '⬜', Watch: '⌚', AirPods: '🎧',
-  'Apple TV': '📺', HomePod: '🔊', Accessories: '🔌', 'Watch Accessories': '⌚',
 }
 
 const formatPrice = (n: number) =>
@@ -127,7 +123,11 @@ export default function EnterpriseAppleDetailPage() {
       <div style={{ maxWidth: 1180, margin: '0 auto', padding: '24px 24px 80px' }}>
 
         <style>{RESPONSIVE_CSS}</style>
-        <button onClick={() => { if (window.history.length > 1) navigate(-1); else navigate('/enterprise/products'); }} style={backLink}>← Back</button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 24 }}>
+          <button onClick={() => navigate('/enterprise/home')} style={{ ...backLink, marginBottom: 0 }}>← Enterprise</button>
+          <div style={{ width: 1, height: 16, background: A.line }} />
+          <button onClick={() => { if (window.history.length > 1) navigate(-1); else navigate('/enterprise/apple'); }} style={{ ...backLink, marginBottom: 0 }}>← Back</button>
+        </div>
         {zoomSrc && (
           <div
             className="ent-zoom-overlay"
@@ -142,9 +142,9 @@ export default function EnterpriseAppleDetailPage() {
             <img className="ent-zoom-img" src={zoomSrc} alt="Zoomed product view" style={{ width: '92vw', height: '88vh', objectFit: 'contain', borderRadius: 12, background: '#fff', padding: 24, boxSizing: 'border-box' }} />
             <button
               onClick={() => setZoomSrc(null)}
-              style={{ position: 'fixed', top: 20, right: 24, fontSize: 28, background: 'none', border: 'none', color: '#fff', cursor: 'pointer' }}
+              style={{ position: 'fixed', top: 20, right: 24, background: 'none', border: 'none', color: '#fff', cursor: 'pointer', display: 'flex' }}
               aria-label="Close zoom"
-            >✕</button>
+            ><X size={28} /></button>
           </div>
         )}
 
@@ -248,7 +248,7 @@ export default function EnterpriseAppleDetailPage() {
           <div className="ent-desc-modal" onClick={e => e.stopPropagation()}
             style={{ background: A.white, borderRadius: 20, maxWidth: 720, width: '100%', maxHeight: '82vh', overflow: 'auto', padding: '40px 44px', position: 'relative' }}>
             <button onClick={() => setShowFullDesc(false)}
-              style={{ position: 'absolute', top: 20, right: 20, width: 34, height: 34, borderRadius: '50%', border: 'none', background: A.off, fontSize: 18, cursor: 'pointer', color: A.grey, lineHeight: 1 }}>×</button>
+              style={{ position: 'absolute', top: 20, right: 20, width: 34, height: 34, borderRadius: '50%', border: 'none', background: A.off, cursor: 'pointer', color: A.grey, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={16} /></button>
             <h2 style={{ fontSize: 26, fontWeight: 600, color: A.dark, letterSpacing: '-0.02em', margin: '0 0 20px', paddingRight: 40 }}>
               {cleanName(product.name)}
             </h2>

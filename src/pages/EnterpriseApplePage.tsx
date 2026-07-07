@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
+import { Search, X, Laptop, Smartphone, Tablet, Watch, Package, Apple as AppleIcon } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import AppleCategoryLanding, { LANDING_CONFIGS } from '../components/AppleCategoryLanding'
 
@@ -364,7 +365,7 @@ function FilterBar({
             boxSizing: 'border-box',
           }}
         />
-        <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: A.grey300, fontSize: 14 }}>🔍</span>
+        <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: A.grey300, display: 'flex' }}><Search size={15} /></span>
       </div>
 
       {/* Colour filter */}
@@ -458,7 +459,7 @@ function QuoteSidebar({
       {/* Header */}
       <div style={{ padding: '24px 24px 16px', borderBottom: `1px solid ${A.grey100}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ fontSize: 17, fontWeight: 600, color: A.black }}>Quote Request</div>
-        <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: A.grey300 }}>✕</button>
+        <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: A.grey300, display: 'flex' }}><X size={20} /></button>
       </div>
 
       {/* Items */}
@@ -473,8 +474,8 @@ function QuoteSidebar({
               display: 'flex', gap: 12, paddingBottom: 16, marginBottom: 16,
               borderBottom: `1px solid ${A.grey100}`,
             }}>
-              <div style={{ width: 56, height: 56, background: A.offwhite, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, flexShrink: 0 }}>
-                {product.category_main === 'Mac' ? '💻' : product.category_main === 'iPhone' ? '📱' : product.category_main === 'iPad' ? '⬜' : product.category_main === 'Watch' ? '⌚' : '📦'}
+              <div style={{ width: 56, height: 56, background: A.offwhite, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: A.grey300 }}>
+                {product.category_main === 'Mac' ? <Laptop size={24} /> : product.category_main === 'iPhone' ? <Smartphone size={24} /> : product.category_main === 'iPad' ? <Tablet size={24} /> : product.category_main === 'Watch' ? <Watch size={24} /> : <Package size={24} />}
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 13, fontWeight: 600, color: A.black, marginBottom: 2, lineHeight: 1.3 }}>
@@ -484,8 +485,8 @@ function QuoteSidebar({
                 <div style={{ fontSize: 14, fontWeight: 600, color: A.black }}>{fmt(product.price_display)}</div>
               </div>
               <button onClick={() => onRemove(product.id)}
-                style={{ background: 'none', border: 'none', color: A.grey300, cursor: 'pointer', fontSize: 16, padding: '0 4px', alignSelf: 'flex-start' }}>
-                ✕
+                style={{ background: 'none', border: 'none', color: A.grey300, cursor: 'pointer', padding: '0 4px', alignSelf: 'flex-start', display: 'flex' }}>
+                <X size={16} />
               </button>
             </div>
           ))
@@ -671,7 +672,18 @@ export default function EnterpriseApplePage() {
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px' }}>
           {/* Header row */}
           <div className="ent-header-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 0 0' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+              <button
+                onClick={() => navigate('/enterprise/home')}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 4,
+                  background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit',
+                  fontSize: 13, fontWeight: 500, color: A.grey300, padding: '6px 4px',
+                }}
+              >
+                ← Enterprise
+              </button>
+              <div style={{ width: 1, height: 18, background: A.grey100 }} />
               <img src="/enterprice-images/Apple Reseller Program Logo.png" alt="Apple Reseller" style={{ height: 28 }}
                 onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
               <span style={{ fontSize: 13, color: A.grey300, fontWeight: 400 }}>Enterprise</span>
@@ -761,12 +773,12 @@ export default function EnterpriseApplePage() {
         {/* Products grid */}
         {loading ? (
           <div style={{ textAlign: 'center', padding: '80px 0', color: A.grey300 }}>
-            <div style={{ fontSize: 32, marginBottom: 12 }}>🍎</div>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}><AppleIcon size={32} /></div>
             <div style={{ fontSize: 14 }}>Loading {currentCat.label} products…</div>
           </div>
         ) : filteredProducts.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '80px 0', color: A.grey300 }}>
-            <div style={{ fontSize: 32, marginBottom: 12 }}>🔍</div>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}><Search size={32} /></div>
             <div style={{ fontSize: 16, fontWeight: 600, color: A.black, marginBottom: 8 }}>No products found</div>
             <div style={{ fontSize: 14 }}>Try adjusting your filters</div>
           </div>

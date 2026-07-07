@@ -1,5 +1,7 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { LegalModal } from '../components/LegalModal'
+import { LegalKey } from '../lib/legalContent'
 
 const E = {
   primary:              '#000000',
@@ -434,7 +436,7 @@ const FEATURES = [
   { icon: <CardIcon />,        title: 'Net 30 / 60 credit',       body: 'Flexible credit terms available for verified accounts. Monthly statements downloadable from your dashboard.' },
 ]
 
-function WhySection() {
+export function WhySection() {
   return (
     <section id="why" style={{ background: E.surfaceWhite, padding: '96px 0' }}>
       <div style={s.container}>
@@ -534,7 +536,33 @@ function CTABanner({ onRegister, onLogin }: { onRegister: () => void; onLogin: (
   )
 }
 
-function EnterpriseFooter() {
+function AppleResellerBanner() {
+  return (
+    <section style={{ background: E.surfaceWhite, padding: '0 0 64px' }}>
+      <div style={s.container}>
+        <div style={{ borderRadius: 24, overflow: 'hidden' }}>
+          <img
+            src="/apple-policy-banner.png"
+            alt="SPET Enterprise — Authorised Apple Reseller Program"
+            style={{ width: '100%', height: 'auto', display: 'block' }}
+          />
+        </div>
+      </div>
+    </section>
+  )
+}
+
+export function EnterpriseFooter() {
+  const [legalDoc, setLegalDoc] = useState<LegalKey | null>(null)
+
+  const legalLinks: [LegalKey, string][] = [
+    ['privacy'  as LegalKey, 'Privacy Policy'],
+    ['terms'    as LegalKey, 'Terms & Conditions'],
+    ['returns'  as LegalKey, 'Returns Policy'],
+    ['warranty' as LegalKey, 'Warranty Policy'],
+    ['faq'      as LegalKey, 'FAQ'],
+  ]
+
   const col = (title: string, links: string[]) => (
     <div key={title}>
       <div style={{ fontSize: 12, fontWeight: 600, letterSpacing: '0.07em', textTransform: 'uppercase', color: E.orange, marginBottom: 16 }}>
@@ -555,6 +583,7 @@ function EnterpriseFooter() {
 
   return (
     <footer style={{ background: E.surfaceHighest, borderTop: `1px solid ${E.outlineVariant}`, padding: '56px 0 0' }}>
+      <LegalModal docKey={legalDoc} onClose={() => setLegalDoc(null)} />
       <div style={s.container}>
         <div style={{ display: 'grid', gridTemplateColumns: '1.6fr 1fr 1fr 1fr', gap: 48, paddingBottom: 48 }}>
           <div>
@@ -566,7 +595,32 @@ function EnterpriseFooter() {
           </div>
           {col('Solutions', ['IT & Computing', 'Security Systems', 'Networking', 'VoIP & Communications', 'Professional Services'])}
           {col('Support',   ['Help Centre', 'Contact Support', 'Logistics Tracking', 'Request a Quote'])}
-          {col('Legal',     ['Privacy Policy', 'Terms of Service', 'POPIA Compliance', 'B-BBEE Certificate'])}
+          <div>
+            <div style={{ fontSize: 12, fontWeight: 600, letterSpacing: '0.07em', textTransform: 'uppercase', color: E.orange, marginBottom: 16 }}>
+              Legal
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {legalLinks.map(([key, label]) => (
+                <button
+                  key={key}
+                  onClick={() => setLegalDoc(key)}
+                  style={{ fontSize: 13, color: E.onSurfaceVariant, background: 'none', border: 'none', padding: 0, textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit' }}
+                  onMouseEnter={e => (e.currentTarget.style.color = E.orange)}
+                  onMouseLeave={e => (e.currentTarget.style.color = E.onSurfaceVariant)}
+                >
+                  {label}
+                </button>
+              ))}
+              <a
+                href="mailto:sales@spetonline.co.za?subject=B-BBEE Certificate Request"
+                style={{ fontSize: 13, color: E.onSurfaceVariant, textDecoration: 'none' }}
+                onMouseEnter={e => (e.currentTarget.style.color = E.orange)}
+                onMouseLeave={e => (e.currentTarget.style.color = E.onSurfaceVariant)}
+              >
+                B-BBEE Certificate
+              </a>
+            </div>
+          </div>
         </div>
 
         <div style={{
@@ -577,9 +631,7 @@ function EnterpriseFooter() {
             © 2026 SPET Online B2B Procurement Portal. Sekkati Petroleum Energy and Technology (Pty) Ltd.
           </p>
           <div style={{ display: 'flex', gap: 20 }}>
-            {['Sitemap', 'Cookies'].map(l => (
-              <a key={l} href="#" style={{ fontSize: 12, color: E.onSurfaceVariant, textDecoration: 'none', opacity: 0.65 }}>{l}</a>
-            ))}
+            <button onClick={() => setLegalDoc('privacy' as LegalKey)} style={{ fontSize: 12, color: E.onSurfaceVariant, background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'inherit', opacity: 0.65 }}>Cookies</button>
           </div>
         </div>
       </div>
@@ -651,6 +703,7 @@ export default function EnterprisePage() {
         <StatsSection />
         <WhySection />
         <CTABanner onRegister={handleRegister} onLogin={handleLogin} />
+        <AppleResellerBanner />
       </main>
       <EnterpriseFooter />
       <style>{`

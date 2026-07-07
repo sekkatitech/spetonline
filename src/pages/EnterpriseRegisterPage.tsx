@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { Check, Truck, CreditCard } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 
 // ── Design tokens (same as EnterprisePage) ──
@@ -34,6 +35,9 @@ interface FormData {
   industry:            string
   company_size:        string
   website:             string
+  id_document_url:                    string
+  company_registration_document_url:  string
+  proof_of_address_document_url:      string
   // Step 2 — Contact
   contact_first_name:  string
   contact_last_name:   string
@@ -52,6 +56,7 @@ interface FormData {
 const INITIAL: FormData = {
   company_name: '', registration_number: '', vat_number: '',
   industry: '', company_size: '', website: '',
+  id_document_url: '', company_registration_document_url: '', proof_of_address_document_url: '',
   contact_first_name: '', contact_last_name: '', contact_email: '',
   contact_phone: '', contact_role: '',
   physical_address: '', city: '', province: '', postal_code: '',
@@ -153,7 +158,7 @@ function StepIndicator({ current }: { current: number }) {
               background: done ? E.primary : active ? E.primary : E.surfaceContainer,
               color: done || active ? E.onPrimary : E.onSurfaceVariant,
             }}>
-              {done ? '✓' : step.num}
+              {done ? <Check size={14} /> : step.num}
             </div>
             <span style={{
               fontSize: 13, fontWeight: active ? 600 : 400,
@@ -173,6 +178,83 @@ function StepIndicator({ current }: { current: number }) {
           </div>
         )
       })}
+    </div>
+  )
+}
+
+// ── KYC document upload field ──
+function KycFileUpload({
+  label, hint, field, value, error, onChange,
+}: {
+  label: string
+  hint: string
+  field: keyof FormData
+  value: string
+  error?: string
+  onChange: (field: keyof FormData, val: string) => void
+}) {
+  const [uploading, setUploading] = useState(false)
+  const [fileName, setFileName] = useState('')
+  const [uploadError, setUploadError] = useState('')
+  const inputId = `kyc-upload-${field}`
+
+  const handleFile = async (e: any) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploading(true)
+    setUploadError('')
+    try {
+      const ext = file.name.split('.').pop()
+      const path = `${crypto.randomUUID()}.${ext}`
+      const { error: uploadErr } = await supabase.storage
+        .from('kyc-documents')
+        .upload(path, file, { contentType: file.type })
+      if (uploadErr) throw uploadErr
+      setFileName(file.name)
+      onChange(field, path)
+    } catch (err: unknown) {
+      setUploadError(err instanceof Error ? err.message : 'Upload failed. Please try again.')
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  return (
+    <div style={fieldWrap}>
+      <label style={labelStyle}>{label} *</label>
+      <p style={{ fontSize: 12, color: E.onSurfaceVariant, margin: '0 0 8px' }}>{hint}</p>
+      <input
+        id={inputId}
+        type="file"
+        accept=".pdf,.jpg,.jpeg,.png"
+        onChange={handleFile}
+        style={{ display: 'none' }}
+      />
+      <label
+        htmlFor={inputId}
+        style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '12px 16px',
+          border: `1.5px dashed ${error ? E.error : (value ? '#4caf50' : E.outlineVariant)}`,
+          borderRadius: 8, cursor: 'pointer',
+          background: value ? '#f1f8f2' : E.surfaceWhite,
+          fontSize: 13.5, color: value ? '#2e7d32' : E.onSurfaceVariant,
+          transition: 'border-color 0.15s, background 0.15s',
+        }}
+      >
+        <span>
+          {uploading ? 'Uploading…' : value ? `✓ ${fileName || 'File uploaded'}` : 'Click to browse for a file…'}
+        </span>
+        <span style={{
+          fontSize: 12, fontWeight: 600, color: E.primary,
+          padding: '5px 12px', borderRadius: 980, background: E.surfaceLow,
+          flexShrink: 0, marginLeft: 12,
+        }}>
+          {value ? 'Replace' : 'Browse'}
+        </span>
+      </label>
+      {uploadError && <span style={errorText}>{uploadError}</span>}
+      {error && !uploadError && <span style={errorText}>{error}</span>}
     </div>
   )
 }
@@ -230,6 +312,39 @@ function Step1({
             {INDUSTRIES.map(ind => <option key={ind} value={ind}>{ind}</option>)}
           </select>
           {errors.industry && <span style={errorText}>{errors.industry}</span>}
+        </div>
+      </div>
+
+      <div>
+        <p style={{ fontSize: 13, fontWeight: 700, color: E.onSurface, marginBottom: 4 }}>KYC Verification Documents</p>
+        <p style={{ fontSize: 12, color: E.onSurfaceVariant, marginBottom: 14, lineHeight: 1.5 }}>
+          Required to verify your business and prevent fraud, in accordance with POPIA.
+        </p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <KycFileUpload
+            label="ID or Passport"
+            hint="Upload a PDF or JPEG of your ID or passport."
+            field="id_document_url"
+            value={data.id_document_url}
+            error={errors.id_document_url}
+            onChange={onChange}
+          />
+          <KycFileUpload
+            label="Company Registration Documents (CIPC)"
+            hint="Upload a PDF of your company registration (CIPC) documents."
+            field="company_registration_document_url"
+            value={data.company_registration_document_url}
+            error={errors.company_registration_document_url}
+            onChange={onChange}
+          />
+          <KycFileUpload
+            label="Proof of Address"
+            hint="Upload a PDF or JPEG, dated within the last 3 months."
+            field="proof_of_address_document_url"
+            value={data.proof_of_address_document_url}
+            error={errors.proof_of_address_document_url}
+            onChange={onChange}
+          />
         </div>
       </div>
 
@@ -491,9 +606,9 @@ function SuccessScreen({ email }: { email: string }) {
         width: 64, height: 64, borderRadius: '50%',
         background: E.successBg,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        margin: '0 auto 24px', fontSize: 28,
+        margin: '0 auto 24px', color: E.successText,
       }}>
-        ✓
+        <Check size={28} />
       </div>
       <h2 style={{ fontSize: 24, fontWeight: 700, color: E.primary, marginBottom: 12 }}>
         Application submitted!
@@ -528,6 +643,9 @@ function validate(step: number, data: FormData): Partial<Record<keyof FormData, 
     if (!data.company_name.trim())  errs.company_name  = 'Company name is required'
     if (!data.industry)             errs.industry      = 'Please select an industry'
     if (!data.company_size)         errs.company_size  = 'Please select company size'
+    if (!data.id_document_url)                   errs.id_document_url                  = 'Please upload an ID or passport'
+    if (!data.company_registration_document_url) errs.company_registration_document_url = 'Please upload your CIPC registration document'
+    if (!data.proof_of_address_document_url)      errs.proof_of_address_document_url     = 'Please upload proof of address'
   }
   if (step === 1) {
     if (!data.contact_first_name.trim()) errs.contact_first_name = 'First name is required'
@@ -632,12 +750,12 @@ export default function EnterpriseRegisterPage() {
 
               {/* Benefits */}
               {[
-                { icon: '✓', title: 'Vetted partners', body: 'Access certified IT and infrastructure brands.' },
-                { icon: '🚚', title: 'Priority logistics', body: 'Dedicated shipping and real-time tracking.' },
-                { icon: '💳', title: 'Flexible credit', body: 'Net 30/60 terms for verified accounts.' },
+                { icon: Check, title: 'Vetted partners', body: 'Access certified IT and infrastructure brands.' },
+                { icon: Truck, title: 'Priority logistics', body: 'Dedicated shipping and real-time tracking.' },
+                { icon: CreditCard, title: 'Flexible credit', body: 'Net 30/60 terms for verified accounts.' },
               ].map(b => (
                 <div key={b.title} style={{ display: 'flex', gap: 12, marginBottom: 20 }}>
-                  <span style={{ fontSize: 16, marginTop: 1 }}>{b.icon}</span>
+                  <span style={{ marginTop: 1, color: E.primary }}><b.icon size={16} /></span>
                   <div>
                     <div style={{ fontSize: 13, fontWeight: 600, color: E.primary, marginBottom: 2 }}>{b.title}</div>
                     <div style={{ fontSize: 12, color: E.onSurfaceVariant, lineHeight: 1.5 }}>{b.body}</div>
@@ -645,17 +763,43 @@ export default function EnterpriseRegisterPage() {
                 </div>
               ))}
 
-              {/* Quote card */}
+              {/* KYC info card */}
               <div style={{
                 background: E.primaryContainer,
                 borderRadius: 10, padding: '20px',
                 marginTop: 24,
               }}>
-                <p style={{ fontSize: 13, fontStyle: 'italic', color: 'rgba(255,255,255,0.75)', lineHeight: 1.65, marginBottom: 12 }}>
-                  "SPET Enterprise has transformed our procurement cycle from weeks to hours."
+                <p style={{ fontSize: 13, fontWeight: 700, color: '#ffffff', marginBottom: 10 }}>
+                  Why we ask for KYC documents
                 </p>
-                <p style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)' }}>
-                  — CTO, NexaCorp Systems
+                <p style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.75)', lineHeight: 1.65, marginBottom: 14 }}>
+                  To protect our customers and prevent fraud, SPET Enterprise may request supporting documents to verify your identity or business before processing certain orders or account applications.
+                </p>
+
+                <p style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.9)', marginBottom: 8 }}>
+                  You may be asked to provide:
+                </p>
+                <ul style={{ margin: '0 0 16px', padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {['ID or Passport', 'Company Registration Documents (CIPC)', 'Proof of Address (within the last 3 months)'].map(item => (
+                    <li key={item} style={{ fontSize: 12, color: 'rgba(255,255,255,0.75)', lineHeight: 1.5, display: 'flex', gap: 8 }}>
+                      <span style={{ color: 'rgba(255,255,255,0.5)' }}>•</span> {item}
+                    </li>
+                  ))}
+                </ul>
+
+                <p style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.9)', marginBottom: 8 }}>
+                  KYC is required for:
+                </p>
+                <ul style={{ margin: '0 0 16px', padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {['Business account registration', 'Enterprise account', 'Credit account application', 'Government department', 'Bulk procurement'].map(item => (
+                    <li key={item} style={{ fontSize: 12, color: 'rgba(255,255,255,0.75)', lineHeight: 1.5, display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+                      <span style={{ color: '#4ade80', marginTop: 2, flexShrink: 0 }}><Check size={13} /></span> {item}
+                    </li>
+                  ))}
+                </ul>
+
+                <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', lineHeight: 1.5, borderTop: '1px solid rgba(255,255,255,0.12)', paddingTop: 12 }}>
+                  All information is handled securely and in accordance with POPIA.
                 </p>
               </div>
             </div>

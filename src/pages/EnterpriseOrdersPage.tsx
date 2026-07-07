@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { X, Check } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 
 // ── Design tokens ──
@@ -147,7 +148,7 @@ function OrderTimeline({ status }: { status: string }) {
   if (status === 'cancelled') {
     return (
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 0' }}>
-        <div style={{ width: 24, height: 24, borderRadius: '50%', background: E.redBg, border: `2px solid ${E.red}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, color: E.red }}>✕</div>
+        <div style={{ width: 24, height: 24, borderRadius: '50%', background: E.redBg, border: `2px solid ${E.red}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: E.red }}><X size={13} /></div>
         <span style={{ fontSize: 12, color: E.red, fontWeight: 500 }}>This order was cancelled</span>
       </div>
     )
@@ -171,7 +172,7 @@ function OrderTimeline({ status }: { status: string }) {
                 fontSize: 10, fontWeight: 700,
                 color: done || active ? E.onPrimary : E.outline,
               }}>
-                {done ? '✓' : i + 1}
+                {done ? <Check size={14} /> : i + 1}
               </div>
               <span style={{
                 fontSize: 9, fontWeight: 500, textTransform: 'uppercase',

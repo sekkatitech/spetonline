@@ -22,6 +22,7 @@ import { SearchPage }       from './pages/SearchPage';
 import EnterprisePage       from './pages/EnterprisePage'
 import EnterpriseRegisterPage from './pages/EnterpriseRegisterPage'
 import EnterpriseLoginPage from './pages/EnterpriseLoginPage'
+import EnterpriseHomePage from './pages/EnterpriseHomePage'
 import EnterpriseDashboard from './pages/EnterpriseDashboard'
 import EnterpriseProductsPage from './pages/EnterpriseProductsPage' 
 import EnterpriseProductDetailPage from './pages/EnterpriseProductDetailPage'
@@ -66,6 +67,7 @@ function AppShell() {
           <Route path="/enterprise/apple/:id" element={<EnterpriseAppleDetailPage />} />
           <Route path="/enterprise/register" element={<EnterpriseRegisterPage />} />
           <Route path="/enterprise/login" element={<EnterpriseLoginPage />} />
+          <Route path="/enterprise/home" element={<EnterpriseHomePage />} />
           <Route path="/enterprise/dashboard" element={<EnterpriseDashboard />} />
           <Route path="/enterprise/lists" element={<EnterpriseProcurementListsPage />} />
           <Route path="/enterprise/products" element={<EnterpriseProductsPage />} />

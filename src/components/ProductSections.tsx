@@ -178,6 +178,16 @@ export function FeaturedProducts() {
 
 // ─── Featured Categories ──────────────────────────────────────────────────────
 
+// Rotating vibrant gradients so category tiles read as distinct, not a wall of blue
+const CATEGORY_GRADIENTS = [
+  'from-orange-500 to-red-600',
+  'from-lago-500 to-lago-800',
+  'from-fuchsia-500 to-purple-700',
+  'from-emerald-500 to-teal-700',
+  'from-amber-400 to-orange-600',
+  'from-sky-400 to-blue-700',
+]
+
 export function FeaturedCategories() {
   const { categories, loading } = useCategories();
   // Group by CategoryHead for display, take the first 6 unique CategoryHeads
@@ -217,7 +227,7 @@ export function FeaturedCategories() {
                 >
                   <Link
                     to={`/shop?categoryHead=${encodeURIComponent(head)}`}
-                    className="group block rounded-2xl overflow-hidden relative aspect-square border border-gray-200 dark:border-lago-800 hover:border-lago-500 dark:hover:border-lago-500 transition-all shadow-sm hover:shadow-lg bg-gradient-to-br from-lago-600 to-lago-900"
+                    className={`group block rounded-2xl overflow-hidden relative aspect-square border border-gray-200 dark:border-lago-800 hover:border-lago-500 dark:hover:border-lago-500 transition-all shadow-sm hover:shadow-lg bg-gradient-to-br ${CATEGORY_GRADIENTS[i % CATEGORY_GRADIENTS.length]}`}
                   >
                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
                     <div className="absolute bottom-3 left-0 right-0 text-center px-2">
