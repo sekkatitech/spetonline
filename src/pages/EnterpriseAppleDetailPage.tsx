@@ -13,6 +13,19 @@ const A = {
 }
 const APPLE_LOGO = '/enterprice-images/apple.com-logo.png'
 
+const RESPONSIVE_CSS = `
+@media (max-width: 820px) {
+  .ent-detail-grid { grid-template-columns: 1fr !important; gap: 32px !important; }
+  .ent-detail-info { position: static !important; top: auto !important; }
+}
+@media (max-width: 480px) {
+  .ent-related-grid { grid-template-columns: repeat(2, minmax(0,1fr)) !important; gap: 12px !important; }
+  .ent-zoom-overlay { padding: 12px !important; }
+  .ent-zoom-img { width: 100% !important; height: 78vh !important; padding: 12px !important; }
+  .ent-desc-modal { padding: 28px 20px !important; }
+}
+`
+
 interface AppleProduct {
   id: string; sku: string; name: string; category_main: string; category_sub: string
   rrp_inc_vat: number; price_display: number; status: string
@@ -113,9 +126,11 @@ export default function EnterpriseAppleDetailPage() {
     <div style={{ background: A.off, minHeight: '100vh', fontFamily: FONT }}>
       <div style={{ maxWidth: 1180, margin: '0 auto', padding: '24px 24px 80px' }}>
 
+        <style>{RESPONSIVE_CSS}</style>
         <button onClick={() => { if (window.history.length > 1) navigate(-1); else navigate('/enterprise/products'); }} style={backLink}>← Back</button>
         {zoomSrc && (
           <div
+            className="ent-zoom-overlay"
             onClick={() => setZoomSrc(null)}
             style={{
               position: 'fixed', inset: 0, zIndex: 1000,
@@ -124,7 +139,7 @@ export default function EnterpriseAppleDetailPage() {
               padding: 32, cursor: 'zoom-out',
             }}
           >
-            <img src={zoomSrc} alt="Zoomed product view" style={{ width: '92vw', height: '88vh', objectFit: 'contain', borderRadius: 12, background: '#fff', padding: 24, boxSizing: 'border-box' }} />
+            <img className="ent-zoom-img" src={zoomSrc} alt="Zoomed product view" style={{ width: '92vw', height: '88vh', objectFit: 'contain', borderRadius: 12, background: '#fff', padding: 24, boxSizing: 'border-box' }} />
             <button
               onClick={() => setZoomSrc(null)}
               style={{ position: 'fixed', top: 20, right: 24, fontSize: 28, background: 'none', border: 'none', color: '#fff', cursor: 'pointer' }}
@@ -133,7 +148,7 @@ export default function EnterpriseAppleDetailPage() {
           </div>
         )}
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1.15fr) minmax(0,1fr)', gap: 56, alignItems: 'start' }}>
+        <div className="ent-detail-grid" style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1.15fr) minmax(0,1fr)', gap: 56, alignItems: 'start' }}>
 
           {/* LEFT — hero then feature images stacked down */}
           <div>
@@ -150,7 +165,7 @@ export default function EnterpriseAppleDetailPage() {
           </div>
 
           {/* RIGHT — sticky product info */}
-          <div style={{ position: 'sticky', top: 24 }}>
+          <div className="ent-detail-info" style={{ position: 'sticky', top: 24 }}>
             {product.status === 'while_stocks_last' && (
               <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.04em', color: '#b45309', textTransform: 'uppercase', marginBottom: 10 }}>While stocks last</div>
             )}
@@ -210,7 +225,7 @@ export default function EnterpriseAppleDetailPage() {
             <h2 style={{ fontSize: 24, fontWeight: 600, color: A.dark, letterSpacing: '-0.01em', marginBottom: 24 }}>
               More {product.category_main}
             </h2>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 20 }}>
+            <div className="ent-related-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 20 }}>
               {featured.map(f => (
                 <button key={f.id} onClick={() => navigate(`/enterprise/apple/${encodeURIComponent(f.id)}`)} style={featCard}>
                   <div style={{ width: '100%', aspectRatio: '1/1', background: A.off, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', fontSize: 44, marginBottom: 12 }}>
@@ -230,7 +245,7 @@ export default function EnterpriseAppleDetailPage() {
       {showFullDesc && product.full_description && (
         <div onClick={() => setShowFullDesc(false)}
           style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, zIndex: 1000 }}>
-          <div onClick={e => e.stopPropagation()}
+          <div className="ent-desc-modal" onClick={e => e.stopPropagation()}
             style={{ background: A.white, borderRadius: 20, maxWidth: 720, width: '100%', maxHeight: '82vh', overflow: 'auto', padding: '40px 44px', position: 'relative' }}>
             <button onClick={() => setShowFullDesc(false)}
               style={{ position: 'absolute', top: 20, right: 20, width: 34, height: 34, borderRadius: '50%', border: 'none', background: A.off, fontSize: 18, cursor: 'pointer', color: A.grey, lineHeight: 1 }}>×</button>

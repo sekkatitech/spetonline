@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import AppleCategoryLanding, { IPAD_LANDING } from '../components/AppleCategoryLanding'
+import AppleCategoryLanding, { LANDING_CONFIGS } from '../components/AppleCategoryLanding'
 
 // ── Types ──────────────────────────────────────────────────────────────────
 const APPLE_LOGO = '/enterprice-images/apple.com-logo.png'
@@ -101,6 +101,28 @@ const CATEGORIES = [
     bg: '#ffffff',
   },
 ]
+
+// ── Responsive overrides (inline-style page, so media queries live here) ───
+const RESPONSIVE_CSS = `
+.ent-tabbar::-webkit-scrollbar { display: none; }
+@media (max-width: 480px) {
+  .ent-product-grid { grid-template-columns: repeat(2, minmax(0,1fr)) !important; gap: 12px !important; }
+}
+@media (max-width: 640px) {
+  .ent-header-row { flex-wrap: wrap; row-gap: 10px; }
+  .ent-search-input { font-size: 16px !important; padding: 12px 16px 12px 36px !important; }
+  .ent-colour-swatch { width: 32px !important; height: 32px !important; }
+  .ent-storage-btn, .ent-status-select { min-height: 44px !important; }
+  .ent-tab-btn { min-height: 44px !important; display: inline-flex !important; align-items: center; }
+  .ent-quote-btn { min-height: 44px !important; }
+  .ent-quote-sidebar {
+    top: auto !important; left: 0 !important; right: 0 !important; bottom: 0 !important;
+    width: 100% !important; max-height: 85vh !important;
+    border-radius: 20px 20px 0 0 !important;
+    box-shadow: 0 -4px 32px rgba(0,0,0,0.16) !important;
+  }
+}
+`
 
 // ── Format helpers ─────────────────────────────────────────────────────────
 const fmt = (n: number) =>
@@ -320,7 +342,7 @@ function FilterBar({
   }
 
   return (
-    <div style={{
+    <div className="ent-filterbar" style={{
       display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'center',
       marginBottom: 32, padding: '16px 20px',
       background: A.white, borderRadius: 12,
@@ -329,6 +351,7 @@ function FilterBar({
       {/* Search */}
       <div style={{ position: 'relative', flex: '1 1 200px' }}>
         <input
+          className="ent-search-input"
           type="text"
           placeholder="Search products…"
           value={filters.search}
@@ -350,6 +373,7 @@ function FilterBar({
           {colours.slice(0, 10).map(colour => (
             <button
               key={colour}
+              className="ent-colour-swatch"
               title={colour}
               onClick={() => setFilters({ ...filters, colour: filters.colour === colour ? '' : colour })}
               style={{
@@ -377,6 +401,7 @@ function FilterBar({
           {storages.map(storage => (
             <button
               key={storage}
+              className="ent-storage-btn"
               onClick={() => setFilters({ ...filters, storage: filters.storage === storage ? '' : storage! })}
               style={{
                 padding: '5px 12px', borderRadius: 980, fontSize: 12, fontWeight: 500,
@@ -395,6 +420,7 @@ function FilterBar({
 
       {/* Status filter */}
       <select
+        className="ent-status-select"
         value={filters.status}
         onChange={e => setFilters({ ...filters, status: e.target.value })}
         style={{
@@ -423,7 +449,7 @@ function QuoteSidebar({
   const total = items.reduce((s, i) => s + i.product.price_display * i.qty, 0)
 
   return (
-    <div style={{
+    <div className="ent-quote-sidebar" style={{
       position: 'fixed', top: 0, right: 0, bottom: 0, width: 380,
       background: A.white, boxShadow: '-4px 0 32px rgba(0,0,0,0.12)',
       zIndex: 1000, display: 'flex', flexDirection: 'column',
@@ -508,7 +534,8 @@ export default function EnterpriseApplePage() {
     setSearchParams(next)
   }
   const view = searchParams.get('view') || ''
-  const showLanding = activeCategory === 'iPad' && !activeSub && view !== 'shop'
+  const landingConfig = LANDING_CONFIGS[activeCategory]
+  const showLanding = !!landingConfig && !activeSub && view !== 'shop'
   const [products, setProducts] = useState<AppleProduct[]>([])
   const [loading, setLoading] = useState(true)
   const [filters, setFilters] = useState({ search: '', colour: '', storage: '', status: '' })
@@ -619,6 +646,7 @@ export default function EnterpriseApplePage() {
       fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif",
       background: A.offwhite, minHeight: '100vh', color: A.black,
     }}>
+      <style>{RESPONSIVE_CSS}</style>
 
       {/* Toast */}
       {toast && (
@@ -642,13 +670,14 @@ export default function EnterpriseApplePage() {
       }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px' }}>
           {/* Header row */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 0 0' }}>
+          <div className="ent-header-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 0 0' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <img src="/enterprice-images/Apple Reseller Program Logo.png" alt="Apple Reseller" style={{ height: 28 }}
                 onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
               <span style={{ fontSize: 13, color: A.grey300, fontWeight: 400 }}>Enterprise</span>
             </div>
             <button
+              className="ent-quote-btn"
               onClick={() => setShowQuote(true)}
               style={{
                 display: 'flex', alignItems: 'center', gap: 6,
@@ -674,10 +703,11 @@ export default function EnterpriseApplePage() {
           </div>
 
           {/* Category tabs */}
-          <div style={{ display: 'flex', gap: 0, overflowX: 'auto', scrollbarWidth: 'none' }}>
+          <div className="ent-tabbar" style={{ display: 'flex', gap: 0, overflowX: 'auto', scrollbarWidth: 'none' }}>
             {CATEGORIES.map(cat => (
               <button
                 key={cat.key}
+                className="ent-tab-btn"
                 onClick={() => setActiveCategory(cat.key)}
                 style={{
                   padding: '12px 16px',
@@ -708,9 +738,9 @@ export default function EnterpriseApplePage() {
         
         {showLanding ? (
           <AppleCategoryLanding
-            config={IPAD_LANDING}
-            onShop={sub => setSearchParams({ cat: 'iPad', sub })}
-            onBrowseAll={() => setSearchParams({ cat: 'iPad', view: 'shop' })}
+            config={landingConfig!}
+            onShop={sub => setSearchParams({ cat: activeCategory, sub })}
+            onBrowseAll={() => setSearchParams({ cat: activeCategory, view: 'shop' })}
           />
         ) : (
         <>
@@ -745,7 +775,7 @@ export default function EnterpriseApplePage() {
             <div style={{ fontSize: 13, color: A.grey300, marginBottom: 20 }}>
               {filteredProducts.length} product{filteredProducts.length !== 1 ? 's' : ''}
             </div>
-            <div style={{
+            <div className="ent-product-grid" style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))',
               gap: 20,
