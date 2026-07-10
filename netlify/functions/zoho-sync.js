@@ -136,11 +136,35 @@ async function createInvoiceFromOrder(order) {
   return result.invoice;
 }
 
+// Verifies the caller is a signed-in admin/super_admin. Was previously a
+// static x-spet-secret header comparison — that value is baked into the
+// admin dashboard's public JS bundle (VITE_* vars are never secret), so
+// anyone who read the bundle could call this endpoint with full service-role
+// write access. Real auth: validate the caller's Supabase session, then
+// check their profiles.role.
+async function requireAdmin(event) {
+  const authHeader = event.headers['authorization'] || event.headers['Authorization'] || '';
+  const token = authHeader.replace(/^Bearer\s+/i, '');
+  if (!token) return null;
+
+  const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+  if (authError || !user) return null;
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single();
+
+  if (!profile || !['admin', 'super_admin'].includes(profile.role)) return null;
+  return user;
+}
+
 // ── Main handler ──
 exports.handler = async (event) => {
-  // Verify this is called from SPET (basic auth check)
-  const authHeader = event.headers['x-spet-secret'];
-  if (authHeader !== process.env.SPET_WEBHOOK_SECRET) {
+  // Verify this is called from a signed-in SPET admin
+  const admin = await requireAdmin(event);
+  if (!admin) {
     return { statusCode: 401, body: JSON.stringify({ error: 'Unauthorized' }) };
   }
 

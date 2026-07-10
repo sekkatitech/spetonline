@@ -27,6 +27,34 @@ const IPHONE_HERO_IMAGE = '/enterprice-images/ARP059_iPhone 17.png'
 const MAC_HERO_IMAGE = '/enterprice-images/ARP100_Desktop Banner.png'
 const AIRPODS_HERO_IMAGE = '/enterprice-images/AirPods-Prods.png'
 
+const MACBOOK_AIR_IMAGE = '/images/apple-imagies/MacBook_Air.jpeg'
+const MACBOOK_PRO_14_IMAGE = '/images/apple-imagies/MacBook_Pro_14.jpg'
+const MACBOOK_PRO_16_IMAGE = '/images/apple-imagies/MacBook_Pro_16.jpg'
+const IMAC_24_IMAGE = '/images/apple-imagies/iMac_24.jpeg'
+const MAC_MINI_IMAGE = '/images/apple-imagies/Mac_mini.jpeg'
+const MAC_STUDIO_IMAGE = '/images/apple-imagies/Mac_Studio.jpeg'
+const STUDIO_DISPLAY_IMAGE = '/images/apple-imagies/Studio_Display.webp'
+const MACBOOK_NEO_IMAGE = '/images/apple-imagies/MacBook_neo.webp'
+
+const IPHONE_17_PRO_MAX_IMAGE = '/images/apple-imagies/iPhone/iPhone_17_Pro_Max.jpg'
+const IPHONE_17_PRO_IMAGE = '/images/apple-imagies/iPhone/iPhone_17_pro.jpg'
+const IPHONE_17_IMAGE = '/images/apple-imagies/iPhone/iPhone_17.jpg'
+const IPHONE_17E_IMAGE = '/images/apple-imagies/iPhone/iPhone_17.webp'
+const IPHONE_AIR_IMAGE = '/images/apple-imagies/iPhone/iPhone_Air.jpg'
+const IPHONE_16_IMAGE = '/images/apple-imagies/iPhone/iPhone_16.webp'
+const IPHONE_16_PLUS_IMAGE = '/images/apple-imagies/iPhone/iPhone_16_Plus.webp'
+const IPHONE_16E_IMAGE = '/images/apple-imagies/iPhone/iPhone_16e.webp'
+const IPHONE_15_IMAGE = '/images/apple-imagies/iPhone/iPhone_15.webp'
+
+const WATCH_SERIES_11_IMAGE = '/images/apple-imagies/apple-watch/Apple_Watch_Series_11.webp'
+const WATCH_SE_3_IMAGE = '/images/apple-imagies/apple-watch/Apple_Watch_SE_3.webp'
+const WATCH_ULTRA_3_IMAGE = '/images/apple-imagies/apple-watch/Apple_Watch_Ultra_3.webp'
+
+const AIRPODS_PRO_3_IMAGE = '/images/apple-imagies/AirPods/AirPods_Pro_3.webp'
+const AIRPODS_MAX_2_IMAGE = '/images/apple-imagies/AirPods/AirPods_Max_2.webp'
+const AIRPODS_4_IMAGE = '/images/apple-imagies/AirPods/AirPods_4.webp'
+const AIRPODS_IMAGE = '/images/apple-imagies/AirPods/AirPods.webp'
+
 const IPAD_LANDING: CategoryLandingConfig = {
   heroVideo: 'https://core.co.za/cdn/shop/videos/c/vp/84926a051b284f16aa7400878fef7c00/84926a051b284f16aa7400878fef7c00.HD-1080p-7.2Mbps-81752485.mp4?v=0',
   heroImage: IPAD_HERO_IMAGE,
@@ -48,15 +76,15 @@ const IPHONE_LANDING: CategoryLandingConfig = {
   headline: 'iPhone',
   subheadline: 'Built for Apple Intelligence.',
   tiles: [
-    { sub: 'Iphone 17 pro max', title: 'iPhone 17 Pro Max', tagline: 'The ultimate iPhone.',                image: IPHONE_HERO_IMAGE },
-    { sub: 'Iphone 17 pro',     title: 'iPhone 17 Pro',     tagline: 'Titanium. Pro cameras. Pro power.',    image: IPHONE_HERO_IMAGE },
-    { sub: 'Iphone 17',         title: 'iPhone 17',         tagline: 'A total powerhouse.',                  image: IPHONE_HERO_IMAGE },
-    { sub: 'Iphone 17e',        title: 'iPhone 17e',        tagline: 'Serious capability. Serious value.',   image: IPHONE_HERO_IMAGE },
-    { sub: 'Iphone air',        title: 'iPhone Air',        tagline: 'Impossibly thin. Incredibly capable.', image: IPHONE_HERO_IMAGE },
-    { sub: 'Iphone 16',         title: 'iPhone 16',         tagline: 'A total powerhouse.',                  image: IPHONE_HERO_IMAGE },
-    { sub: 'Iphone 16 plus',    title: 'iPhone 16 Plus',    tagline: 'Big and mighty.',                      image: IPHONE_HERO_IMAGE },
-    { sub: 'Iphone 16e',        title: 'iPhone 16e',        tagline: 'A lot to love.',                       image: IPHONE_HERO_IMAGE },
-    { sub: 'Iphone 15',         title: 'iPhone 15',         tagline: 'Loads to love. Even more to discover.', image: IPHONE_HERO_IMAGE },
+    { sub: 'Iphone 17 pro max', title: 'iPhone 17 Pro Max', tagline: 'The ultimate iPhone.',                image: IPHONE_17_PRO_MAX_IMAGE },
+    { sub: 'Iphone 17 pro',     title: 'iPhone 17 Pro',     tagline: 'Titanium. Pro cameras. Pro power.',    image: IPHONE_17_PRO_IMAGE },
+    { sub: 'Iphone 17',         title: 'iPhone 17',         tagline: 'A total powerhouse.',                  image: IPHONE_17_IMAGE },
+    { sub: 'Iphone 17e',        title: 'iPhone 17e',        tagline: 'Serious capability. Serious value.',   image: IPHONE_17E_IMAGE },
+    { sub: 'Iphone air',        title: 'iPhone Air',        tagline: 'Impossibly thin. Incredibly capable.', image: IPHONE_AIR_IMAGE },
+    { sub: 'Iphone 16',         title: 'iPhone 16',         tagline: 'A total powerhouse.',                  image: IPHONE_16_IMAGE },
+    { sub: 'Iphone 16 plus',    title: 'iPhone 16 Plus',    tagline: 'Big and mighty.',                      image: IPHONE_16_PLUS_IMAGE },
+    { sub: 'Iphone 16e',        title: 'iPhone 16e',        tagline: 'A lot to love.',                       image: IPHONE_16E_IMAGE },
+    { sub: 'Iphone 15',         title: 'iPhone 15',         tagline: 'Loads to love. Even more to discover.', image: IPHONE_15_IMAGE },
   ],
 }
 
@@ -66,14 +94,26 @@ const MAC_LANDING: CategoryLandingConfig = {
   headline: 'Mac',
   subheadline: "Supercharged for what's next.",
   tiles: [
-    { sub: 'Macbook air m5',   title: 'MacBook Air | M5',   tagline: 'Strikingly thin. Remarkably capable.', image: MAC_HERO_IMAGE },
-    { sub: 'Macbook pro 14"',  title: 'MacBook Pro 14″', tagline: 'Mind-blowing. Head-turning.',        image: MAC_HERO_IMAGE },
-    { sub: 'Macbook pro 16"',  title: 'MacBook Pro 16″', tagline: 'A beast of a laptop.',                image: MAC_HERO_IMAGE },
-    { sub: 'Imac 24',          title: 'iMac 24″',       tagline: 'Say hello to the color of possibility.', image: MAC_HERO_IMAGE },
-    { sub: 'Mac mini',         title: 'Mac mini',           tagline: 'More muscle. More hustle.',            image: MAC_HERO_IMAGE },
-    { sub: 'Mac studio',       title: 'Mac Studio',         tagline: 'Take a big step up.',                  image: MAC_HERO_IMAGE },
-    { sub: 'Displays',         title: 'Displays',           tagline: 'The ultimate display companion.',      image: MAC_HERO_IMAGE },
-    { sub: 'Macbook neo',      title: 'MacBook Neo',        tagline: 'A18 Pro power. Incredible price.',     image: MAC_HERO_IMAGE },
+    { sub: 'Macbook air m5',   title: 'MacBook Air | M5',   tagline: 'Strikingly thin. Remarkably capable.', image: MACBOOK_AIR_IMAGE },
+    { sub: 'Macbook pro 14"',  title: 'MacBook Pro 14″', tagline: 'Mind-blowing. Head-turning.',        image: MACBOOK_PRO_14_IMAGE },
+    { sub: 'Macbook pro 16"',  title: 'MacBook Pro 16″', tagline: 'A beast of a laptop.',                image: MACBOOK_PRO_16_IMAGE },
+    { sub: 'Imac 24',          title: 'iMac 24″',       tagline: 'Say hello to the color of possibility.', image: IMAC_24_IMAGE },
+    { sub: 'Mac mini',         title: 'Mac mini',           tagline: 'More muscle. More hustle.',            image: MAC_MINI_IMAGE },
+    { sub: 'Mac studio',       title: 'Mac Studio',         tagline: 'Take a big step up.',                  image: MAC_STUDIO_IMAGE },
+    { sub: 'Displays',         title: 'Displays',           tagline: 'The ultimate display companion.',      image: STUDIO_DISPLAY_IMAGE },
+    { sub: 'Macbook neo',      title: 'MacBook Neo',        tagline: 'A18 Pro power. Incredible price.',     image: MACBOOK_NEO_IMAGE },
+  ],
+}
+
+const WATCH_LANDING: CategoryLandingConfig = {
+  heroVideo: 'https://core.co.za/cdn/shop/videos/c/vp/e95cf57d268a4fd9b26e855020a6873b/e95cf57d268a4fd9b26e855020a6873b.HD-1080p-7.2Mbps-81753153.mp4?v=0',
+  heroImage: WATCH_SERIES_11_IMAGE,
+  headline: 'Apple Watch',
+  subheadline: 'The ultimate device for a healthier life.',
+  tiles: [
+    { sub: 'Watch ultra 3',   title: 'Apple Watch Ultra 3',   tagline: 'Adventure at every altitude.',      image: WATCH_ULTRA_3_IMAGE },
+    { sub: 'Watch series 11', title: 'Apple Watch Series 11', tagline: 'Smarter. Brighter. Mightier.',      image: WATCH_SERIES_11_IMAGE },
+    { sub: 'Watch se 3',      title: 'Apple Watch SE 3',      tagline: 'A big step up. A great value.',     image: WATCH_SE_3_IMAGE },
   ],
 }
 
@@ -83,10 +123,10 @@ const AIRPODS_LANDING: CategoryLandingConfig = {
   headline: 'AirPods',
   subheadline: 'Wireless audio. Perfected.',
   tiles: [
-    { sub: 'AirPods Pro 3',  title: 'AirPods Pro 3',  tagline: 'Adaptive Audio. Now even smarter.',   image: AIRPODS_HERO_IMAGE },
-    { sub: 'AirPods Pro 4',  title: 'AirPods Pro 4',  tagline: 'The ultimate wireless earbuds.',       image: AIRPODS_HERO_IMAGE },
-    { sub: 'AirPods Max 2',  title: 'AirPods Max 2',  tagline: 'Computational audio. Reimagined.',     image: AIRPODS_HERO_IMAGE },
-    { sub: 'AirPods',        title: 'AirPods',        tagline: 'Effortless. Magical. AirPods.',        image: AIRPODS_HERO_IMAGE },
+    { sub: 'AirPods Pro 3',  title: 'AirPods Pro 3',  tagline: 'Adaptive Audio. Now even smarter.',   image: AIRPODS_PRO_3_IMAGE },
+    { sub: 'AirPods 4',      title: 'AirPods 4',      tagline: 'The ultimate wireless earbuds.',       image: AIRPODS_4_IMAGE },
+    { sub: 'AirPods Max 2',  title: 'AirPods Max 2',  tagline: 'Computational audio. Reimagined.',     image: AIRPODS_MAX_2_IMAGE },
+    { sub: 'AirPods',        title: 'AirPods',        tagline: 'Effortless. Magical. AirPods.',        image: AIRPODS_IMAGE },
   ],
 }
 
@@ -95,6 +135,7 @@ export const LANDING_CONFIGS: Record<string, CategoryLandingConfig> = {
   iPhone: IPHONE_LANDING,
   Mac: MAC_LANDING,
   AirPods: AIRPODS_LANDING,
+  Watch: WATCH_LANDING,
 }
 
 // ── Design tokens (matches the Apple portal) ────────────────────────────────

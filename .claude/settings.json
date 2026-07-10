@@ -1,0 +1,30 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node -e ' *)",
+      "Bash(node scripts/fill-macbook-air-m5.mjs)",
+      "Bash(node scripts/fill-macbook-neo.mjs)",
+      "Bash(node scripts/fill-studio-displays.mjs)",
+      "Bash(mkdir -p \"C:\\\\Users\\\\User\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-User-Pictures-spet-online-webste-spet-online\\\\e9e1c2f7-7a9a-4676-a639-e2a289244887\\\\scratchpad\\\\imgcheck2\")",
+      "Bash(curl -s -o neo_silver_p6.jpg \"https://core.co.za/cdn/shop/files/MacBook_13-in_A18_Pro_Silver_PDP_Image_Position_6__en-WW_600x.jpg?v=1772717687\")",
+      "Bash(curl -s -o neo_silver_p7.jpg \"https://core.co.za/cdn/shop/files/MacBook_13-in_A18_Pro_Silver_PDP_Image_Position_7__en-WW_600x.jpg?v=1772717687\")",
+      "Bash(curl -s -o neo_silver_p9.jpg \"https://core.co.za/cdn/shop/files/MacBook_13-in_A18_Pro_Silver_PDP_Image_Position_9__en-WW_600x.jpg?v=1772717687\")",
+      "Bash(curl -s -o neo_silver_p10.jpg \"https://core.co.za/cdn/shop/files/MacBook_13-in_A18_Pro_Silver_PDP_Image_Position_10__en-WW_600x.jpg?v=1772717687\")",
+      "Bash(curl -s -o neo_silver_p8.jpg \"https://core.co.za/cdn/shop/files/MacBook_13-in_A18_Pro_Silver_PDP_Image_Position_8__en-WW_600x.jpg?v=1772717687\")",
+      "Bash(curl -s -o neo_silver_p3.jpg \"https://core.co.za/cdn/shop/files/MacBook_13-in_A18_Pro_Silver_PDP_Image_Position_3__en-WW_600x.jpg?v=1772717687\")",
+      "Bash(curl -s -o pro14_sb_p3.jpg \"https://core.co.za/cdn/shop/files/MacBook_Pro_14-in_M5_Space_Black_PDP_Image_Position_3__WWEN_800x.jpg?v=1760682083\")",
+      "Bash(curl -s -o pro14_sb_p4.jpg \"https://core.co.za/cdn/shop/files/MacBook_Pro_14-in_M5_Space_Black_PDP_Image_Position_4__WWEN_800x.jpg?v=1760682083\")",
+      "Bash(curl -s -o air15_midnight_p1.jpg \"https://core.co.za/cdn/shop/files/MacBook_Air_15-in_M5_Midnight_PDP_Image_Position_1__en-WW_5000x.jpg?v=1772715473\")",
+      "Bash(curl -s -o air15_skyblue_p1.jpg \"https://core.co.za/cdn/shop/files/MacBook_Air_15-in_M5_Sky_Blue_PDP_Image_Position_1__en-WW_5000x.jpg?v=1772715422\")",
+      "Bash(node scripts/enrich-thin-galleries.mjs)",
+      "Bash(node scripts/fill-macbook-air-starlight-all-sizes.mjs)",
+      "Bash(mkdir -p \"C:\\\\Users\\\\User\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-User-Pictures-spet-online-webste-spet-online\\\\e9e1c2f7-7a9a-4676-a639-e2a289244887\\\\scratchpad\\\\imgcheck4\")",
+      "Bash(curl -s -o guess_p5.jpg \"https://core.co.za/cdn/shop/files/MacBook_Air_13-in_M5_Sky_Blue_PDP_Image_Position_5__en-WW_5000x.jpg?v=1772714795\")",
+      "Bash(curl -s -o guess_p9.jpg \"https://core.co.za/cdn/shop/files/MacBook_Air_13-in_M5_Sky_Blue_PDP_Image_Position_9__en-WW_5000x.jpg?v=1772714796\")",
+      "Bash(curl -sI \"https://core.co.za/cdn/shop/files/MacBook_Air_13-in_M5_Sky_Blue_PDP_Image_Position_5__en-WW_5000x.jpg?v=1772714795\")",
+      "Bash(file guess_p5.jpg guess_p9.jpg)",
+      "Bash(npx --yes playwright screenshot --viewport-size=1440,900 --wait-for-timeout=3000 http://localhost:3001/shop /tmp/shots/shop-after2.png)",
+      "Bash(npm run *)"
+    ]
+  }
+}

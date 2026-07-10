@@ -1,0 +1,24 @@
+Know Your Customer (KYC) Verification
+
+ID or Passport (PDF/JPG)
+Company Registration Documents (CIPC) (PDF)
+Proof of Address (within the last 3 months) (PDF)
+
+To protect our customers and prevent fraud, SPET Enterprise may request supporting documents to verify your identity or business before processing certain orders or account applications.
+
+You may be asked to provide:
+
+ID or Passport
+Company Registration Documents (CIPC)
+Proof of Address (within the last 3 months)
+
+All information is handled securely and in accordance with POPIA.
+
+
+
+Customer Type	                  KYC Required
+Business account registration	     ✅ Yes
+Enterprise account	             ✅ Yes
+Credit account application	     ✅ Yes
+Government department	             ✅ Yes
+Bulk procurement	             ✅ Yes

@@ -81,7 +81,7 @@ const CATEGORIES = [
     key: 'Accessories',
     label: 'Accessories',
     tagline: 'Everything you need to do more.',
-    hero: '/enterprice-images/ARP100_Mobile Banner.png',
+    hero: '/images/apple-imagies/ARP100_Desktop Banner.png',
     color: '#1d1d1f',
     bg: '#ffffff',
   },

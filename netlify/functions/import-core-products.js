@@ -1,6 +1,6 @@
 // netlify/functions/import-core-products.js
 // Imports the Core Group Apple ARP price list XLSX into core_products table
-// Called from admin dashboard — protected by SPET_WEBHOOK_SECRET
+// Called from admin dashboard — protected by a Supabase admin session (Authorization: Bearer <token>)
 
 const { createClient } = require('@supabase/supabase-js');
 const XLSX = require('xlsx');
@@ -12,9 +12,33 @@ const supabase = createClient(
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'Content-Type, x-spet-secret',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
+
+// Verifies the caller is a signed-in admin/super_admin. Was previously a
+// static x-spet-secret header comparison — that value is baked into the
+// admin dashboard's public JS bundle (VITE_* vars are never secret), so
+// anyone who read the bundle could call this endpoint with full service-role
+// write access. Real auth: validate the caller's Supabase session, then
+// check their profiles.role.
+async function requireAdmin(event) {
+  const authHeader = event.headers['authorization'] || event.headers['Authorization'] || '';
+  const token = authHeader.replace(/^Bearer\s+/i, '');
+  if (!token) return null;
+
+  const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+  if (authError || !user) return null;
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single();
+
+  if (!profile || !['admin', 'super_admin'].includes(profile.role)) return null;
+  return user;
+}
 
 const MAIN_MAP = {
   '1 - CPU': 'Mac', '2 - iPad': 'iPad', '3 - iPhone': 'iPhone',
@@ -47,7 +71,8 @@ exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') return { statusCode: 405, headers: CORS, body: 'Method not allowed' };
 
   // Auth check
-  if (event.headers['x-spet-secret'] !== process.env.SPET_WEBHOOK_SECRET) {
+  const admin = await requireAdmin(event);
+  if (!admin) {
     return { statusCode: 401, headers: CORS, body: JSON.stringify({ error: 'Unauthorized' }) };
   }
 
