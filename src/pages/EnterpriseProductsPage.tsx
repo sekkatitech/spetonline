@@ -180,7 +180,7 @@ export default function EnterpriseProductsPage() {
   const [quoteSuccess, setQuoteSuccess] = useState(false)
   const [submitting, setSubmitting]   = useState(false)
   const [toast, setToast]             = useState('')
-  const searchTimeout = useRef<ReturnType<typeof setTimeout>>()
+  const searchTimeout = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
   const showToast = (msg:string)=>{ setToast(msg); setTimeout(()=>setToast(''),2500) }
 
@@ -203,7 +203,7 @@ export default function EnterpriseProductsPage() {
         if(source==='esquire') q=q.range(from,to); else q=q.range(0,99)
         const {data,count}=await q
         if(data){
-          allRows.push(...data.map((p:any)=>({id:p.id,name:p.ProductName,sku:p.ProductCode,brand:p.Brand??'—',category:p.Category??'—',price:Number(p.Price),stock:p.AvailableQty??0,stockStatus:(p.AvailableQty??0)===0?'out_of_stock':(p.AvailableQty??0)<=5?'low_stock':'in_stock',image:p.image,source:'esquire' as const,description:null})))
+          allRows.push(...data.map((p:any)=>({id:p.id,name:p.ProductName,sku:p.ProductCode,brand:p.Brand??'—',category:p.Category??'—',price:Number(p.Price),stock:p.AvailableQty??0,stockStatus:((p.AvailableQty??0)===0?'out_of_stock':(p.AvailableQty??0)<=5?'low_stock':'in_stock') as Product['stockStatus'],image:p.image,source:'esquire' as const,description:null})))
           totalCount+=count??0
         }
       }
@@ -331,7 +331,7 @@ export default function EnterpriseProductsPage() {
                   {key:'enterprise',label:'Enterprise'},
                   {key:'apple',label:' Apple'},
                 ] as const).map(s=>(
-                  <button key={s.key} onClick={()=>s.key==='apple'?navigate('/enterprise/apple'):setSource(s.key)} style={{padding:'5px 12px',borderRadius:6,border:'none',background:source===s.key?(s.key==='apple'?'#1d1d1f':E.primary):'none',color:source===s.key?E.onPrimary:E.onSurfaceVariant,fontSize:12,fontWeight:source===s.key?600:400,cursor:'pointer',fontFamily:'inherit'}}>
+                  <button key={s.key} onClick={()=>s.key==='apple'?navigate('/enterprise/apple'):setSource(s.key)} style={{padding:'5px 12px',borderRadius:6,border:'none',background:source===s.key?E.primary:'none',color:source===s.key?E.onPrimary:E.onSurfaceVariant,fontSize:12,fontWeight:source===s.key?600:400,cursor:'pointer',fontFamily:'inherit'}}>
                     {s.label}
                   </button>
                 ))}

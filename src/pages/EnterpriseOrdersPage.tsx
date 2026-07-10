@@ -9,6 +9,7 @@ const E = {
   primaryContainer:    '#131b2e',
   onPrimary:           '#ffffff',
   secondary:           '#515f74',
+  secondaryContainer:  '#d5e3fd',
   surface:             '#f7f9fb',
   surfaceLow:          '#f2f4f6',
   surfaceContainer:    '#eceef0',
@@ -95,7 +96,7 @@ const daysFromNow = (d: string | null) => {
 const ORDER_STATUS: Record<string, { label: string; bg: string; color: string; dot: string; step: number }> = {
   pending:    { label: 'Order Placed',   bg: E.surfaceContainer, color: E.onSurfaceVariant, dot: E.outline,  step: 0 },
   processing: { label: 'Processing',     bg: E.amberBg,          color: E.amber,            dot: E.amber,    step: 1 },
-  shipped:    { label: 'In Transit',     bg: E.secondaryContainer ?? '#d5e3fd', color: E.blue, dot: E.blue,  step: 2 },
+  shipped:    { label: 'In Transit',     bg: E.secondaryContainer, color: E.blue, dot: E.blue,  step: 2 },
   completed:  { label: 'Delivered',      bg: E.greenBg,          color: E.green,            dot: E.green,   step: 3 },
   cancelled:  { label: 'Cancelled',      bg: E.redBg,            color: E.red,              dot: E.red,     step: -1 },
 }
