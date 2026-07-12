@@ -13,6 +13,20 @@ const PF_VALIDATE_HOST = process.env.PAYFAST_SANDBOX === 'true'
   ? 'sandbox.payfast.co.za'
   : 'www.payfast.co.za';
 
+// Must match the pfEncode in create-order.js's generatePfSignature exactly —
+// PayFast's signature algorithm is based on PHP's urlencode(), which differs
+// from JS's encodeURIComponent on spaces ('+' vs '%20') and !'()* and ~.
+function pfEncode(value) {
+  return encodeURIComponent(String(value).trim())
+    .replace(/%20/g, '+')
+    .replace(/!/g, '%21')
+    .replace(/'/g, '%27')
+    .replace(/\(/g, '%28')
+    .replace(/\)/g, '%29')
+    .replace(/\*/g, '%2A')
+    .replace(/~/g, '%7E');
+}
+
 // ── Rebuild and verify the PayFast signature ──────────────────────────────────
 function verifySignature(data, passphrase = '') {
   const receivedSignature = data.signature;
@@ -20,9 +34,9 @@ function verifySignature(data, passphrase = '') {
   delete payload.signature;
 
   let str = Object.entries(payload)
-    .map(([k, v]) => `${k}=${encodeURIComponent(String(v).trim())}`)
+    .map(([k, v]) => `${k}=${pfEncode(v)}`)
     .join('&');
-  if (passphrase) str += `&passphrase=${encodeURIComponent(passphrase.trim())}`;
+  if (passphrase) str += `&passphrase=${pfEncode(passphrase)}`;
 
   const calculatedSignature = crypto.createHash('md5').update(str).digest('hex');
   return calculatedSignature === receivedSignature;

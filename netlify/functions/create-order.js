@@ -21,11 +21,27 @@ const PF_URL = process.env.PAYFAST_SANDBOX === 'true'
   ? 'https://sandbox.payfast.co.za/eng/process'
   : 'https://www.payfast.co.za/eng/process';
 
+// PayFast's signature algorithm is based on PHP's urlencode(), which differs
+// from JS's encodeURIComponent on several characters — most commonly spaces
+// ('+' vs '%20'), but also !'()* and ~ (PHP encodes these, JS leaves them as
+// unreserved). A customer name like "O'Brien" or an item_name with a space
+// would otherwise produce a signature PayFast can never match.
+function pfEncode(value) {
+  return encodeURIComponent(String(value).trim())
+    .replace(/%20/g, '+')
+    .replace(/!/g, '%21')
+    .replace(/'/g, '%27')
+    .replace(/\(/g, '%28')
+    .replace(/\)/g, '%29')
+    .replace(/\*/g, '%2A')
+    .replace(/~/g, '%7E');
+}
+
 function generatePfSignature(data, passphrase = '') {
   let str = Object.entries(data)
-    .map(([k, v]) => `${k}=${encodeURIComponent(String(v).trim())}`)
+    .map(([k, v]) => `${k}=${pfEncode(v)}`)
     .join('&');
-  if (passphrase) str += `&passphrase=${encodeURIComponent(passphrase.trim())}`;
+  if (passphrase) str += `&passphrase=${pfEncode(passphrase)}`;
   return crypto.createHash('md5').update(str).digest('hex');
 }
 
