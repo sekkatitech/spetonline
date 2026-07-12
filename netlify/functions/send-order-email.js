@@ -191,3 +191,4 @@ exports.handler = async (event) => {
     };
   }
 };// cache-bust: force rebuild after env var scope fix (2026-07-12T21:49:14Z)
+// revert: env vars restored to plain (non-secret) after runtime incident

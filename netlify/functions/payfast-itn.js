@@ -160,3 +160,4 @@ exports.handler = async (event) => {
     return { statusCode: 500, body: 'Server error' };
   }
 };// cache-bust: force rebuild after env var scope fix (2026-07-12T21:49:14Z)
+// revert: env vars restored to plain (non-secret) after runtime incident
