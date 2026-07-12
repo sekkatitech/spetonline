@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Trash2, Plus, Minus, ShoppingBag, Tag, ArrowRight } from 'lucide-react';
 import { useCartStore } from '../lib/cartStore';
@@ -21,11 +21,31 @@ export function CartPage() {
   const [promoCode, setPromoCode] = useState('');
   const [promoResult, setPromoResult] = useState<{ valid: boolean; message: string; discount?: number; promotion?: any } | null>(null);
   const [promoLoading, setPromoLoading] = useState(false);
+  const [shipping, setShipping] = useState(90);
+  const [shippingLoading, setShippingLoading] = useState(true);
 
   const sub = Number(subtotal()) || 0;
   const discount = Number(promoResult?.discount) || 0;
-  const shipping = sub - discount >= 2500 ? 0 : 150;
   const total = sub - discount + shipping;
+
+  useEffect(() => {
+    if (items.length === 0) return;
+    let cancelled = false;
+    setShippingLoading(true);
+    fetch('/.netlify/functions/calculate-shipping', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        items: items.map((i) => ({ product_id: i.product_id, supplier: i.supplier ?? 'esquire', qty: i.qty })),
+        orderValue: sub - discount,
+      }),
+    })
+      .then((res) => res.json())
+      .then((result) => { if (!cancelled) setShipping(Number(result.shipping) || 0); })
+      .catch(() => { if (!cancelled) setShipping(90); })
+      .finally(() => { if (!cancelled) setShippingLoading(false); });
+    return () => { cancelled = true; };
+  }, [items, sub, discount]);
 
   async function applyPromo() {
     if (!promoCode.trim()) return;
@@ -156,9 +176,11 @@ export function CartPage() {
                 )}
                 <div className="flex justify-between text-gray-600 dark:text-lago-200">
                   <span>Shipping</span>
-                  <span className="font-semibold">{shipping === 0 ? <span className="text-green-600 dark:text-green-400">FREE</span> : `R ${shipping.toFixed(2)}`}</span>
+                  <span className="font-semibold">
+                    {shippingLoading ? 'Calculating…' : shipping === 0 ? <span className="text-green-600 dark:text-green-400">FREE</span> : `R ${shipping.toFixed(2)}`}
+                  </span>
                 </div>
-                {shipping > 0 && (
+                {!shippingLoading && shipping > 0 && (
                   <p className="text-xs text-gray-400 dark:text-lago-500">Free shipping on orders over R2,500</p>
                 )}
                 <p className="text-xs text-gray-400 dark:text-lago-500">VAT (15%) included in all prices</p>

@@ -35,10 +35,12 @@ export function CheckoutPage() {
   const promoCode = location.state?.promoCode ?? null;
   const promoId = location.state?.promoId ?? null;
 
-  // NOTE: These are display-only estimates. The server recalculates everything.
+  // NOTE: This is a display-only estimate — create-order.js recalculates the
+  // authoritative shipping amount server-side using the same function.
   const sub = Number(subtotal()) || 0;
   const discount = Number(promoDiscount) || 0;
-  const shipping = sub - discount >= 2500 ? 0 : 150;
+  const [shipping, setShipping] = useState(90);
+  const [shippingLoading, setShippingLoading] = useState(true);
   const total = sub - discount + shipping;
 
   // ✅ AUTH GATE: redirect to login if not signed in
@@ -74,6 +76,32 @@ export function CheckoutPage() {
     country: 'ZA',
     save_address: false,
   });
+
+  const activePostalCode = useExisting && selectedAddr
+    ? addresses.find((a) => a.id === selectedAddr)?.postal_code
+    : form.postal_code;
+
+  useEffect(() => {
+    if (items.length === 0) return;
+    let cancelled = false;
+    const timer = setTimeout(() => {
+      setShippingLoading(true);
+      fetch('/.netlify/functions/calculate-shipping', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          items: items.map((i) => ({ product_id: i.product_id, supplier: i.supplier ?? 'esquire', qty: i.qty })),
+          orderValue: sub - discount,
+          postalCode: activePostalCode || undefined,
+        }),
+      })
+        .then((res) => res.json())
+        .then((result) => { if (!cancelled) setShipping(Number(result.shipping) || 0); })
+        .catch(() => { if (!cancelled) setShipping(90); })
+        .finally(() => { if (!cancelled) setShippingLoading(false); });
+    }, 400);
+    return () => { cancelled = true; clearTimeout(timer); };
+  }, [items, sub, discount, activePostalCode]);
 
   function field(key: keyof typeof form) {
     return (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -412,7 +440,9 @@ export function CheckoutPage() {
                 )}
                 <div className="flex justify-between text-gray-600 dark:text-lago-200">
                   <span>Shipping</span>
-                  <span>{shipping === 0 ? <span className="text-green-600 dark:text-green-400 font-semibold">FREE</span> : `R ${shipping.toFixed(2)}`}</span>
+                  <span>
+                    {shippingLoading ? 'Calculating…' : shipping === 0 ? <span className="text-green-600 dark:text-green-400 font-semibold">FREE</span> : `R ${shipping.toFixed(2)}`}
+                  </span>
                 </div>
                 <p className="text-xs text-gray-400 dark:text-lago-500">VAT (15%) included in prices</p>
                 <div className="border-t border-gray-200 dark:border-lago-800 pt-3 flex justify-between font-black text-xl text-gray-900 dark:text-white">

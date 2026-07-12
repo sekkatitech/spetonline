@@ -119,16 +119,28 @@ export default function EnterpriseHomePage() {
         <div style={{ ...s.container, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 24px' }}>
           <img src="/enterprice-images/spet-enterprise-logo.png" alt="SPET Enterprise" style={{ height: 32 }}
             onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
-          <button
-            onClick={() => navigate('/enterprise/dashboard')}
-            style={{
-              background: E.primary, color: E.onPrimary, border: 'none',
-              borderRadius: 980, padding: '10px 20px', fontSize: 13, fontWeight: 600,
-              cursor: 'pointer', fontFamily: 'inherit',
-            }}
-          >
-            Go to Dashboard →
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <button
+              onClick={() => navigate('/')}
+              style={{
+                background: E.orange, color: '#fff', border: 'none',
+                borderRadius: 980, padding: '10px 20px', fontSize: 13, fontWeight: 600,
+                cursor: 'pointer', fontFamily: 'inherit',
+              }}
+            >
+              ← Back to SPET Online
+            </button>
+            <button
+              onClick={() => navigate('/enterprise/dashboard')}
+              style={{
+                background: E.primary, color: E.onPrimary, border: 'none',
+                borderRadius: 980, padding: '10px 20px', fontSize: 13, fontWeight: 600,
+                cursor: 'pointer', fontFamily: 'inherit',
+              }}
+            >
+              Go to Dashboard →
+            </button>
+          </div>
         </div>
       </div>
 

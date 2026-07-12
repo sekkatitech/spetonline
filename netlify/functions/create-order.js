@@ -268,3 +268,4 @@ exports.handler = async (event) => {
     };
   }
 };
+// cache-bust: force rebuild after env var scope fix (2026-07-12T21:49:14Z)

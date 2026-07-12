@@ -95,4 +95,4 @@ exports.handler = async (event) => {
       body: `<html><body><h2>Connection failed</h2><p>${err.message}</p></body></html>`,
     };
   }
-};
+};// cache-bust: force rebuild after env var scope fix (2026-07-12T21:49:14Z)

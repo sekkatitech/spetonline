@@ -159,4 +159,4 @@ exports.handler = async (event) => {
     console.error('PayFast ITN error:', err);
     return { statusCode: 500, body: 'Server error' };
   }
-};
+};// cache-bust: force rebuild after env var scope fix (2026-07-12T21:49:14Z)
