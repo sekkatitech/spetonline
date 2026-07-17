@@ -1,6 +1,7 @@
 const { createClient } = require('@supabase/supabase-js');
 const crypto = require('crypto');
 const https = require('https');
+const { createInvoiceFromOrder } = require('./zoho-lib');
 
 // ── Supabase admin client (server-side only) ─────────────────────────────────
 const supabase = createClient(
@@ -101,10 +102,10 @@ exports.handler = async (event) => {
       return { statusCode: 400, body: 'Missing order reference' };
     }
 
-    // ── 4. Fetch the order to verify amount matches ─────────────────────────
+    // ── 4. Fetch the order (with line items, for the Zoho invoice) to verify amount matches
     const { data: order, error: fetchError } = await supabase
       .from('orders')
-      .select('*')
+      .select('*, order_items(*)')
       .eq('id', orderId)
       .single();
 
@@ -163,6 +164,24 @@ exports.handler = async (event) => {
       } catch (emailErr) {
         // Don't fail the ITN response if email fails — just log it
         console.error('Failed to trigger confirmation email:', emailErr);
+      }
+
+      // ── 7. Sync the paid order to Zoho Books as an invoice ─────────────────
+      // Non-fatal, same reasoning as the email above — a Zoho hiccup must never
+      // block PayFast's payment confirmation.
+      try {
+        const invoice = await createInvoiceFromOrder({
+          ...order,
+          items: order.order_items,
+          payment_status: 'paid',
+        });
+        if (invoice) {
+          await supabase.from('orders').update({
+            internal_notes: `${order.internal_notes || ''} | Zoho Invoice: ${invoice.invoice_id}`.trim().replace(/^\|\s*/, ''),
+          }).eq('id', orderId);
+        }
+      } catch (zohoErr) {
+        console.error('Failed to sync order to Zoho:', zohoErr);
       }
     }
 
