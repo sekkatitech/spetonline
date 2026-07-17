@@ -8,6 +8,7 @@ import { useAuth } from '../lib/AuthContext';
 import { useWishlist } from '../lib/api';
 import { ProductCard } from '../components/ProductSections';
 import { SafeImage } from '../components/SafeImage';
+import { useSEO } from '../lib/useSEO';
 
 const SA_PROVINCES = ['Eastern Cape','Free State','Gauteng','KwaZulu-Natal','Limpopo','Mpumalanga','Northern Cape','North West','Western Cape'];
 
@@ -39,6 +40,35 @@ export function ProductPage() {
       setLoading(false);
     });
   }, [slug]);
+
+  // SEO — called unconditionally (before the loading/not-found early returns) with
+  // safe fallbacks, since product may still be null on first render or if not found.
+  const seoInStock = (product?.AvailableQty ?? 0) > 0;
+  const seoPrice = product?.is_on_sale && product?.sale_price ? product.sale_price : product?.Price;
+  const seoPlainDescription = product?.ProductSummary
+    || product?.ProductDescription?.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 300)
+    || (product ? `${product.ProductName} — shop at SPET Online.` : 'Shop premium electronics at SPET Online.');
+
+  useSEO({
+    title: product ? `${product.ProductName}${product.Brand ? ` | ${product.Brand}` : ''}` : 'Product',
+    description: seoPlainDescription,
+    image: product?.image,
+    jsonLd: product ? {
+      '@type': 'Product',
+      name: product.ProductName,
+      image: product.image ? [product.image] : undefined,
+      description: seoPlainDescription,
+      sku: product.ProductCode,
+      brand: product.Brand ? { '@type': 'Brand', name: product.Brand } : undefined,
+      offers: {
+        '@type': 'Offer',
+        priceCurrency: 'ZAR',
+        price: seoPrice,
+        availability: seoInStock ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+        url: `https://spetonline.co.za/product/${product.slug || product.id}`,
+      },
+    } : undefined,
+  });
 
   if (loading) {
     return (

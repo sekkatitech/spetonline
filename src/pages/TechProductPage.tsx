@@ -8,6 +8,7 @@ import { useCartStore } from '../lib/cartStore';
 import { useAuth } from '../lib/AuthContext';
 import { useWishlist } from '../lib/api';
 import { NavSpacer } from '../components/Layout';
+import { useSEO } from '../lib/useSEO';
 
 export function TechProductPage() {
   const { id } = useParams<{ id: string }>();
@@ -36,6 +37,33 @@ export function TechProductPage() {
         setLoading(false);
       });
   }, [id]);
+
+  // SEO — called unconditionally (before the loading/not-found early returns) with
+  // safe fallbacks, since product may still be null on first render or if not found.
+  const seoPlainDescription = product?.short_description
+    || product?.full_description?.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 300)
+    || (product ? `${product.name} — shop at SPET Online.` : 'Shop gaming and computing gear at SPET Online.');
+
+  useSEO({
+    title: product ? `${product.name}${product.brand ? ` | ${product.brand}` : ''}` : 'Product',
+    description: seoPlainDescription,
+    image: product?.thumbnail_url ?? product?.images?.[0],
+    jsonLd: product ? {
+      '@type': 'Product',
+      name: product.name,
+      image: product.thumbnail_url ? [product.thumbnail_url] : (product.images ?? undefined),
+      description: seoPlainDescription,
+      sku: product.sku,
+      brand: product.brand ? { '@type': 'Brand', name: product.brand } : undefined,
+      offers: {
+        '@type': 'Offer',
+        priceCurrency: 'ZAR',
+        price: product.price_display,
+        availability: (product.stock_qty ?? 0) > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+        url: `https://spetonline.co.za/shop/tech/product/${product.id}`,
+      },
+    } : undefined,
+  });
 
   if (loading) return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#0a141d]">

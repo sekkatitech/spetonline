@@ -7,6 +7,7 @@ import { supabase } from '../lib/supabase';
 import { useState, useEffect, useCallback } from 'react';
 import { SafeImage } from '../components/SafeImage';
 import { NavSpacer } from '../components/Layout';
+import { useSEO } from '../lib/useSEO';
 
 // ── Rotating banner carousel ─────────────────────────────────────────────────
 const BANNERS = [
@@ -134,6 +135,11 @@ function SyntechCard({ product }: { product: any }) {
 
 // ── Main shop landing page ────────────────────────────────────────────────────
 export function ShopLandingPage() {
+  useSEO({
+    title: 'Shop All Electronics',
+    description: 'Browse the full SPET Online catalogue — laptops, smartphones, TVs, gaming gear and more, all at competitive prices with fast delivery across South Africa.',
+  });
+
   const { products: esquireProducts, loading: esquireLoading } = useProducts({
     sortBy: 'featured',
     perPage: 8,

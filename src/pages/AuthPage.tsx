@@ -4,8 +4,11 @@ import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { Eye, EyeOff, Mail, Lock, User } from 'lucide-react';
 import { useAuth } from '../lib/AuthContext';
 import { supabase } from '../lib/supabase';
+import { useSEO } from '../lib/useSEO';
 
 export function AuthPage() {
+  useSEO({ title: 'Sign In', description: 'Sign in or create your SPET Online account.', noindex: true });
+
   const [mode, setMode] = useState<'login' | 'register' | 'forgot'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

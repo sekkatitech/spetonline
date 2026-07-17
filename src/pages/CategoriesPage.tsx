@@ -7,6 +7,7 @@ import { useCategories, useCategoryHeads } from '../lib/api';
 import { SafeImage } from '../components/SafeImage';
 import { NavSpacer } from '../components/Layout';
 import { supabase } from '../lib/supabase';
+import { useSEO } from '../lib/useSEO';
 
 // ── Fetches first product image for a Syntech category ────────────────────────
 function CategoryImage({ categoryName }: { categoryName: string }) {
@@ -88,6 +89,11 @@ function useSyntechCategories() {
 }
 
 export function CategoriesPage() {
+  useSEO({
+    title: 'Shop by Category',
+    description: 'Browse SPET Online by category — laptops, smartphones, TVs, gaming, audio and more, all in one place.',
+  });
+
   const { categories, loading } = useCategories();
   const { categoryHeads, categoryImages, loading: headsLoading } = useCategoryHeads();
   const { categories: syntechCats, loading: syntechLoading } = useSyntechCategories();

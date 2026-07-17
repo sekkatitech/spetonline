@@ -24,7 +24,19 @@
       "Bash(curl -sI \"https://core.co.za/cdn/shop/files/MacBook_Air_13-in_M5_Sky_Blue_PDP_Image_Position_5__en-WW_5000x.jpg?v=1772714795\")",
       "Bash(file guess_p5.jpg guess_p9.jpg)",
       "Bash(npx --yes playwright screenshot --viewport-size=1440,900 --wait-for-timeout=3000 http://localhost:3001/shop /tmp/shots/shop-after2.png)",
-      "Bash(npm run *)"
+      "Bash(npm run *)",
+      "mcp__claude_ai_Netlify__netlify-project-services-updater",
+      "Bash(curl -s -X POST https://spetonline.co.za/.netlify/functions/calculate-shipping -H 'Content-Type: application/json' -d '{\"items\":[{\"product_id\":\"00000000-0000-0000-0000-000000000000\",\"supplier\":\"esquire\",\"qty\":15}],\"orderValue\":100,\"postalCode\":\"2001\"}')",
+      "Bash(curl -s -i -X POST https://spetonline.co.za/.netlify/functions/calculate-shipping -H 'Content-Type: application/json' -d '{\"items\":[{\"product_id\":\"00000000-0000-0000-0000-000000000000\",\"supplier\":\"esquire\",\"qty\":2}],\"orderValue\":500}')",
+      "Bash(git push *)",
+      "mcp__claude_ai_Netlify__netlify-project-services-reader",
+      "mcp__claude_ai_Netlify__netlify-deploy-services-reader",
+      "Bash(git commit -m ' *)",
+      "mcp__claude_ai_Supabase__list_projects",
+      "mcp__claude_ai_Supabase__execute_sql",
+      "WebFetch(domain:developers.payfast.co.za)",
+      "Bash(node -c netlify/functions/create-order.js)",
+      "Bash(node -c netlify/functions/payfast-itn.js)"
     ]
   }
 }

@@ -1,8 +1,14 @@
 import { Link } from 'react-router-dom';
 import { Building2, ChevronRight, CheckCircle, ShieldCheck, Truck, HeadphonesIcon, Server, Monitor, HardDrive, Wifi } from 'lucide-react';
 import { NavSpacer } from '../components/Layout';
+import { useSEO } from '../lib/useSEO';
 
 export function B2BPage() {
+  useSEO({
+    title: 'B2B & Enterprise Technology Solutions',
+    description: 'Bulk pricing, dedicated account management and enterprise procurement for businesses — SPET Online B2B solutions across South Africa.',
+  });
+
   return (
     <div className="min-h-screen bg-gray-30 dark:bg-[#0a141d]">
       <NavSpacer />

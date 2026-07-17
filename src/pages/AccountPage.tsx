@@ -8,6 +8,7 @@ import { useOrders, useAddresses, useWishlist } from '../lib/api';
 import { useProducts } from '../lib/api';
 import { ProductCard } from '../components/ProductSections';
 import { supabase } from '../lib/supabase';
+import { useSEO } from '../lib/useSEO';
 
 const SA_PROVINCES = ['Eastern Cape','Free State','Gauteng','KwaZulu-Natal','Limpopo','Mpumalanga','Northern Cape','North West','Western Cape'];
 
@@ -22,6 +23,8 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 export function AccountPage() {
+  useSEO({ title: 'My Account', description: 'Manage your SPET Online account.', noindex: true });
+
   const { user, profile, signOut, loading } = useAuth();
   const [tab, setTab] = useState<'orders' | 'wishlist' | 'addresses' | 'profile'>('orders');
 

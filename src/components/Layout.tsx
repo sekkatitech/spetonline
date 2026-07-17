@@ -59,6 +59,36 @@ export function Navbar() {
   const isHeroPage    = pathname === '/';
   const isTransparent = isHeroPage && !isScrolled;
 
+  // Sitewide Organization/WebSite structured data — injected once, not per-page
+  useEffect(() => {
+    if (document.querySelector('script[data-seo-jsonld-site="true"]')) return;
+    const el = document.createElement('script');
+    el.setAttribute('type', 'application/ld+json');
+    el.setAttribute('data-seo-jsonld-site', 'true');
+    el.textContent = JSON.stringify({
+      '@context': 'https://schema.org',
+      '@graph': [
+        {
+          '@type': 'Organization',
+          name: 'SPET Online',
+          url: 'https://spetonline.co.za',
+          logo: 'https://spetonline.co.za/logo-main.png',
+        },
+        {
+          '@type': 'WebSite',
+          name: 'SPET Online',
+          url: 'https://spetonline.co.za',
+          potentialAction: {
+            '@type': 'SearchAction',
+            target: 'https://spetonline.co.za/search?q={search_term_string}',
+            'query-input': 'required name=search_term_string',
+          },
+        },
+      ],
+    });
+    document.head.appendChild(el);
+  }, []);
+
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
     window.addEventListener('scroll', handleScroll);

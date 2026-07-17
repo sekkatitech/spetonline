@@ -256,6 +256,38 @@ export function useActivePromotions() {
   return { promotions, loading };
 }
 
+// ─── Deal banners ──────────────────────────────────────────────────────────
+
+export interface DealBanner {
+  id: string;
+  title: string;
+  subtitle: string | null;
+  image_url: string;
+  link_url: string;
+  badge_label: string | null;
+  size: 'large' | 'standard';
+  sort_order: number;
+}
+
+export function useDealBanners() {
+  const [banners, setBanners] = useState<DealBanner[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    supabase
+      .from('deal_banners')
+      .select('id, title, subtitle, image_url, link_url, badge_label, size, sort_order')
+      .order('sort_order', { ascending: true })
+      .then(({ data, error }) => {
+        if (error) setBanners([]);
+        else setBanners(data ?? []);
+        setLoading(false);
+      });
+  }, []);
+
+  return { banners, loading };
+}
+
 export async function validatePromoCode(code: string, orderTotal: number) {
   const { data, error } = await supabase
     .from('promotions')

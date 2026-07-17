@@ -4,5 +4,9 @@ Disallow: /admin
 Disallow: /checkout
 Disallow: /account
 Disallow: /orders
+Disallow: /auth
+Disallow: /cart
+Disallow: /enterprise
+Disallow: /search
 
-Sitemap: https://spetonline.netlify.app/sitemap.xml
+Sitemap: https://spetonline.co.za/sitemap.xml

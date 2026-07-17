@@ -9,6 +9,7 @@ import { useCartStore } from '../lib/cartStore';
 import { useAuth } from '../lib/AuthContext';
 import { useWishlist } from '../lib/api';
 import { NavSpacer } from '../components/Layout';
+import { useSEO } from '../lib/useSEO';
 
 // ── All actual Syntech brands with logo.dev API (reliable, token-based) ──────
 const LOGO_TOKEN = 'pk_RSkNTnvvScKErzhoXO5UUg';
@@ -169,6 +170,11 @@ function TechProductCard({ product }: { product: any }) {
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 export function TechShopPage() {
+  useSEO({
+    title: 'Gaming & Computing Gear',
+    description: 'Shop gaming PCs, components, peripherals and computing gear from SPET Online’s Gaming & Computing range, with fast delivery across South Africa.',
+  });
+
   const [searchParams, setSearchParams]             = useSearchParams();
   const [products,           setProducts]           = useState<any[]>([]);
   const [loading,            setLoading]            = useState(true);

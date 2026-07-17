@@ -6,10 +6,18 @@ import { supabase } from '../lib/supabase';
 import { SafeImage } from '../components/SafeImage';
 import { useCartStore } from '../lib/cartStore';
 import { NavSpacer } from '../components/Layout';
+import { useSEO } from '../lib/useSEO';
 
 export function SearchPage() {
   const [searchParams] = useSearchParams();
   const q = searchParams.get('q') ?? '';
+
+  // Internal search results shouldn't be indexed — thin/duplicate content per Google's own guidance
+  useSEO({
+    title: q ? `Search results for "${q}"` : 'Search',
+    description: q ? `Search results for "${q}" on SPET Online.` : 'Search SPET Online for electronics and tech products.',
+    noindex: true,
+  });
 
   const [esquireResults, setEsquireResults] = useState<any[]>([]);
   const [syntechResults, setSyntechResults] = useState<any[]>([]);

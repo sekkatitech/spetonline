@@ -17,6 +17,7 @@ const getCategoryIcon = (name: string) => {
 };
 import { useProducts, useBrands, useCategories, useCategoryHeads } from '../lib/api';
 import { ProductCard, ProductSkeleton } from '../components/ProductSections';
+import { useSEO } from '../lib/useSEO';
 
 const SORT_OPTIONS = [
   { value: 'newest', label: 'Newest First' },
@@ -26,6 +27,11 @@ const SORT_OPTIONS = [
 ];
 
 export function ShopPage() {
+  useSEO({
+    title: 'Home & Entertainment Electronics',
+    description: 'Shop laptops, TVs, audio, smart home and more from SPET Online’s Home & Entertainment range, with fast delivery across South Africa.',
+  });
+
   const [searchParams, setSearchParams] = useSearchParams();
   const [filtersOpen, setFiltersOpen] = useState(false);
   const navigate = useNavigate();

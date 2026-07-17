@@ -8,6 +8,7 @@ import { useAuth } from '../lib/AuthContext';
 import { useAddresses } from '../lib/api';
 import { supabase } from '../lib/supabase';
 import { SafeImage } from '../components/SafeImage';
+import { useSEO } from '../lib/useSEO';
 
 const SA_PROVINCES = ['Eastern Cape','Free State','Gauteng','KwaZulu-Natal','Limpopo','Mpumalanga','Northern Cape','North West','Western Cape'];
 
@@ -25,6 +26,8 @@ const PAYMENT_LOGOS = [
 ];
 
 export function CheckoutPage() {
+  useSEO({ title: 'Checkout', description: 'Complete your SPET Online purchase.', noindex: true });
+
   const navigate = useNavigate();
   const location = useLocation();
   const { user, profile, loading: authLoading, isEmailVerified } = useAuth();

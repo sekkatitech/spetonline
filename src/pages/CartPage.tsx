@@ -5,6 +5,7 @@ import { Trash2, Plus, Minus, ShoppingBag, Tag, ArrowRight } from 'lucide-react'
 import { useCartStore } from '../lib/cartStore';
 import { validatePromoCode } from '../lib/api';
 import { SafeImage } from '../components/SafeImage';
+import { useSEO } from '../lib/useSEO';
 
 const PAYMENT_LOGOS = [
   { src: '/payment-logos/Visa_Brandmark_Blue_RGB_2021.png', alt: 'Visa' },
@@ -16,6 +17,8 @@ const PAYMENT_LOGOS = [
 ];
 
 export function CartPage() {
+  useSEO({ title: 'Your Cart', description: 'Review the items in your SPET Online cart.', noindex: true });
+
   const { items, removeItem, updateQty, subtotal } = useCartStore();
   const navigate = useNavigate();
   const [promoCode, setPromoCode] = useState('');
