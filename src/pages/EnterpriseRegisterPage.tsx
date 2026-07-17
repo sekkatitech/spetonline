@@ -614,12 +614,13 @@ function SuccessScreen({ email }: { email: string }) {
         Application submitted!
       </h2>
       <p style={{ fontSize: 15, color: E.onSurfaceVariant, lineHeight: 1.7, maxWidth: 440, margin: '0 auto 8px' }}>
-        We've received your business registration for review. You'll receive a confirmation email at:
+        We've received your business registration. We've sent a confirmation link to:
       </p>
       <p style={{ fontSize: 15, fontWeight: 600, color: E.primary, marginBottom: 24 }}>{email}</p>
       <p style={{ fontSize: 13, color: E.onSurfaceVariant, lineHeight: 1.65, maxWidth: 400, margin: '0 auto 32px' }}>
-        Our team will verify your details and approve your account within <strong>1 business day</strong>.
-        Once approved you'll receive login instructions to access the Enterprise Portal.
+        Click the link to confirm your email and activate your login. Our team will separately verify your
+        business details and approve your account within <strong>1 business day</strong> — you'll be able to
+        sign in with the password you just created once both steps are complete.
       </p>
       <a
         href="/enterprise"
