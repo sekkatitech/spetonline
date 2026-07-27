@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ClipboardList, Package, Search } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 
@@ -167,16 +167,20 @@ function QuoteCart({ items, onRemove, onQtyChange, onSubmit, onClear }: {
 // ── Main page ──
 export default function EnterpriseProductsPage() {
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [products, setProducts]       = useState<Product[]>([])
   const [loading, setLoading]         = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
   const [total, setTotal]             = useState(0)
   const [page, setPage]               = useState(0)
-  const [search, setSearch]           = useState('')
-  const [searchInput, setSearchInput] = useState('')
-  const [source, setSource]           = useState<'all'|'esquire'|'syntech'|'axiz'|'pinnacle'>('all')
-  const [stockFilter, setStockFilter] = useState<'all'|'in_stock'>('all')
-  const [sortBy, setSortBy]           = useState<'popular'|'price_asc'|'price_desc'|'name'>('popular')
+  // Filters are seeded from the URL and kept in sync (see effect below) so
+  // "Back to Catalog" from a product detail page returns to the same tab/
+  // search/sort instead of resetting to defaults.
+  const [search, setSearch]           = useState(() => searchParams.get('q') ?? '')
+  const [searchInput, setSearchInput] = useState(() => searchParams.get('q') ?? '')
+  const [source, setSource]           = useState<'all'|'esquire'|'syntech'|'axiz'|'pinnacle'>(() => (searchParams.get('source') as any) ?? 'all')
+  const [stockFilter, setStockFilter] = useState<'all'|'in_stock'>(() => (searchParams.get('stock') as any) ?? 'all')
+  const [sortBy, setSortBy]           = useState<'popular'|'price_asc'|'price_desc'|'name'>(() => (searchParams.get('sort') as any) ?? 'popular')
   const [cart, setCart]               = useState<CartItem[]>([])
   const [quoteSuccess, setQuoteSuccess] = useState(false)
   const [submitting, setSubmitting]   = useState(false)
@@ -269,6 +273,15 @@ export default function EnterpriseProductsPage() {
   },[search,source,stockFilter,sortBy,page])
 
   useEffect(()=>{ loadProducts(true) },[search,source,stockFilter,sortBy])
+
+  useEffect(()=>{
+    const params = new URLSearchParams()
+    if(source!=='all') params.set('source',source)
+    if(search) params.set('q',search)
+    if(stockFilter!=='all') params.set('stock',stockFilter)
+    if(sortBy!=='popular') params.set('sort',sortBy)
+    setSearchParams(params,{replace:true})
+  },[source,search,stockFilter,sortBy])
 
   const handleSearchInput=(val:string)=>{
     setSearchInput(val); clearTimeout(searchTimeout.current)

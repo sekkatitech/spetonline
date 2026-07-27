@@ -24,6 +24,14 @@ export function PinnacleProductPage() {
   const { wishlist, toggleWishlist } = useWishlist(user?.id ?? null);
   const navigate = useNavigate();
 
+  // Plain navigate(-1) is a dead end if the user landed here directly (shared
+  // link, new tab, refresh) with no prior in-app history — fall back to the
+  // category page in that case, same guard used on ProductPage/ShopPage.
+  function goBack() {
+    if (window.history.state && window.history.state.idx > 0) navigate(-1);
+    else navigate('/shop/pinnacle');
+  }
+
   useEffect(() => {
     if (!id) return;
     supabase
@@ -111,7 +119,7 @@ export function PinnacleProductPage() {
         {/* Breadcrumb */}
         <nav className="flex items-center gap-2 text-sm text-gray-400 mb-8">
           <button
-            onClick={() => navigate(-1)}
+            onClick={() => goBack()}
             className="hover:text-teal-600 dark:hover:text-teal-400 transition-colors flex items-center gap-1 font-medium"
           >
             <ChevronLeft className="w-4 h-4" /> Back
@@ -320,7 +328,7 @@ export function PinnacleProductPage() {
 
         <div className="mt-8">
           <button
-            onClick={() => navigate(-1)}
+            onClick={() => goBack()}
             className="inline-flex items-center gap-2 text-sm font-semibold text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 transition-colors"
           >
             <ChevronLeft className="w-4 h-4" />

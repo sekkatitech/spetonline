@@ -82,6 +82,16 @@ export default function EnterpriseProductDetailPage() {
   const { source, id } = useParams<{ source: string; id: string }>()
   const navigate = useNavigate()
 
+  // Plain navigate(-1) is a dead end if the user landed here directly (shared
+  // link, new tab, refresh) with no prior in-app history — fall back to the
+  // plain catalog URL in that case. When there IS history, this returns to
+  // the catalog with whatever tab/search/sort was active, since those are
+  // now synced to the URL there.
+  function goBackToCatalog() {
+    if (window.history.state && window.history.state.idx > 0) navigate(-1)
+    else navigate('/enterprise/products')
+  }
+
   const [product, setProduct]   = useState<ProductDetail | null>(null)
   const [loading, setLoading]   = useState(true)
   const [imgError, setImgError] = useState(false)
@@ -374,7 +384,7 @@ export default function EnterpriseProductDetailPage() {
           position: 'sticky', top: 0, zIndex: 10,
         }}>
           <button
-            onClick={() => navigate('/enterprise/products')}
+            onClick={goBackToCatalog}
             style={{
               display: 'flex', alignItems: 'center', gap: 6,
               background: 'none', border: 'none', cursor: 'pointer',
