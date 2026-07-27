@@ -53,7 +53,7 @@ interface ProductDetail {
   stockStatus: string
   image:       string | null
   images:      string[]
-  source:      'esquire' | 'syntech' | 'enterprise' | 'axiz'
+  source:      'esquire' | 'syntech' | 'enterprise' | 'axiz' | 'pinnacle'
   description: string | null
   summary:     string | null
   specs:       Record<string, string>
@@ -65,6 +65,7 @@ function SourceBadge({ source }: { source: string }) {
     syntech:    { label: 'Gaming & Computing',   bg: E.secondaryContainer, color: E.blue },
     enterprise: { label: 'Enterprise Exclusive', bg: '#ede7f6', color: '#5e35b1' },
     axiz:       { label: 'Axiz Digital',         bg: '#fff3e0', color: '#e65100' },
+    pinnacle:   { label: 'Pinnacle',             bg: '#e0f2f1', color: '#00695c' },
   }
   const s = map[source] ?? map.esquire
   return <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 4, background: s.bg, color: s.color }}>{s.label}</span>
@@ -208,6 +209,41 @@ export default function EnterpriseProductDetailPage() {
               ...(data.category ? { Category: data.category } : {}),
               ...(data.sku    ? { SKU:      data.sku }      : {}),
               ...(data.uom    ? { Unit:     data.uom }      : {}),
+            },
+          })
+        }
+      } else if (source === 'pinnacle') {
+        const { data } = await supabase
+          .from('pinnacle_products')
+          .select('*')
+          .eq('id', id)
+          .eq('is_active', true)
+          .single()
+
+        if (data) {
+          const imgs: string[] = []
+          if (data.thumbnail_url) imgs.push(data.thumbnail_url)
+          if (data.images && Array.isArray(data.images)) imgs.push(...data.images.filter((u: string) => u !== data.thumbnail_url))
+
+          setProduct({
+            id:          data.id,
+            name:        data.name,
+            sku:         data.sku,
+            brand:       data.brand ?? '—',
+            category:    data.category ?? '—',
+            price:       Number(data.price_display),
+            stock:       data.stock_qty ?? 0,
+            stockStatus: data.stock_status ?? 'out_of_stock',
+            image:       data.thumbnail_url,
+            images:      imgs,
+            source:      'pinnacle',
+            description: data.short_description,
+            summary:     data.short_description,
+            specs: {
+              ...(data.brand    ? { Brand:    data.brand }    : {}),
+              ...(data.category ? { Category: data.category } : {}),
+              ...(data.sku      ? { SKU:      data.sku }      : {}),
+              ...(data.specifications ?? {}),
             },
           })
         }
