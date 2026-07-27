@@ -355,6 +355,7 @@ export function Footer() {
                     { label: 'Home & Entertainment', to: '/shop/home' },
                     { label: 'Gaming & Computing',   to: '/shop/tech' },
                     { label: 'Axiz Digital',         to: '/shop/axiz' },
+                    { label: 'Pinnacle',             to: '/shop/pinnacle' },
                     { label: 'Deals & Clearance',    to: '/deals' },
                     { label: 'All Categories',       to: '/categories' },
                     { label: 'B2B / Business',       to: '/b2b' },
