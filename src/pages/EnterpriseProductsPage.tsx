@@ -34,7 +34,7 @@ const APPLE_LOGO = '/enterprice-images/apple.com-logo.png'
 interface Product {
   id: string; name: string; sku: string; brand: string; category: string
   price: number; stock: number; stockStatus: 'in_stock'|'low_stock'|'out_of_stock'
-  image: string|null; source: 'esquire'|'syntech'|'enterprise'|'axiz'|'pinnacle'; description: string|null
+  image: string|null; source: 'esquire'|'syntech'|'axiz'|'pinnacle'; description: string|null
 }
 interface CartItem { product: Product; qty: number }
 
@@ -67,7 +67,6 @@ function SourceBadge({ source }: { source: string }) {
   const map: Record<string,{label:string;bg:string;color:string}> = {
     esquire:    {label:'Home & Entertainment',bg:E.surfaceContainer,color:E.onSurfaceVariant},
     syntech:    {label:'Gaming & Computing',bg:E.secondaryContainer,color:E.blue},
-    enterprise: {label:'Enterprise Exclusive',bg:'#ede7f6',color:'#5e35b1'},
     axiz:       {label:'Axiz Digital',bg:'#fff3e0',color:'#e65100'},
     pinnacle:   {label:'Pinnacle',bg:'#e0f2f1',color:'#00695c'},
   }
@@ -175,7 +174,7 @@ export default function EnterpriseProductsPage() {
   const [page, setPage]               = useState(0)
   const [search, setSearch]           = useState('')
   const [searchInput, setSearchInput] = useState('')
-  const [source, setSource]           = useState<'all'|'esquire'|'syntech'|'enterprise'|'axiz'|'pinnacle'>('all')
+  const [source, setSource]           = useState<'all'|'esquire'|'syntech'|'axiz'|'pinnacle'>('all')
   const [stockFilter, setStockFilter] = useState<'all'|'in_stock'>('all')
   const [sortBy, setSortBy]           = useState<'popular'|'price_asc'|'price_desc'|'name'>('popular')
   const [cart, setCart]               = useState<CartItem[]>([])
@@ -362,7 +361,6 @@ export default function EnterpriseProductsPage() {
                   {key:'all',label:'All'},
                   {key:'esquire',label:'Home & Ent.'},
                   {key:'syntech',label:'Gaming & Computing'},
-                  {key:'enterprise',label:'Enterprise'},
                   {key:'axiz',label:'Axiz Digital'},
                   {key:'pinnacle',label:'Pinnacle'},
                   {key:'apple',label:' Apple'},

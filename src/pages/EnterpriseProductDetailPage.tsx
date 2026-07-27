@@ -53,7 +53,7 @@ interface ProductDetail {
   stockStatus: string
   image:       string | null
   images:      string[]
-  source:      'esquire' | 'syntech' | 'enterprise' | 'axiz' | 'pinnacle'
+  source:      'esquire' | 'syntech' | 'axiz' | 'pinnacle'
   description: string | null
   summary:     string | null
   specs:       Record<string, string>
@@ -63,7 +63,6 @@ function SourceBadge({ source }: { source: string }) {
   const map: Record<string, { label: string; bg: string; color: string }> = {
     esquire:    { label: 'Home & Entertainment', bg: E.surfaceContainer, color: E.onSurfaceVariant },
     syntech:    { label: 'Gaming & Computing',   bg: E.secondaryContainer, color: E.blue },
-    enterprise: { label: 'Enterprise Exclusive', bg: '#ede7f6', color: '#5e35b1' },
     axiz:       { label: 'Axiz Digital',         bg: '#fff3e0', color: '#e65100' },
     pinnacle:   { label: 'Pinnacle',             bg: '#e0f2f1', color: '#00695c' },
   }
