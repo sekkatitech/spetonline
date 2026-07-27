@@ -8,6 +8,7 @@ import { ShopLandingPage }  from './pages/ShopLandingPage';
 import { ShopPage }         from './pages/ShopPage';          // Esquire — /shop/home
 import { TechShopPage }     from './pages/TechShopPage';      // Syntech  — /shop/tech
 import { AxizShopPage }     from './pages/AxizShopPage';      // Axiz     — /shop/axiz
+import { AxizProductPage }  from './pages/AxizProductPage';   // Axiz     — /shop/axiz/product/:id
 import { TechProductPage }  from './pages/TechProductPage';   // Syntech product detail
 import { B2BPage }          from './pages/B2BPage';           // B2B placeholder
 import { ProductPage }      from './pages/ProductPage';
@@ -64,6 +65,7 @@ function AppShell() {
           <Route path="/shop/tech"       element={<TechShopPage />} />
           <Route path="/shop/tech/product/:id" element={<TechProductPage />} />
           <Route path="/shop/axiz"       element={<AxizShopPage />} />
+          <Route path="/shop/axiz/product/:id" element={<AxizProductPage />} />
           <Route path="/b2b"             element={<B2BPage />} />
           <Route path="/enterprise"      element={<EnterprisePage />} />
           <Route path="/enterprise/apple" element={<EnterpriseApplePage />} />

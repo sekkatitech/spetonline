@@ -45,10 +45,8 @@ function AxizProductCard({ product }: { product: any }) {
   }
 
   return (
-    // No dedicated public product-detail page for Axiz yet (only the
-    // Enterprise B2B one exists, which is the wrong UI/context for a
-    // retail shopper) — card stays in-place, Add to Cart is the only action.
-    <div
+    <Link
+      to={`/shop/axiz/product/${product.id}`}
       className="group bg-white dark:bg-lago-900 border border-gray-200 dark:border-lago-800 rounded-2xl overflow-hidden hover:border-lago-400 dark:hover:border-lago-600 hover:shadow-xl transition-all duration-300 flex flex-col"
     >
       <div className="relative bg-gray-50 dark:bg-lago-800/50 aspect-square overflow-hidden">
@@ -93,7 +91,7 @@ function AxizProductCard({ product }: { product: any }) {
           </button>
         </div>
       </div>
-    </div>
+    </Link>
   );
 }
 
