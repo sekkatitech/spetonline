@@ -11,6 +11,12 @@
 [functions."axiz-sync"]
   schedule = "0 2 * * *"
 
+# Backfills AI-generated product descriptions for Axiz/Pinnacle products
+# missing one (their feeds don't include descriptions) — runs after both
+# suppliers' daily syncs (Axiz 02:00, Pinnacle pg_cron 01:30) have finished
+[functions."generate-descriptions-background"]
+  schedule = "0 3 * * *"
+
 # Security headers — applied to every response
 [[headers]]
   for = "/*"

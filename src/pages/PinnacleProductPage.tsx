@@ -187,6 +187,13 @@ export function PinnacleProductPage() {
               {inStock ? `In Stock (${product.stock_qty} available)` : 'Out of Stock'}
             </div>
 
+            {/* Short description */}
+            {product.short_description && (
+              <p className="text-gray-600 dark:text-lago-300 text-sm leading-relaxed mb-6">
+                {product.short_description}
+              </p>
+            )}
+
             {/* Quantity + Add to cart */}
             {inStock && (
               <div className="flex items-center gap-4 mb-6">
@@ -275,10 +282,13 @@ export function PinnacleProductPage() {
           </div>
           <div className="p-6">
             {activeTab === 'description' ? (
-              <p className="text-gray-400 dark:text-lago-500 text-sm">
-                {product.category ? `${product.category}. ` : ''}
-                See specifications for full details on this product.
-              </p>
+              product.short_description ? (
+                <p className="text-gray-600 dark:text-lago-300 text-sm leading-relaxed">
+                  {product.short_description}
+                </p>
+              ) : (
+                <p className="text-gray-400 dark:text-lago-500 text-sm">No description available for this product.</p>
+              )
             ) : (
               Object.keys(specs).length > 0 ? (
                 <table className="w-full text-sm">
