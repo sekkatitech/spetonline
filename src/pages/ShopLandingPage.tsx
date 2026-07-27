@@ -212,6 +212,37 @@ export function ShopLandingPage() {
         </div>
       </div>
 
+      {/* ── Two more section banners (Axiz + placeholder) ── */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+          {/* Axiz Digital */}
+          <Link
+            to="/shop/axiz"
+            className="group relative overflow-hidden rounded-3xl min-h-[320px] flex flex-col justify-end p-8 hover:shadow-2xl hover:shadow-orange-900/30 transition-all duration-500 bg-gradient-to-br from-orange-800 via-orange-900 to-[#1a0e00]"
+          >
+            <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-black/60 to-transparent" />
+            <div className="relative z-10">
+              <p className="text-orange-200 text-xs font-bold uppercase tracking-widest mb-2">New Range</p>
+              <h3 className="text-2xl font-display font-black text-white mb-4">Axiz Digital</h3>
+              <div className="flex items-center gap-2 bg-white text-orange-700 font-bold text-sm px-5 py-2.5 rounded-full group-hover:bg-orange-100 transition-colors w-fit">
+                Shop Now
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </div>
+            </div>
+          </Link>
+
+          {/* Placeholder — next range TBD */}
+          <div className="relative overflow-hidden rounded-3xl min-h-[320px] flex flex-col justify-end p-8 bg-gray-100 dark:bg-lago-900/60 border border-dashed border-gray-300 dark:border-lago-700">
+            <div className="relative z-10">
+              <p className="text-gray-400 dark:text-lago-500 text-xs font-bold uppercase tracking-widest mb-2">Coming Soon</p>
+              <h3 className="text-2xl font-display font-black text-gray-400 dark:text-lago-500">More on the way</h3>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
       {/* ── Featured — Home & Entertainment ── */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
         <div className="flex items-center justify-between mb-6">

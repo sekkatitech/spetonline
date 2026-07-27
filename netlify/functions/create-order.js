@@ -97,6 +97,7 @@ exports.handler = async (event) => {
     // ── 3. Re-fetch prices from DB ────────────────────────────────────────
     const esquireIds = items.filter(i => i.supplier === 'esquire').map(i => i.product_id);
     const syntechIds = items.filter(i => i.supplier === 'syntech').map(i => i.product_id);
+    const axizIds    = items.filter(i => i.supplier === 'axiz').map(i => i.product_id);
     const priceMap = {};
 
     if (esquireIds.length > 0) {
@@ -118,6 +119,18 @@ exports.handler = async (event) => {
         .in('id', syntechIds)
         .eq('is_active', true);
       if (error) throw new Error('Failed to fetch Syntech product prices');
+      for (const p of products) {
+        priceMap[p.id] = { price: Number(p.price_display), name: p.name, sku: p.sku, qty_available: p.stock_qty };
+      }
+    }
+
+    if (axizIds.length > 0) {
+      const { data: products, error } = await supabase
+        .from('axiz_products')
+        .select('id, name, sku, price_display, stock_qty')
+        .in('id', axizIds)
+        .eq('is_active', true);
+      if (error) throw new Error('Failed to fetch Axiz product prices');
       for (const p of products) {
         priceMap[p.id] = { price: Number(p.price_display), name: p.name, sku: p.sku, qty_available: p.stock_qty };
       }
