@@ -133,6 +133,134 @@ function SyntechCard({ product }: { product: any }) {
   );
 }
 
+// ── Axiz featured products ───────────────────────────────────────────────────
+function useAxizFeatured() {
+  const [products, setProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    supabase
+      .from('axiz_products')
+      .select('*')
+      .eq('is_active', true)
+      .gt('stock_qty', 0)
+      .order('last_synced_at', { ascending: false })
+      .limit(8)
+      .then(({ data }) => {
+        setProducts(data ?? []);
+        setLoading(false);
+      });
+  }, []);
+
+  return { products, loading };
+}
+
+// ── Axiz product card ────────────────────────────────────────────────────────
+function AxizCard({ product }: { product: any }) {
+  const price   = product.price_display ?? 0;
+  const image   = product.thumbnail_url ?? (product.images?.[0] ?? null);
+  const brand   = product.brand ?? '';
+  const inStock = (product.stock_qty ?? 0) > 0;
+
+  return (
+    <Link
+      to={`/shop/axiz/product/${product.id}`}
+      className="group bg-white dark:bg-lago-900 border border-gray-200 dark:border-lago-800 rounded-2xl overflow-hidden hover:border-lago-400 dark:hover:border-lago-600 hover:shadow-xl transition-all duration-300 flex flex-col"
+    >
+      <div className="relative bg-gray-50 dark:bg-lago-800/50 aspect-square overflow-hidden">
+        <SafeImage
+          src={image}
+          brand={brand}
+          alt={product.name}
+          className="w-full h-full object-contain p-4 group-hover:scale-105 transition-transform duration-500"
+          referrerPolicy="no-referrer"
+        />
+        {!inStock && (
+          <span className="absolute top-3 left-3 bg-gray-700 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">OUT OF STOCK</span>
+        )}
+      </div>
+      <div className="p-4 flex flex-col flex-1">
+        {brand && (
+          <p className="text-[10px] font-bold text-orange-500 dark:text-orange-400 uppercase tracking-widest mb-1">{brand}</p>
+        )}
+        <h3 className="text-sm font-semibold text-gray-900 dark:text-white leading-snug mb-3 line-clamp-2 group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors">
+          {product.name}
+        </h3>
+        <div className="mt-auto">
+          <p className="text-lg font-bold text-gray-900 dark:text-white">
+            R {price.toLocaleString('en-ZA', { minimumFractionDigits: 2 })}
+          </p>
+          <p className="text-[10px] text-gray-400 mt-0.5">incl. VAT</p>
+        </div>
+      </div>
+    </Link>
+  );
+}
+
+// ── Pinnacle featured products ───────────────────────────────────────────────
+function usePinnacleFeatured() {
+  const [products, setProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    supabase
+      .from('pinnacle_products')
+      .select('*')
+      .eq('is_active', true)
+      .gt('stock_qty', 0)
+      .order('last_synced_at', { ascending: false })
+      .limit(8)
+      .then(({ data }) => {
+        setProducts(data ?? []);
+        setLoading(false);
+      });
+  }, []);
+
+  return { products, loading };
+}
+
+// ── Pinnacle product card ────────────────────────────────────────────────────
+function PinnacleCard({ product }: { product: any }) {
+  const price   = product.price_display ?? 0;
+  const image   = product.thumbnail_url ?? (product.images?.[0] ?? null);
+  const brand   = product.brand ?? '';
+  const inStock = (product.stock_qty ?? 0) > 0;
+
+  return (
+    <Link
+      to={`/shop/pinnacle/product/${product.id}`}
+      className="group bg-white dark:bg-lago-900 border border-gray-200 dark:border-lago-800 rounded-2xl overflow-hidden hover:border-lago-400 dark:hover:border-lago-600 hover:shadow-xl transition-all duration-300 flex flex-col"
+    >
+      <div className="relative bg-gray-50 dark:bg-lago-800/50 aspect-square overflow-hidden">
+        <SafeImage
+          src={image}
+          brand={brand}
+          alt={product.name}
+          className="w-full h-full object-contain p-4 group-hover:scale-105 transition-transform duration-500"
+          referrerPolicy="no-referrer"
+        />
+        {!inStock && (
+          <span className="absolute top-3 left-3 bg-gray-700 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">OUT OF STOCK</span>
+        )}
+      </div>
+      <div className="p-4 flex flex-col flex-1">
+        {brand && (
+          <p className="text-[10px] font-bold text-teal-600 dark:text-teal-400 uppercase tracking-widest mb-1">{brand}</p>
+        )}
+        <h3 className="text-sm font-semibold text-gray-900 dark:text-white leading-snug mb-3 line-clamp-2 group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
+          {product.name}
+        </h3>
+        <div className="mt-auto">
+          <p className="text-lg font-bold text-gray-900 dark:text-white">
+            R {price.toLocaleString('en-ZA', { minimumFractionDigits: 2 })}
+          </p>
+          <p className="text-[10px] text-gray-400 mt-0.5">incl. VAT</p>
+        </div>
+      </div>
+    </Link>
+  );
+}
+
 // ── Main shop landing page ────────────────────────────────────────────────────
 export function ShopLandingPage() {
   useSEO({
@@ -147,6 +275,8 @@ export function ShopLandingPage() {
   });
 
   const { products: syntechProducts, loading: syntechLoading } = useSyntechFeatured();
+  const { products: axizProducts, loading: axizLoading } = useAxizFeatured();
+  const { products: pinnacleProducts, loading: pinnacleLoading } = usePinnacleFeatured();
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#0a141d]">
@@ -293,6 +423,52 @@ export function ShopLandingPage() {
           {syntechLoading
             ? Array.from({ length: 8 }).map((_, i) => <ProductSkeleton key={i} />)
             : syntechProducts.map((p) => <SyntechCard key={p.id} product={p} />)
+          }
+        </div>
+      </div>
+
+      {/* ── Featured — Axiz Digital ── */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h2 className="text-2xl font-display font-bold text-gray-900 dark:text-white">
+              Featured — Axiz Digital
+            </h2>
+            <p className="text-sm text-gray-500 dark:text-lago-400 mt-0.5">
+              Top picks from the Axiz Digital range
+            </p>
+          </div>
+          <Link to="/shop/axiz" className="flex items-center gap-1.5 text-sm font-semibold text-orange-600 dark:text-orange-400 hover:text-orange-700 dark:hover:text-orange-300 transition-colors">
+            View all <ArrowRight className="w-4 h-4" />
+          </Link>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {axizLoading
+            ? Array.from({ length: 8 }).map((_, i) => <ProductSkeleton key={i} />)
+            : axizProducts.map((p) => <AxizCard key={p.id} product={p} />)
+          }
+        </div>
+      </div>
+
+      {/* ── Featured — Pinnacle ── */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h2 className="text-2xl font-display font-bold text-gray-900 dark:text-white">
+              Featured — Pinnacle
+            </h2>
+            <p className="text-sm text-gray-500 dark:text-lago-400 mt-0.5">
+              Top picks from the Pinnacle range
+            </p>
+          </div>
+          <Link to="/shop/pinnacle" className="flex items-center gap-1.5 text-sm font-semibold text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 transition-colors">
+            View all <ArrowRight className="w-4 h-4" />
+          </Link>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {pinnacleLoading
+            ? Array.from({ length: 8 }).map((_, i) => <ProductSkeleton key={i} />)
+            : pinnacleProducts.map((p) => <PinnacleCard key={p.id} product={p} />)
           }
         </div>
       </div>
