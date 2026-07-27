@@ -7,6 +7,10 @@
   to     = "/index.html"
   status = 200
 
+# Pulls the latest Axiz Digital price list from their SFTP drop daily at 02:00 UTC
+[functions."axiz-sync"]
+  schedule = "0 2 * * *"
+
 # Security headers — applied to every response
 [[headers]]
   for = "/*"

@@ -34,7 +34,7 @@ const APPLE_LOGO = '/enterprice-images/apple.com-logo.png'
 interface Product {
   id: string; name: string; sku: string; brand: string; category: string
   price: number; stock: number; stockStatus: 'in_stock'|'low_stock'|'out_of_stock'
-  image: string|null; source: 'esquire'|'syntech'|'enterprise'; description: string|null
+  image: string|null; source: 'esquire'|'syntech'|'enterprise'|'axiz'; description: string|null
 }
 interface CartItem { product: Product; qty: number }
 
@@ -68,6 +68,7 @@ function SourceBadge({ source }: { source: string }) {
     esquire:    {label:'Home & Entertainment',bg:E.surfaceContainer,color:E.onSurfaceVariant},
     syntech:    {label:'Gaming & Computing',bg:E.secondaryContainer,color:E.blue},
     enterprise: {label:'Enterprise Exclusive',bg:'#ede7f6',color:'#5e35b1'},
+    axiz:       {label:'Axiz Digital',bg:'#fff3e0',color:'#e65100'},
   }
   const s = map[source]??map.esquire
   return <span style={{fontSize:10,fontWeight:600,padding:'2px 8px',borderRadius:4,background:s.bg,color:s.color}}>{s.label}</span>
@@ -173,7 +174,7 @@ export default function EnterpriseProductsPage() {
   const [page, setPage]               = useState(0)
   const [search, setSearch]           = useState('')
   const [searchInput, setSearchInput] = useState('')
-  const [source, setSource]           = useState<'all'|'esquire'|'syntech'|'enterprise'>('all')
+  const [source, setSource]           = useState<'all'|'esquire'|'syntech'|'enterprise'|'axiz'>('all')
   const [stockFilter, setStockFilter] = useState<'all'|'in_stock'>('all')
   const [sortBy, setSortBy]           = useState<'popular'|'price_asc'|'price_desc'|'name'>('popular')
   const [cart, setCart]               = useState<CartItem[]>([])
@@ -220,6 +221,22 @@ export default function EnterpriseProductsPage() {
         const {data,count}=await q
         if(data){
           allRows.push(...data.map((p:any)=>({id:p.id,name:p.name,sku:p.sku,brand:p.brand??'—',category:p.category??'—',price:Number(p.price_display),stock:p.stock_qty??0,stockStatus:(p.stock_status as any)??'out_of_stock',image:p.thumbnail_url,source:'syntech' as const,description:p.short_description})))
+          totalCount+=count??0
+        }
+      }
+
+      if(source==='all'||source==='axiz'){
+        let q = supabase.from('axiz_products').select('id,name,sku,brand,category,price_display,stock_qty,stock_status,short_description',{count:'exact'}).eq('is_active',true)
+        if(search) q=q.ilike('name',`%${search}%`)
+        if(stockFilter==='in_stock') q=q.gt('stock_qty',0)
+        if(sortBy==='price_asc') q=q.order('price_display',{ascending:true})
+        else if(sortBy==='price_desc') q=q.order('price_display',{ascending:false})
+        else if(sortBy==='name') q=q.order('name',{ascending:true})
+        else q=q.order('stock_qty',{ascending:false})
+        if(source==='axiz') q=q.range(from,to); else q=q.range(0,99)
+        const {data,count}=await q
+        if(data){
+          allRows.push(...data.map((p:any)=>({id:p.id,name:p.name,sku:p.sku,brand:p.brand??'—',category:p.category??'—',price:Number(p.price_display)||0,stock:p.stock_qty??0,stockStatus:(p.stock_status==='out_of_stock'?'out_of_stock':(p.stock_qty??0)<=5?'low_stock':'in_stock') as Product['stockStatus'],image:null,source:'axiz' as const,description:p.short_description})))
           totalCount+=count??0
         }
       }
@@ -329,6 +346,7 @@ export default function EnterpriseProductsPage() {
                   {key:'esquire',label:'Home & Ent.'},
                   {key:'syntech',label:'Gaming & Computing'},
                   {key:'enterprise',label:'Enterprise'},
+                  {key:'axiz',label:'Axiz Digital'},
                   {key:'apple',label:' Apple'},
                 ] as const).map(s=>(
                   <button key={s.key} onClick={()=>s.key==='apple'?navigate('/enterprise/apple'):setSource(s.key)} style={{padding:'5px 12px',borderRadius:6,border:'none',background:source===s.key?E.primary:'none',color:source===s.key?E.onPrimary:E.onSurfaceVariant,fontSize:12,fontWeight:source===s.key?600:400,cursor:'pointer',fontFamily:'inherit'}}>

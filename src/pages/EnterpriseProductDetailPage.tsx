@@ -53,7 +53,7 @@ interface ProductDetail {
   stockStatus: string
   image:       string | null
   images:      string[]
-  source:      'esquire' | 'syntech' | 'enterprise'
+  source:      'esquire' | 'syntech' | 'enterprise' | 'axiz'
   description: string | null
   summary:     string | null
   specs:       Record<string, string>
@@ -64,6 +64,7 @@ function SourceBadge({ source }: { source: string }) {
     esquire:    { label: 'Home & Entertainment', bg: E.surfaceContainer, color: E.onSurfaceVariant },
     syntech:    { label: 'Gaming & Computing',   bg: E.secondaryContainer, color: E.blue },
     enterprise: { label: 'Enterprise Exclusive', bg: '#ede7f6', color: '#5e35b1' },
+    axiz:       { label: 'Axiz Digital',         bg: '#fff3e0', color: '#e65100' },
   }
   const s = map[source] ?? map.esquire
   return <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 4, background: s.bg, color: s.color }}>{s.label}</span>
@@ -172,6 +173,37 @@ export default function EnterpriseProductDetailPage() {
               ...(data.brand    ? { Brand:    data.brand }    : {}),
               ...(data.category ? { Category: data.category } : {}),
               ...(data.sku      ? { SKU:      data.sku }      : {}),
+            },
+          })
+        }
+      } else if (source === 'axiz') {
+        const { data } = await supabase
+          .from('axiz_products')
+          .select('*')
+          .eq('id', id)
+          .eq('is_active', true)
+          .single()
+
+        if (data) {
+          setProduct({
+            id:          data.id,
+            name:        data.name,
+            sku:         data.sku,
+            brand:       data.brand ?? '—',
+            category:    data.category ?? '—',
+            price:       Number(data.price_display),
+            stock:       data.stock_qty ?? 0,
+            stockStatus: data.stock_status ?? 'out_of_stock',
+            image:       null,
+            images:      [],
+            source:      'axiz',
+            description: data.short_description,
+            summary:     data.short_description,
+            specs: {
+              ...(data.brand ? { Brand:    data.brand }    : {}),
+              ...(data.category ? { Category: data.category } : {}),
+              ...(data.sku    ? { SKU:      data.sku }      : {}),
+              ...(data.uom    ? { Unit:     data.uom }      : {}),
             },
           })
         }
