@@ -116,19 +116,39 @@ function mapRow(row, columnMap, headerRow) {
 }
 
 async function fetchLatestFileBuffer(sftp) {
-  const path = process.env.AXIZ_SFTP_PATH || '/home/axizpricing/files';
-  const list = await sftp.list(path);
+  const configuredPath = process.env.AXIZ_SFTP_PATH || '/home/axizpricing/files';
+  let path = configuredPath;
+  let list;
+
+  try {
+    list = await sftp.list(path);
+  } catch (err) {
+    // The configured path doesn't resolve — likely because this account is
+    // chrooted to a subtree, so absolute paths from outside that jail don't
+    // exist. Fall back to wherever the connection actually lands.
+    const cwd = await sftp.cwd();
+    path = cwd;
+    try {
+      list = await sftp.list(path);
+    } catch (innerErr) {
+      const innerMessage = innerErr instanceof Error ? innerErr.message : String(innerErr);
+      throw new Error(
+        `Configured path "${configuredPath}" failed, and fallback to account's home directory "${cwd}" also failed: ${innerMessage}`
+      );
+    }
+  }
+
   const candidates = list
     .filter((f) => f.type === '-' && DATA_EXT.test(f.name))
     .sort((a, b) => b.modifyTime - a.modifyTime);
 
   if (candidates.length === 0) {
-    throw new Error(`No data files found in ${path}`);
+    throw new Error(`No data files found in "${path}" (listed ${list.length} entries: ${list.map((f) => f.name).join(', ')})`);
   }
 
   const target = candidates[0];
   const buffer = await sftp.get(`${path}/${target.name}`);
-  return { name: target.name, buffer };
+  return { name: target.name, buffer, resolvedPath: path };
 }
 
 exports.handler = async () => {
@@ -216,6 +236,7 @@ exports.handler = async () => {
       body: JSON.stringify({
         success: true,
         file: fileName,
+        resolved_path: file.resolvedPath,
         total_fetched: totalFetched,
         total_upserted: totalUpserted,
         total_skipped: totalSkipped,
