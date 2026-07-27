@@ -9,6 +9,20 @@ import { useCartStore } from '../lib/cartStore';
 import { NavSpacer } from '../components/Layout';
 import { useSEO } from '../lib/useSEO';
 
+// ── Brands present in the Axiz catalog, mapped to real domains for
+// logo.dev. Two entries ("Dell E", "HPIC") are exact brand values as they
+// appear in Axiz's own feed data — kept as-is so clicking the tile filters
+// correctly, even though the feed's brand field isn't fully cleaned.
+const LOGO_TOKEN = 'pk_RSkNTnvvScKErzhoXO5UUg';
+
+const AXIZ_BRANDS = [
+  { name: 'Dell',     domain: 'dell.com' },
+  { name: 'Dell E',   domain: 'dell.com' },
+  { name: 'HPIC',     domain: 'hp.com' },
+  { name: 'Kingston', domain: 'kingston.com' },
+  { name: 'Targus',   domain: 'targus.com' },
+];
+
 const PER_PAGE = 40;
 
 const SORT_OPTIONS = [
@@ -199,9 +213,59 @@ export function AxizShopPage() {
               Axiz Digital
             </h1>
           </div>
-          <p className="text-orange-200 text-base">
+          <p className="text-orange-200 text-base mb-8">
             Distributor range, sourced fresh from Axiz Digital's price list
           </p>
+
+          {/* Brand logo strip — square tiles, single auto-scrolling row */}
+          <div className="relative overflow-hidden mt-2">
+            {/* Fade edges */}
+            <div className="absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-orange-900 to-transparent z-10 pointer-events-none" />
+            <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-orange-900 to-transparent z-10 pointer-events-none" />
+
+            {/* Scrolling track */}
+            <div className="flex gap-2 overflow-x-auto scrollbar-none pb-1 scroll-smooth"
+              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            >
+              {AXIZ_BRANDS.map((b) => (
+                <button
+                  key={b.name}
+                  onClick={() => toggleBrand(b.name)}
+                  title={b.name}
+                  className={`relative flex-shrink-0 flex flex-col items-center justify-center gap-1.5 w-20 h-20 rounded-xl border-2 transition-all duration-200 ${
+                    selectedBrands.includes(b.name)
+                      ? 'bg-white border-orange-400 shadow-lg shadow-orange-900/40 scale-105'
+                      : 'bg-white/95 border-white/10 hover:border-orange-300 hover:scale-105'
+                  }`}
+                >
+                  <div className="w-10 h-10 flex items-center justify-center">
+                    <img
+                      src={`https://img.logo.dev/${b.domain}?token=${LOGO_TOKEN}&format=png&size=80`}
+                      alt={b.name}
+                      className="max-w-full max-h-full object-contain"
+                      onError={(e) => {
+                        const el = e.target as HTMLImageElement;
+                        el.style.display = 'none';
+                        if (el.parentElement) {
+                          el.parentElement.innerHTML = `<span style="font-size:11px;font-weight:900;color:#7c2d12;text-align:center;line-height:1.2">${b.name.substring(0,4)}</span>`;
+                        }
+                      }}
+                    />
+                  </div>
+                  <span className={`text-[10px] font-bold leading-tight text-center px-1 truncate w-full ${
+                    selectedBrands.includes(b.name) ? 'text-orange-700' : 'text-gray-700'
+                  }`}>
+                    {b.name}
+                  </span>
+                  {selectedBrands.includes(b.name) && (
+                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-orange-600 rounded-full flex items-center justify-center">
+                      <span className="text-white text-[8px] font-black">✓</span>
+                    </div>
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
 

@@ -9,6 +9,55 @@ import { useCartStore } from '../lib/cartStore';
 import { NavSpacer } from '../components/Layout';
 import { useSEO } from '../lib/useSEO';
 
+// ── Pinnacle brands present in the catalog, mapped to their real domains
+// for logo.dev — same token/pattern already used on the Gaming & Computing
+// page. A handful of these (private-label lines like Zone, PinnPOS, PinnSec)
+// don't have a public logo; the tile's onError falls back to text initials.
+const LOGO_TOKEN = 'pk_RSkNTnvvScKErzhoXO5UUg';
+
+const PINNACLE_BRANDS = [
+  { name: 'TP-Link',          domain: 'tp-link.com' },
+  { name: 'Hikvision',        domain: 'hikvision.com' },
+  { name: 'Sandisk',          domain: 'sandisk.com' },
+  { name: 'HP',               domain: 'hp.com' },
+  { name: 'Dell',             domain: 'dell.com' },
+  { name: 'Asus',             domain: 'asus.com' },
+  { name: 'Port',             domain: 'portdesigns.com' },
+  { name: 'Seagate',          domain: 'seagate.com' },
+  { name: 'Huawei',           domain: 'huawei.com' },
+  { name: 'Hiksemi',          domain: 'hiksemi.com' },
+  { name: 'Lenovo',           domain: 'lenovo.com' },
+  { name: 'EZViz',            domain: 'ezviz.com' },
+  { name: 'NearStream',       domain: 'nearstream.com' },
+  { name: 'Zone',             domain: 'pinnacle.co.za' },
+  { name: 'Microsoft',        domain: 'microsoft.com' },
+  { name: 'PinnPOS',          domain: 'pinnacle.co.za' },
+  { name: 'LG',               domain: 'lg.com' },
+  { name: 'Bixolon',          domain: 'bixolon.com' },
+  { name: 'Western Digital',  domain: 'westerndigital.com' },
+  { name: 'Zebra',            domain: 'zebra.com' },
+  { name: 'Mercusys',         domain: 'mercusys.com' },
+  { name: 'Logitech',         domain: 'logitech.com' },
+  { name: 'Aten',             domain: 'aten.com' },
+  { name: 'Hisense',          domain: 'hisense.com' },
+  { name: 'Zebex',            domain: 'zebex.com' },
+  { name: 'PinnSec',          domain: 'pinnacle.co.za' },
+  { name: 'D-Link',           domain: 'dlink.com' },
+  { name: 'Evolis',           domain: 'evolis.com' },
+  { name: 'Qnap',             domain: 'qnap.com' },
+  { name: 'Eaton',            domain: 'eaton.com' },
+  { name: 'iMiN',             domain: 'imin.sg' },
+  { name: 'Datalogic',        domain: 'datalogic.com' },
+  { name: 'Proline',          domain: 'proline.co.za' },
+  { name: 'CommScope',        domain: 'commscope.com' },
+  { name: 'Allbro',           domain: 'allbro.co.za' },
+  { name: 'Adata',            domain: 'adata.com' },
+  { name: 'Kingston',         domain: 'kingston.com' },
+  { name: 'FSP',              domain: 'fsp-group.com' },
+  { name: 'Datanet',          domain: 'datanet.co.za' },
+  { name: 'Wacom',            domain: 'wacom.com' },
+];
+
 const PER_PAGE = 40;
 
 const SORT_OPTIONS = [
@@ -199,9 +248,59 @@ export function PinnacleShopPage() {
               Pinnacle
             </h1>
           </div>
-          <p className="text-teal-200 text-base">
+          <p className="text-teal-200 text-base mb-8">
             Computing accessories & peripherals from the Pinnacle range
           </p>
+
+          {/* Brand logo strip — square tiles, single auto-scrolling row */}
+          <div className="relative overflow-hidden mt-2">
+            {/* Fade edges */}
+            <div className="absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-teal-900 to-transparent z-10 pointer-events-none" />
+            <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-teal-900 to-transparent z-10 pointer-events-none" />
+
+            {/* Scrolling track */}
+            <div className="flex gap-2 overflow-x-auto scrollbar-none pb-1 scroll-smooth"
+              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            >
+              {PINNACLE_BRANDS.map((b) => (
+                <button
+                  key={b.name}
+                  onClick={() => toggleBrand(b.name)}
+                  title={b.name}
+                  className={`relative flex-shrink-0 flex flex-col items-center justify-center gap-1.5 w-20 h-20 rounded-xl border-2 transition-all duration-200 ${
+                    selectedBrands.includes(b.name)
+                      ? 'bg-white border-teal-400 shadow-lg shadow-teal-900/40 scale-105'
+                      : 'bg-white/95 border-white/10 hover:border-teal-300 hover:scale-105'
+                  }`}
+                >
+                  <div className="w-10 h-10 flex items-center justify-center">
+                    <img
+                      src={`https://img.logo.dev/${b.domain}?token=${LOGO_TOKEN}&format=png&size=80`}
+                      alt={b.name}
+                      className="max-w-full max-h-full object-contain"
+                      onError={(e) => {
+                        const el = e.target as HTMLImageElement;
+                        el.style.display = 'none';
+                        if (el.parentElement) {
+                          el.parentElement.innerHTML = `<span style="font-size:11px;font-weight:900;color:#134e4a;text-align:center;line-height:1.2">${b.name.substring(0,4)}</span>`;
+                        }
+                      }}
+                    />
+                  </div>
+                  <span className={`text-[10px] font-bold leading-tight text-center px-1 truncate w-full ${
+                    selectedBrands.includes(b.name) ? 'text-teal-700' : 'text-gray-700'
+                  }`}>
+                    {b.name}
+                  </span>
+                  {selectedBrands.includes(b.name) && (
+                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-teal-600 rounded-full flex items-center justify-center">
+                      <span className="text-white text-[8px] font-black">✓</span>
+                    </div>
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
 
