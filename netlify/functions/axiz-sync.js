@@ -34,20 +34,26 @@ const VAT_PERCENT = 15;
 const MARKUP_PERCENT = 25;
 
 const HEADER_ALIASES = {
-  sku:      ['sku', 'stockcode', 'stock_code', 'productcode', 'product_code', 'itemcode', 'item_code', 'code'],
-  name:     ['description', 'productdescription', 'product_description', 'name', 'productname', 'product_name'],
+  // "itemid" etc. confirmed against Axiz's real feed (Axiz.csv): ITEMID,
+  // ITEMNAME, Brand, ITEMPRICE, AVAILTOSELL, PRODCAT, Image Url, IMAGEURL2-5.
+  sku:      ['sku', 'stockcode', 'stock_code', 'productcode', 'product_code', 'itemcode', 'item_code', 'code', 'itemid'],
+  name:     ['description', 'productdescription', 'product_description', 'name', 'productname', 'product_name', 'itemname'],
   brand:    ['brand', 'manufacturer', 'vendor'],
-  category: ['category', 'productgroup', 'product_group', 'group', 'range'],
+  category: ['category', 'productgroup', 'product_group', 'group', 'range', 'prodcat'],
   uom:      ['uom', 'unit', 'unitofmeasure', 'unit_of_measure'],
   // Explicit "incl VAT" column — if the file has this, VAT is already in
   // the number, so we only add markup.
   price_incl_vat: ['priceinclvat', 'price_incl_vat', 'inclprice', 'incl_price', 'vatinclusiveprice', 'grossprice', 'gross_price', 'rrpincl', 'rrp_incl'],
   // Explicit "excl VAT" column, or an unlabelled generic "price" — treated
   // as VAT-exclusive (the normal case for a distributor cost/wholesale
-  // price list), so we add VAT then markup.
-  price_excl_vat: ['price', 'exclprice', 'excl_price', 'priceexclvat', 'price_excl_vat', 'listprice', 'list_price', 'unitprice', 'unit_price', 'nettprice', 'nett_price', 'cost', 'costprice', 'cost_price'],
-  stock:    ['stock', 'stockqty', 'stock_qty', 'qty', 'quantity', 'available', 'availableqty', 'available_qty', 'soh'],
+  // price list), so we add VAT then markup. Axiz's ITEMPRICE isn't labelled
+  // either way; treated as excl-VAT under that same default.
+  price_excl_vat: ['price', 'exclprice', 'excl_price', 'priceexclvat', 'price_excl_vat', 'listprice', 'list_price', 'unitprice', 'unit_price', 'nettprice', 'nett_price', 'cost', 'costprice', 'cost_price', 'itemprice'],
+  stock:    ['stock', 'stockqty', 'stock_qty', 'qty', 'quantity', 'available', 'availableqty', 'available_qty', 'soh', 'availtosell'],
+  image1:   ['imageurl', 'image_url', 'imageurl1', 'image'],
 };
+
+const EXTRA_IMAGE_HEADERS = ['imageurl2', 'imageurl3', 'imageurl4', 'imageurl5'];
 
 function normalizeHeader(h) {
   return String(h ?? '').toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -64,10 +70,27 @@ function buildColumnMap(headerRow) {
   return map;
 }
 
-function mapRow(row, columnMap, headerRow) {
+function buildExtraImageIndices(headerRow) {
+  const normalized = headerRow.map(normalizeHeader);
+  return EXTRA_IMAGE_HEADERS
+    .map((alias) => normalized.indexOf(alias))
+    .filter((idx) => idx !== -1);
+}
+
+function mapRow(row, columnMap, headerRow, extraImageIndices) {
   const sku = columnMap.sku != null ? String(row[columnMap.sku] ?? '').trim() : '';
   const name = columnMap.name != null ? String(row[columnMap.name] ?? '').trim() : '';
   const stockQty = columnMap.stock != null ? Number(row[columnMap.stock]) || 0 : 0;
+
+  const images = [];
+  if (columnMap.image1 != null) {
+    const url = String(row[columnMap.image1] ?? '').trim();
+    if (url) images.push(url);
+  }
+  for (const idx of extraImageIndices) {
+    const url = String(row[idx] ?? '').trim();
+    if (url && !images.includes(url)) images.push(url);
+  }
 
   // Figure out the selling price. If the file gives us a VAT-inclusive
   // price, VAT's already in there — just add markup. Otherwise treat the
@@ -108,6 +131,8 @@ function mapRow(row, columnMap, headerRow) {
     price_display:      priceDisplay,
     stock_qty:          stockQty,
     stock_status:       stockQty > 0 ? 'in_stock' : 'out_of_stock',
+    thumbnail_url:      images[0] ?? null,
+    images,
     raw_data:           raw,
     is_active:          true,
     supplier_id:        'axiz',
@@ -189,8 +214,9 @@ exports.handler = async () => {
     const dataRows = rows.slice(1);
     totalFetched = dataRows.length;
 
+    const extraImageIndices = buildExtraImageIndices(headerRow);
     const mapped = dataRows
-      .map((r) => mapRow(r, columnMap, headerRow))
+      .map((r) => mapRow(r, columnMap, headerRow, extraImageIndices))
       .filter((r) => r.sku !== '' && r.name !== '');
     totalSkipped = dataRows.length - mapped.length;
 

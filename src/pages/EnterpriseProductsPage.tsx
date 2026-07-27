@@ -226,7 +226,7 @@ export default function EnterpriseProductsPage() {
       }
 
       if(source==='all'||source==='axiz'){
-        let q = supabase.from('axiz_products').select('id,name,sku,brand,category,price_display,stock_qty,stock_status,short_description',{count:'exact'}).eq('is_active',true)
+        let q = supabase.from('axiz_products').select('id,name,sku,brand,category,price_display,stock_qty,stock_status,short_description,thumbnail_url',{count:'exact'}).eq('is_active',true)
         if(search) q=q.ilike('name',`%${search}%`)
         if(stockFilter==='in_stock') q=q.gt('stock_qty',0)
         if(sortBy==='price_asc') q=q.order('price_display',{ascending:true})
@@ -236,7 +236,7 @@ export default function EnterpriseProductsPage() {
         if(source==='axiz') q=q.range(from,to); else q=q.range(0,99)
         const {data,count}=await q
         if(data){
-          allRows.push(...data.map((p:any)=>({id:p.id,name:p.name,sku:p.sku,brand:p.brand??'—',category:p.category??'—',price:Number(p.price_display)||0,stock:p.stock_qty??0,stockStatus:(p.stock_status==='out_of_stock'?'out_of_stock':(p.stock_qty??0)<=5?'low_stock':'in_stock') as Product['stockStatus'],image:null,source:'axiz' as const,description:p.short_description})))
+          allRows.push(...data.map((p:any)=>({id:p.id,name:p.name,sku:p.sku,brand:p.brand??'—',category:p.category??'—',price:Number(p.price_display)||0,stock:p.stock_qty??0,stockStatus:(p.stock_status==='out_of_stock'?'out_of_stock':(p.stock_qty??0)<=5?'low_stock':'in_stock') as Product['stockStatus'],image:p.thumbnail_url,source:'axiz' as const,description:p.short_description})))
           totalCount+=count??0
         }
       }

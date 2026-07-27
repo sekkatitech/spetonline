@@ -185,6 +185,10 @@ export default function EnterpriseProductDetailPage() {
           .single()
 
         if (data) {
+          const imgs: string[] = []
+          if (data.thumbnail_url) imgs.push(data.thumbnail_url)
+          if (data.images && Array.isArray(data.images)) imgs.push(...data.images.filter((u: string) => u !== data.thumbnail_url))
+
           setProduct({
             id:          data.id,
             name:        data.name,
@@ -194,8 +198,8 @@ export default function EnterpriseProductDetailPage() {
             price:       Number(data.price_display),
             stock:       data.stock_qty ?? 0,
             stockStatus: data.stock_status ?? 'out_of_stock',
-            image:       null,
-            images:      [],
+            image:       data.thumbnail_url,
+            images:      imgs,
             source:      'axiz',
             description: data.short_description,
             summary:     data.short_description,
