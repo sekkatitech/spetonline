@@ -1,7 +1,7 @@
 // @ts-nocheck
 import React from 'react';
 import { motion } from 'motion/react';
-import { Heart, ShoppingCart, ArrowRight, Eye, Tag } from 'lucide-react';
+import { Heart, ShoppingCart, ArrowRight, Eye } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useProducts, useCategories, useCategoryHeads, Product } from '../lib/api';
 import { useCartStore } from '../lib/cartStore';
@@ -237,36 +237,6 @@ export function FeaturedCategories() {
                   </Link>
                 </motion.div>
               ))
-          }
-        </div>
-      </div>
-    </section>
-  );
-}
-
-// ─── Best Sellers ─────────────────────────────────────────────────────────────
-
-export function BestSellers() {
-  const { products, loading } = useProducts({ sortBy: 'price_asc', perPage: 4 });
-
-  return (
-    <section className="py-20 bg-gray-50 dark:bg-[#0a141d] transition-colors duration-300">
-      <div className="container mx-auto px-4 md:px-6">
-        <div className="flex items-end justify-between mb-10">
-          <div>
-            <p className="text-accent-orange font-bold text-sm uppercase tracking-widest mb-2 flex items-center gap-2">
-              <Tag className="w-4 h-4" /> Top Sellers
-            </p>
-            <h2 className="text-4xl md:text-5xl font-display font-bold text-gray-900 dark:text-white">Customer Favourites</h2>
-          </div>
-          <Link to="/shop?sort=newest" className="hidden md:flex items-center gap-2 text-sm font-semibold text-lago-600 dark:text-lago-400 hover:text-lago-800 dark:hover:text-white transition-colors">
-            View All <ArrowRight className="w-4 h-4" />
-          </Link>
-        </div>
-        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-          {loading
-            ? Array.from({ length: 4 }).map((_, i) => <ProductSkeleton key={i} />)
-            : products.map((p) => <ProductCard key={p.id} product={p} />)
           }
         </div>
       </div>

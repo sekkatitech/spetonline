@@ -204,6 +204,23 @@ export function BrandShowcase() {
   );
 }
 
+export function BrandCollageBanner() {
+  return (
+    <section className="py-16 bg-white dark:bg-[#0a141d] transition-colors duration-300">
+      <div className="container mx-auto px-4 md:px-6">
+        <div className="rounded-3xl overflow-hidden border border-gray-200 dark:border-lago-800 shadow-sm hover:shadow-xl dark:hover:shadow-lago-900/60 transition-shadow duration-300">
+          <img
+            src="/images/gizzu-family-banner.jpg"
+            alt="Featured brands — Gizzu, Xiaomi, WINX, Port Designs, ASUS, HP and more"
+            className="w-full h-auto block"
+            loading="lazy"
+          />
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export function PromoBanner() {
   return (
     <section className="py-6 px-4 md:px-6 container mx-auto">

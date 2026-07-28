@@ -1,5 +1,5 @@
-import { Hero, BrandShowcase, PromoBanner, TrustSection, AccountBenefits, Newsletter } from '../components/HomeSections';
-import { FeaturedCategories, FeaturedProducts, BestSellers } from '../components/ProductSections';
+import { Hero, BrandShowcase, BrandCollageBanner, PromoBanner, TrustSection, AccountBenefits, Newsletter } from '../components/HomeSections';
+import { FeaturedCategories, FeaturedProducts } from '../components/ProductSections';
 import { useSEO } from '../lib/useSEO';
 
 export function HomePage() {
@@ -13,10 +13,10 @@ export function HomePage() {
     <>
       <Hero />
       <BrandShowcase />
+      <BrandCollageBanner />
       <FeaturedCategories />
       <FeaturedProducts />
       <PromoBanner />
-      <BestSellers />
       <TrustSection />
       <AccountBenefits />
       <Newsletter />
