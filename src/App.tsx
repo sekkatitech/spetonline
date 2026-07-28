@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route, useLocation, Link, useNavigationType } from 'react-router-dom';
 import { useEffect } from 'react';
-import { Navbar, Footer } from './components/Layout';
+import { Navbar, Footer, WhatsAppButton } from './components/Layout';
 import { AuthProvider } from './lib/AuthContext';
 // Pages
 import { HomePage }         from './pages/HomePage';
@@ -111,6 +111,7 @@ function AppShell() {
         </Routes>
       </main>
       {!isEnterprise && <Footer />}
+      {!isEnterprise && <WhatsAppButton />}
     </>
   );
 }
