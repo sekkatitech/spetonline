@@ -48,7 +48,7 @@ export function NavSpacer() {
 }
 
 // ── Floating WhatsApp chat button ────────────────────────────────────────────
-const WHATSAPP_NUMBER = '27870881483'; // same number already used in the footer
+const WHATSAPP_NUMBER = '27741164295';
 const WHATSAPP_MESSAGE = "Hi SPET Online, I'd like some help with a product.";
 
 export function WhatsAppButton() {
@@ -364,7 +364,7 @@ export function Footer() {
                     className="w-8 h-8 bg-gray-800 hover:bg-lago-600 rounded-full flex items-center justify-center transition-colors text-gray-400 hover:text-white text-xs font-bold">f</a>
                   <a href="https://instagram.com" target="_blank" rel="noreferrer"
                     className="w-8 h-8 bg-gray-800 hover:bg-lago-600 rounded-full flex items-center justify-center transition-colors text-gray-400 hover:text-white text-xs font-bold">in</a>
-                  <a href="https://wa.me/27870881483" target="_blank" rel="noreferrer"
+                  <a href={`https://wa.me/${WHATSAPP_NUMBER}`} target="_blank" rel="noreferrer"
                     className="w-8 h-8 bg-gray-800 hover:bg-green-600 rounded-full flex items-center justify-center transition-colors text-gray-400 hover:text-white text-xs font-bold">W</a>
                 </div>
               </div>
