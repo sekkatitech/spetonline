@@ -290,7 +290,11 @@ export function PinnacleProductPage() {
           </div>
           <div className="p-6">
             {activeTab === 'description' ? (
-              product.short_description ? (
+              product.full_description ? (
+                <p className="text-gray-600 dark:text-lago-300 text-sm leading-relaxed whitespace-pre-wrap">
+                  {product.full_description}
+                </p>
+              ) : product.short_description ? (
                 <p className="text-gray-600 dark:text-lago-300 text-sm leading-relaxed">
                   {product.short_description}
                 </p>

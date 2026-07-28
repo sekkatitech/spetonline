@@ -246,7 +246,7 @@ export default function EnterpriseProductDetailPage() {
             image:       data.thumbnail_url,
             images:      imgs,
             source:      'pinnacle',
-            description: data.short_description,
+            description: data.full_description ?? data.short_description,
             summary:     data.short_description,
             specs: {
               ...(data.brand    ? { Brand:    data.brand }    : {}),
