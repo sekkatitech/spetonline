@@ -2,20 +2,21 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowRight, Grid3x3, Zap, Home } from 'lucide-react';
+import { ArrowRight, Grid3x3, Zap, Home, Package } from 'lucide-react';
 import { useCategories, useCategoryHeads } from '../lib/api';
 import { SafeImage } from '../components/SafeImage';
 import { NavSpacer } from '../components/Layout';
 import { supabase } from '../lib/supabase';
 import { useSEO } from '../lib/useSEO';
 
-// ── Fetches first product image for a Syntech category ────────────────────────
-function CategoryImage({ categoryName }: { categoryName: string }) {
+// ── Fetches first product image for a category from any supplier table ────────
+function CategoryImage({ table, categoryName }: { table: string; categoryName: string }) {
   const [image, setImage] = useState<string | null>(null);
 
   useEffect(() => {
+    setImage(null);
     supabase
-      .from('syntech_products')
+      .from(table)
       .select('thumbnail_url, images')
       .eq('category', categoryName)
       .eq('is_active', true)
@@ -25,7 +26,7 @@ function CategoryImage({ categoryName }: { categoryName: string }) {
       .then(({ data }) => {
         if (data?.thumbnail_url) setImage(data.thumbnail_url);
       });
-  }, [categoryName]);
+  }, [table, categoryName]);
 
   if (!image) {
     return (
@@ -62,13 +63,15 @@ const SYNTECH_CATEGORY_NAMES: Record<string, string> = {
   'Computers':            'Computers',
 };
 
-function useSyntechCategories() {
+// ── Generic "categories with counts" hook, used for any supplier table that
+// has a flat `category` text column (Syntech, Axiz, Pinnacle) ────────────────
+function useSupplierCategories(table: string) {
   const [categories, setCategories] = useState<{ name: string; count: number }[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     supabase
-      .from('syntech_products')
+      .from(table)
       .select('category')
       .eq('is_active', true)
       .not('category', 'is', null)
@@ -83,7 +86,7 @@ function useSyntechCategories() {
         setCategories(sorted);
         setLoading(false);
       });
-  }, []);
+  }, [table]);
 
   return { categories, loading };
 }
@@ -96,12 +99,17 @@ export function CategoriesPage() {
 
   const { categories, loading } = useCategories();
   const { categoryHeads, categoryImages, loading: headsLoading } = useCategoryHeads();
-  const { categories: syntechCats, loading: syntechLoading } = useSyntechCategories();
+  const { categories: syntechCats, loading: syntechLoading } = useSupplierCategories('syntech_products');
+  const { categories: axizCats, loading: axizLoading } = useSupplierCategories('axiz_products');
+  const { categories: pinnacleCats, loading: pinnacleLoading } = useSupplierCategories('pinnacle_products');
   const navigate = useNavigate();
 
   const [searchParams, setSearchParams] = useSearchParams();
-  const activeTab: 'home' | 'gaming' = searchParams.get('tab') === 'gaming' ? 'gaming' : 'home';
-  const setActiveTab = (tab: 'home' | 'gaming') => setSearchParams(tab === 'home' ? {} : { tab });
+  const activeTab: 'home' | 'gaming' | 'axiz' | 'pinnacle' =
+    (['gaming', 'axiz', 'pinnacle'] as const).includes(searchParams.get('tab') as any)
+      ? (searchParams.get('tab') as 'gaming' | 'axiz' | 'pinnacle')
+      : 'home'
+  const setActiveTab = (tab: 'home' | 'gaming' | 'axiz' | 'pinnacle') => setSearchParams(tab === 'home' ? {} : { tab })
 
   // Group categories by CategoryHead
   const categoryMap = new Map<string, typeof categories>();
@@ -179,6 +187,28 @@ export function CategoriesPage() {
             >
               <Zap className="w-4 h-4" />
               Gaming & Computing
+            </button>
+            <button
+              onClick={() => setActiveTab('axiz')}
+              className={`flex items-center gap-2 px-6 py-3.5 text-sm font-semibold border-b-2 transition-colors ${
+                activeTab === 'axiz'
+                  ? 'border-lago-600 text-lago-600 dark:text-lago-400 dark:border-lago-400'
+                  : 'border-transparent text-gray-500 dark:text-lago-500 hover:text-gray-700 dark:hover:text-lago-300'
+              }`}
+            >
+              <Package className="w-4 h-4" />
+              Axiz Digital
+            </button>
+            <button
+              onClick={() => setActiveTab('pinnacle')}
+              className={`flex items-center gap-2 px-6 py-3.5 text-sm font-semibold border-b-2 transition-colors ${
+                activeTab === 'pinnacle'
+                  ? 'border-lago-600 text-lago-600 dark:text-lago-400 dark:border-lago-400'
+                  : 'border-transparent text-gray-500 dark:text-lago-500 hover:text-gray-700 dark:hover:text-lago-300'
+              }`}
+            >
+              <Package className="w-4 h-4" />
+              Pinnacle
             </button>
           </div>
         </div>
@@ -333,7 +363,7 @@ export function CategoriesPage() {
                         {/* Product image from category — fetch first product image */}
                         <div className="relative aspect-[4/3] bg-white dark:bg-gray-100 overflow-hidden flex items-center justify-center p-6">
                           <div className="w-full h-full flex items-center justify-center">
-                            <CategoryImage categoryName={cat.name} />
+                            <CategoryImage table="syntech_products" categoryName={cat.name} />
                           </div>
                           <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
                             <div className="w-7 h-7 rounded-full bg-lago-600 flex items-center justify-center shadow">
@@ -358,6 +388,122 @@ export function CategoriesPage() {
           </div>
         )}
 
+        {/* ── AXIZ DIGITAL tab ── */}
+        {activeTab === 'axiz' && (
+          <div className="mb-12">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-display font-bold text-gray-900 dark:text-white">
+                Axiz Digital Categories
+              </h2>
+              <Link to="/shop/axiz" className="flex items-center gap-1.5 text-sm font-semibold text-lago-600 dark:text-lago-400 hover:text-lago-800 dark:hover:text-white transition-colors">
+                All products <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
+
+            {axizLoading ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                {Array.from({ length: 12 }).map((_, i) => (
+                  <div key={i} className="aspect-[4/3] bg-gray-200 dark:bg-lago-800 rounded-2xl animate-pulse" />
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                {axizCats.map((cat, i) => (
+                  <motion.div
+                    key={cat.name}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: i * 0.04 }}
+                  >
+                    <Link
+                      to={`/shop/axiz?category=${encodeURIComponent(cat.name)}`}
+                      className="group block bg-white dark:bg-lago-900 border border-gray-200 dark:border-lago-800 rounded-2xl overflow-hidden hover:border-lago-400 dark:hover:border-lago-500 hover:shadow-lg transition-all duration-300"
+                    >
+                      <div className="relative aspect-[4/3] bg-white dark:bg-gray-100 overflow-hidden flex items-center justify-center p-6">
+                        <div className="w-full h-full flex items-center justify-center">
+                          <CategoryImage table="axiz_products" categoryName={cat.name} />
+                        </div>
+                        <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="w-7 h-7 rounded-full bg-lago-600 flex items-center justify-center shadow">
+                            <ArrowRight className="w-3.5 h-3.5 text-white" />
+                          </div>
+                        </div>
+                      </div>
+                      <div className="p-3.5">
+                        <h3 className="font-bold text-sm text-gray-900 dark:text-white group-hover:text-lago-600 dark:group-hover:text-lago-400 transition-colors leading-snug">
+                          {cat.name}
+                        </h3>
+                        <p className="text-xs text-gray-400 dark:text-lago-500 mt-0.5">
+                          {cat.count} product{cat.count !== 1 ? 's' : ''}
+                        </p>
+                      </div>
+                    </Link>
+                  </motion.div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── PINNACLE tab ── */}
+        {activeTab === 'pinnacle' && (
+          <div className="mb-12">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-display font-bold text-gray-900 dark:text-white">
+                Pinnacle Categories
+              </h2>
+              <Link to="/shop/pinnacle" className="flex items-center gap-1.5 text-sm font-semibold text-lago-600 dark:text-lago-400 hover:text-lago-800 dark:hover:text-white transition-colors">
+                All products <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
+
+            {pinnacleLoading ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                {Array.from({ length: 12 }).map((_, i) => (
+                  <div key={i} className="aspect-[4/3] bg-gray-200 dark:bg-lago-800 rounded-2xl animate-pulse" />
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                {pinnacleCats.map((cat, i) => (
+                  <motion.div
+                    key={cat.name}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: i * 0.04 }}
+                  >
+                    <Link
+                      to={`/shop/pinnacle?category=${encodeURIComponent(cat.name)}`}
+                      className="group block bg-white dark:bg-lago-900 border border-gray-200 dark:border-lago-800 rounded-2xl overflow-hidden hover:border-lago-400 dark:hover:border-lago-500 hover:shadow-lg transition-all duration-300"
+                    >
+                      <div className="relative aspect-[4/3] bg-white dark:bg-gray-100 overflow-hidden flex items-center justify-center p-6">
+                        <div className="w-full h-full flex items-center justify-center">
+                          <CategoryImage table="pinnacle_products" categoryName={cat.name} />
+                        </div>
+                        <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="w-7 h-7 rounded-full bg-lago-600 flex items-center justify-center shadow">
+                            <ArrowRight className="w-3.5 h-3.5 text-white" />
+                          </div>
+                        </div>
+                      </div>
+                      <div className="p-3.5">
+                        <h3 className="font-bold text-sm text-gray-900 dark:text-white group-hover:text-lago-600 dark:group-hover:text-lago-400 transition-colors leading-snug">
+                          {cat.name}
+                        </h3>
+                        <p className="text-xs text-gray-400 dark:text-lago-500 mt-0.5">
+                          {cat.count} product{cat.count !== 1 ? 's' : ''}
+                        </p>
+                      </div>
+                    </Link>
+                  </motion.div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* ── CTA ── */}
         <div className="rounded-3xl bg-gradient-to-r from-lago-900 to-[#0a141d] border border-lago-700 p-8 md:p-12 flex flex-col md:flex-row items-center justify-between gap-6">
           <div>
@@ -366,7 +512,7 @@ export function CategoriesPage() {
             </h2>
             <p className="text-lago-300">Search across all our products from top tech brands.</p>
           </div>
-          <div className="flex gap-3 flex-shrink-0">
+          <div className="flex flex-wrap gap-3 flex-shrink-0">
             <Link
               to="/shop/home"
               className="flex items-center gap-2 px-6 py-3.5 rounded-full bg-white text-lago-800 font-bold transition-colors hover:bg-lago-50 shadow-lg"
@@ -378,6 +524,18 @@ export function CategoriesPage() {
               className="flex items-center gap-2 px-6 py-3.5 rounded-full bg-lago-600 hover:bg-lago-500 text-white font-bold transition-colors shadow-lg"
             >
               <Zap className="w-4 h-4" /> Gaming & Computing
+            </Link>
+            <Link
+              to="/shop/axiz"
+              className="flex items-center gap-2 px-6 py-3.5 rounded-full bg-white text-lago-800 font-bold transition-colors hover:bg-lago-50 shadow-lg"
+            >
+              <Package className="w-4 h-4" /> Axiz Digital
+            </Link>
+            <Link
+              to="/shop/pinnacle"
+              className="flex items-center gap-2 px-6 py-3.5 rounded-full bg-lago-600 hover:bg-lago-500 text-white font-bold transition-colors shadow-lg"
+            >
+              <Package className="w-4 h-4" /> Pinnacle
             </Link>
           </div>
         </div>

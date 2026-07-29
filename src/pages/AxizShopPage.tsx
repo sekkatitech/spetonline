@@ -124,11 +124,17 @@ export function AxizShopPage() {
   const [search,         setSearch]     = useState('');
   const [sortBy,         setSortBy]     = useState('newest');
   const [inStockOnly,   setInStockOnly] = useState(false);
-  const [selectedBrands,     setSelectedBrands]     = useState<string[]>([]);
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [selectedBrands,     setSelectedBrands]     = useState<string[]>(() => {
+    const b = searchParams.get('brand')
+    return b ? [b] : []
+  })
+  const [selectedCategories, setSelectedCategories] = useState<string[]>(() => {
+    const c = searchParams.get('category')
+    return c ? [c] : []
+  });
   const [brands,     setBrands]     = useState<string[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
-  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(() => !!searchParams.get('category') || !!searchParams.get('brand'));
 
   // Populate brand/category filter options once, from the full active set
   useEffect(() => {
