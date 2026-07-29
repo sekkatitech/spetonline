@@ -123,6 +123,11 @@ function PinnacleProductCard({ product }: { product: any }) {
             <p className="text-lg font-bold text-gray-900 dark:text-white">
               R {price.toLocaleString('en-ZA', { minimumFractionDigits: 2 })}
             </p>
+            {product.price_rrp && product.price_rrp > price && (
+              <p className="text-xs text-gray-400 line-through">
+                R {product.price_rrp.toLocaleString('en-ZA', { minimumFractionDigits: 2 })}
+              </p>
+            )}
           </div>
           <p className="text-[10px] text-gray-400 mb-3">incl. VAT</p>
           <button

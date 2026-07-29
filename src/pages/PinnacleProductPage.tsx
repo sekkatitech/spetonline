@@ -96,6 +96,10 @@ export function PinnacleProductPage() {
   const inWishlist = wishlist.includes(product.id);
   const specs    = product.specifications ?? {};
 
+  // On sale whenever price_rrp is set higher than the current selling price
+  const isOnSale = product.price_rrp && product.price_rrp > price;
+  const savings  = isOnSale ? Math.round(((product.price_rrp - price) / product.price_rrp) * 100) : 0;
+
   function handleAddToCart() {
     addItem({
       id:         product.id,
@@ -138,6 +142,13 @@ export function PinnacleProductPage() {
 
           {/* ── Image gallery ── */}
           <div className="relative">
+            {isOnSale && (
+              <div className="absolute top-4 left-4 z-10">
+                <span className="flex items-center gap-1.5 bg-red-500 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg shadow-red-500/30">
+                  {savings > 0 ? `${savings}% OFF` : 'SALE'}
+                </span>
+              </div>
+            )}
             <div className="bg-white dark:bg-lago-900 rounded-2xl border border-gray-200 dark:border-lago-800 aspect-square overflow-hidden mb-4 p-6">
               <SafeImage
                 src={activeImage}
@@ -177,11 +188,29 @@ export function PinnacleProductPage() {
               {product.name}
             </h1>
 
+            {isOnSale && (
+              <div className="mb-5">
+                <span className="flex items-center gap-1.5 bg-red-500 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-sm w-fit">
+                  {savings > 0 ? `${savings}% OFF — SALE` : 'ON SALE'}
+                </span>
+              </div>
+            )}
+
             {/* Price */}
             <div className="flex items-baseline gap-3 mb-2">
-              <span className="text-4xl font-black text-gray-900 dark:text-white">
+              <span className={`text-4xl font-black ${isOnSale ? 'text-red-500' : 'text-gray-900 dark:text-white'}`}>
                 R {price.toLocaleString('en-ZA', { minimumFractionDigits: 2 })}
               </span>
+              {isOnSale && (
+                <span className="text-xl text-gray-400 line-through">
+                  R {product.price_rrp.toLocaleString('en-ZA', { minimumFractionDigits: 2 })}
+                </span>
+              )}
+              {isOnSale && savings > 0 && (
+                <span className="text-sm font-bold text-red-500 bg-red-50 dark:bg-red-900/20 px-2 py-0.5 rounded-lg">
+                  Save R {(product.price_rrp - price).toLocaleString('en-ZA', { minimumFractionDigits: 2 })}
+                </span>
+              )}
             </div>
             <p className="text-xs text-gray-400 mb-6">incl. VAT</p>
 
