@@ -180,7 +180,7 @@ export function TechShopPage() {
   const [loading,            setLoading]            = useState(true);
   const [total,              setTotal]              = useState(0);
   const [page,                 setPage]             = useState(() => parseInt(searchParams.get('page') || '1', 10));
-  const [search,             setSearch]             = useState('');
+  const [search,             setSearch]             = useState(() => searchParams.get('search') ?? '');
   const [sortBy,             setSortBy]             = useState('newest');
   const [inStockOnly,        setInStockOnly]        = useState(false);
   const [selectedBrands,     setSelectedBrands]     = useState<string[]>(() => {

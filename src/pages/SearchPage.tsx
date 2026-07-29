@@ -21,6 +21,8 @@ export function SearchPage() {
 
   const [esquireResults, setEsquireResults] = useState<any[]>([]);
   const [syntechResults, setSyntechResults] = useState<any[]>([]);
+  const [axizResults, setAxizResults] = useState<any[]>([]);
+  const [pinnacleResults, setPinnacleResults] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const addItem = useCartStore((s) => s.addItem);
   const [addedIds, setAddedIds] = useState<string[]>([]);
@@ -47,14 +49,34 @@ export function SearchPage() {
         .ilike('name', `%${q}%`)
         .order('name', { ascending: true })
         .limit(20),
-    ]).then(([esquire, syntech]) => {
+
+      // Search Axiz products
+      supabase
+        .from('axiz_products')
+        .select('id, name, sku, brand, price_display, thumbnail_url, stock_qty')
+        .eq('is_active', true)
+        .ilike('name', `%${q}%`)
+        .order('name', { ascending: true })
+        .limit(20),
+
+      // Search Pinnacle products
+      supabase
+        .from('pinnacle_products')
+        .select('id, name, sku, brand, price_display, thumbnail_url, stock_qty')
+        .eq('is_active', true)
+        .ilike('name', `%${q}%`)
+        .order('name', { ascending: true })
+        .limit(20),
+    ]).then(([esquire, syntech, axiz, pinnacle]) => {
       setEsquireResults(esquire.data ?? []);
       setSyntechResults(syntech.data ?? []);
+      setAxizResults(axiz.data ?? []);
+      setPinnacleResults(pinnacle.data ?? []);
       setLoading(false);
     });
   }, [q]);
 
-  const total = esquireResults.length + syntechResults.length;
+  const total = esquireResults.length + syntechResults.length + axizResults.length + pinnacleResults.length;
 
   function handleAddEsquire(e: any, product: any) {
     e.preventDefault();
@@ -83,6 +105,38 @@ export function SearchPage() {
       image: product.thumbnail_url ?? '',
       sku: product.sku,
       supplier: 'syntech',
+    });
+    setAddedIds((prev) => [...prev, product.id]);
+    setTimeout(() => setAddedIds((prev) => prev.filter((id) => id !== product.id)), 1800);
+  }
+
+  function handleAddAxiz(e: any, product: any) {
+    e.preventDefault();
+    addItem({
+      id: product.id,
+      product_id: product.id,
+      name: product.name,
+      brand: product.brand ?? '',
+      price: product.price_display,
+      image: product.thumbnail_url ?? '',
+      sku: product.sku,
+      supplier: 'axiz',
+    });
+    setAddedIds((prev) => [...prev, product.id]);
+    setTimeout(() => setAddedIds((prev) => prev.filter((id) => id !== product.id)), 1800);
+  }
+
+  function handleAddPinnacle(e: any, product: any) {
+    e.preventDefault();
+    addItem({
+      id: product.id,
+      product_id: product.id,
+      name: product.name,
+      brand: product.brand ?? '',
+      price: product.price_display,
+      image: product.thumbnail_url ?? '',
+      sku: product.sku,
+      supplier: 'pinnacle',
     });
     setAddedIds((prev) => [...prev, product.id]);
     setTimeout(() => setAddedIds((prev) => prev.filter((id) => id !== product.id)), 1800);
@@ -209,6 +263,98 @@ export function SearchPage() {
                         </p>
                         <button
                           onClick={(e) => handleAddSyntech(e, p)}
+                          disabled={p.stock_qty === 0}
+                          className={`w-full py-1.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1 ${
+                            addedIds.includes(p.id) ? 'bg-green-500 text-white' :
+                            p.stock_qty > 0 ? 'bg-lago-600 hover:bg-lago-700 text-white' :
+                            'bg-gray-200 dark:bg-lago-800 text-gray-400 cursor-not-allowed'
+                          }`}
+                        >
+                          <ShoppingCart className="w-3 h-3" />
+                          {addedIds.includes(p.id) ? 'Added!' : p.stock_qty > 0 ? 'Add to Cart' : 'Out of Stock'}
+                        </button>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Axiz results */}
+            {axizResults.length > 0 && (
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                    Axiz Digital
+                    <span className="text-sm font-normal text-gray-500 dark:text-lago-400">({axizResults.length} results)</span>
+                  </h2>
+                  <Link to={`/shop/axiz?search=${encodeURIComponent(q)}`} className="text-sm font-semibold text-lago-600 dark:text-lago-400 hover:underline">
+                    View all →
+                  </Link>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                  {axizResults.map((p) => (
+                    <Link key={p.id} to={`/shop/axiz/product/${p.id}`}
+                      className="group bg-white dark:bg-lago-900 border border-gray-200 dark:border-lago-800 rounded-2xl overflow-hidden hover:border-lago-400 hover:shadow-lg transition-all flex flex-col">
+                      <div className="aspect-square bg-gray-50 dark:bg-lago-800 p-3">
+                        <SafeImage src={p.thumbnail_url} brand={p.brand} alt={p.name}
+                          className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
+                          referrerPolicy="no-referrer" />
+                      </div>
+                      <div className="p-3 flex flex-col flex-1">
+                        {p.brand && <p className="text-[10px] font-bold text-lago-500 uppercase tracking-wide mb-1">{p.brand}</p>}
+                        <p className="text-xs font-semibold text-gray-900 dark:text-white line-clamp-2 mb-2 flex-1">{p.name}</p>
+                        <p className="text-sm font-bold text-gray-900 dark:text-white mb-2">
+                          R {(p.price_display ?? 0).toLocaleString('en-ZA', { minimumFractionDigits: 2 })}
+                        </p>
+                        <button
+                          onClick={(e) => handleAddAxiz(e, p)}
+                          disabled={p.stock_qty === 0}
+                          className={`w-full py-1.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1 ${
+                            addedIds.includes(p.id) ? 'bg-green-500 text-white' :
+                            p.stock_qty > 0 ? 'bg-lago-600 hover:bg-lago-700 text-white' :
+                            'bg-gray-200 dark:bg-lago-800 text-gray-400 cursor-not-allowed'
+                          }`}
+                        >
+                          <ShoppingCart className="w-3 h-3" />
+                          {addedIds.includes(p.id) ? 'Added!' : p.stock_qty > 0 ? 'Add to Cart' : 'Out of Stock'}
+                        </button>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Pinnacle results */}
+            {pinnacleResults.length > 0 && (
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                    Pinnacle
+                    <span className="text-sm font-normal text-gray-500 dark:text-lago-400">({pinnacleResults.length} results)</span>
+                  </h2>
+                  <Link to={`/shop/pinnacle?search=${encodeURIComponent(q)}`} className="text-sm font-semibold text-lago-600 dark:text-lago-400 hover:underline">
+                    View all →
+                  </Link>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                  {pinnacleResults.map((p) => (
+                    <Link key={p.id} to={`/shop/pinnacle/product/${p.id}`}
+                      className="group bg-white dark:bg-lago-900 border border-gray-200 dark:border-lago-800 rounded-2xl overflow-hidden hover:border-lago-400 hover:shadow-lg transition-all flex flex-col">
+                      <div className="aspect-square bg-gray-50 dark:bg-lago-800 p-3">
+                        <SafeImage src={p.thumbnail_url} brand={p.brand} alt={p.name}
+                          className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
+                          referrerPolicy="no-referrer" />
+                      </div>
+                      <div className="p-3 flex flex-col flex-1">
+                        {p.brand && <p className="text-[10px] font-bold text-lago-500 uppercase tracking-wide mb-1">{p.brand}</p>}
+                        <p className="text-xs font-semibold text-gray-900 dark:text-white line-clamp-2 mb-2 flex-1">{p.name}</p>
+                        <p className="text-sm font-bold text-gray-900 dark:text-white mb-2">
+                          R {(p.price_display ?? 0).toLocaleString('en-ZA', { minimumFractionDigits: 2 })}
+                        </p>
+                        <button
+                          onClick={(e) => handleAddPinnacle(e, p)}
                           disabled={p.stock_qty === 0}
                           className={`w-full py-1.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1 ${
                             addedIds.includes(p.id) ? 'bg-green-500 text-white' :

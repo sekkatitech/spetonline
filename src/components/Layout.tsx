@@ -5,9 +5,10 @@ import { LegalModal } from './LegalModal';
 import { LegalKey } from '../lib/legalContent';
 import { useCartStore } from '../lib/cartStore';
 import { useAuth } from '../lib/AuthContext';
+import { supabase } from '../lib/supabase';
 import {
   Phone, Mail, Truck, MapPin, Search, User, Heart,
-  ShoppingCart, X, Menu, Building2,
+  ShoppingCart, X, Menu, Building2, ChevronDown,
 } from 'lucide-react';
 
 // ── Nav link with active indicator ───────────────────────────────────────────
@@ -66,6 +67,100 @@ export function WhatsAppButton() {
         <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38a9.9 9.9 0 004.74 1.21h.01c5.46 0 9.9-4.45 9.9-9.91C21.96 6.45 17.5 2 12.04 2zm0 18.13h-.01a8.2 8.2 0 01-4.19-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.19 8.19 0 01-1.26-4.37c0-4.54 3.7-8.24 8.26-8.24 2.2 0 4.27.86 5.83 2.42a8.18 8.18 0 012.42 5.83c0 4.55-3.7 8.24-8.26 8.24zm4.53-6.17c-.25-.12-1.47-.72-1.7-.81-.23-.08-.39-.12-.56.13-.17.25-.64.81-.78.97-.14.17-.29.19-.53.06-.25-.12-1.05-.39-2-1.23-.74-.66-1.24-1.47-1.39-1.72-.14-.25-.02-.38.11-.51.11-.11.25-.29.37-.43.12-.15.16-.25.25-.42.08-.17.04-.31-.02-.43-.06-.12-.56-1.35-.77-1.85-.2-.48-.41-.42-.56-.43-.14-.01-.31-.01-.48-.01-.17 0-.43.06-.66.31-.23.25-.86.85-.86 2.06 0 1.22.89 2.4 1.01 2.56.12.17 1.75 2.67 4.24 3.74.59.26 1.05.41 1.41.52.59.19 1.13.16 1.55.1.47-.07 1.47-.6 1.68-1.18.21-.58.21-1.08.14-1.18-.06-.11-.23-.17-.48-.29z"/>
       </svg>
     </a>
+  );
+}
+
+// ── Lightweight, lazily-loaded category preview for the Shop mega-menu ────────
+// Deliberately not the same hook CategoriesPage uses — that one fetches the
+// entire table to build an exhaustive, accurate list for a dedicated
+// category-browsing page. This only needs "a good top-N preview" for a nav
+// dropdown, and only loads once the user actually hovers Shop, so it doesn't
+// add a query to every single page load.
+function useMenuCategories(table: string, column: string) {
+  const [items, setItems] = useState<{ name: string; count: number }[]>([]);
+  const [loaded, setLoaded] = useState(false);
+
+  function load() {
+    if (loaded) return;
+    setLoaded(true);
+    supabase
+      .from(table)
+      .select(column)
+      .eq('is_active', true)
+      .not(column, 'is', null)
+      .limit(400)
+      .then(({ data }) => {
+        const counts: Record<string, number> = {};
+        (data ?? []).forEach((d: any) => {
+          const v = d[column];
+          if (v) counts[v] = (counts[v] || 0) + 1;
+        });
+        const sorted = Object.entries(counts)
+          .sort((a, b) => b[1] - a[1])
+          .map(([name, count]) => ({ name, count }));
+        setItems(sorted);
+      });
+  }
+
+  return { items, load };
+}
+
+// ── "Shop" mega-menu — hover dropdown with top categories per supplier ────────
+function ShopMegaMenu({ transparent }: { transparent?: boolean }) {
+  const esquire  = useMenuCategories('products', 'CategoryHead');
+  const syntech  = useMenuCategories('syntech_products', 'category');
+  const axiz     = useMenuCategories('axiz_products', 'category');
+  const pinnacle = useMenuCategories('pinnacle_products', 'category');
+
+  function loadAll() {
+    esquire.load(); syntech.load(); axiz.load(); pinnacle.load();
+  }
+
+  const columns = [
+    { label: 'Home & Entertainment', to: '/shop/home',     param: 'categoryHead', items: esquire.items },
+    { label: 'Gaming & Computing',   to: '/shop/tech',      param: 'category',     items: syntech.items },
+    { label: 'Axiz Digital',         to: '/shop/axiz',      param: 'category',     items: axiz.items },
+    { label: 'Pinnacle',             to: '/shop/pinnacle',  param: 'category',     items: pinnacle.items },
+  ];
+
+  return (
+    <div className="relative group" onMouseEnter={loadAll}>
+      <NavLink to="/shop" transparent={transparent} className="flex items-center gap-1">
+        Shop <ChevronDown className="w-3.5 h-3.5 opacity-60" />
+      </NavLink>
+      <div className="invisible opacity-0 translate-y-1 group-hover:visible group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-150 absolute left-1/2 -translate-x-1/2 top-full pt-4 z-50">
+        <div className="w-[720px] max-w-[90vw] bg-white dark:bg-lago-900 border border-gray-200 dark:border-lago-800 rounded-2xl shadow-2xl p-6 grid grid-cols-4 gap-6">
+          {columns.map((col) => (
+            <div key={col.label}>
+              <Link to={col.to} className="block text-xs font-bold uppercase tracking-widest text-lago-600 dark:text-lago-400 mb-3 hover:underline">
+                {col.label}
+              </Link>
+              <ul className="space-y-2 min-h-[120px]">
+                {col.items.length === 0 ? (
+                  Array.from({ length: 5 }).map((_, i) => (
+                    <li key={i} className="h-3.5 w-4/5 rounded bg-gray-100 dark:bg-lago-800 animate-pulse" />
+                  ))
+                ) : (
+                  col.items.slice(0, 6).map((item) => (
+                    <li key={item.name}>
+                      <Link
+                        to={`${col.to}?${col.param}=${encodeURIComponent(item.name)}`}
+                        className="block text-sm text-gray-600 dark:text-lago-300 hover:text-lago-600 dark:hover:text-white transition-colors truncate"
+                      >
+                        {item.name}
+                      </Link>
+                    </li>
+                  ))
+                )}
+              </ul>
+              <Link to={col.to} className="inline-flex items-center gap-1 text-xs font-semibold text-lago-600 dark:text-lago-400 hover:underline mt-3">
+                View all <ChevronDown className="w-3 h-3 -rotate-90" />
+              </Link>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -188,7 +283,7 @@ export function Navbar() {
 
             <nav className="hidden md:flex items-center gap-8">
               <NavLink to="/" transparent={isTransparent}>Home</NavLink>
-              <NavLink to="/shop" transparent={isTransparent}>Shop</NavLink>
+              <ShopMegaMenu transparent={isTransparent} />
               <NavLink to="/categories" transparent={isTransparent}>Categories</NavLink>
               <NavLink to="/b2b" transparent={isTransparent} className="flex items-center gap-1.5">
                 <Building2 className="w-4 h-4" />
@@ -270,7 +365,15 @@ export function Navbar() {
         <div className="pointer-events-auto absolute top-full left-0 right-0 bg-white dark:bg-lago-900 border-b border-gray-200 dark:border-lago-800 md:hidden pb-4 pt-2 shadow-2xl">
           <div className="flex flex-col gap-4 px-6">
             <Link to="/"           onClick={() => setMobileMenuOpen(false)} className="font-semibold text-lago-600 dark:text-lago-400 border-b border-gray-100 dark:border-lago-800 pb-3">Home</Link>
-            <Link to="/shop"       onClick={() => setMobileMenuOpen(false)} className="font-medium text-gray-700 dark:text-lago-100 border-b border-gray-100 dark:border-lago-800 pb-3">Shop</Link>
+            <div className="border-b border-gray-100 dark:border-lago-800 pb-3">
+              <Link to="/shop" onClick={() => setMobileMenuOpen(false)} className="font-medium text-gray-700 dark:text-lago-100 block mb-2">Shop</Link>
+              <div className="flex flex-col gap-2 pl-3">
+                <Link to="/shop/home"     onClick={() => setMobileMenuOpen(false)} className="text-sm text-gray-500 dark:text-lago-400">Home & Entertainment</Link>
+                <Link to="/shop/tech"     onClick={() => setMobileMenuOpen(false)} className="text-sm text-gray-500 dark:text-lago-400">Gaming & Computing</Link>
+                <Link to="/shop/axiz"     onClick={() => setMobileMenuOpen(false)} className="text-sm text-gray-500 dark:text-lago-400">Axiz Digital</Link>
+                <Link to="/shop/pinnacle" onClick={() => setMobileMenuOpen(false)} className="text-sm text-gray-500 dark:text-lago-400">Pinnacle</Link>
+              </div>
+            </div>
             <Link to="/categories" onClick={() => setMobileMenuOpen(false)} className="font-medium text-gray-700 dark:text-lago-100 border-b border-gray-100 dark:border-lago-800 pb-3">Categories</Link>
             <Link to="/b2b"        onClick={() => setMobileMenuOpen(false)} className="font-medium text-gray-700 dark:text-lago-100 border-b border-gray-100 dark:border-lago-800 pb-3 flex items-center gap-2">
               <Building2 className="w-4 h-4" /> B2B Enterprise
