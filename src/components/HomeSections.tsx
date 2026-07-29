@@ -132,7 +132,7 @@ export function BrandShowcase() {
           {currentBrands.map((brand) => (
             <motion.a
               key={brand.name}
-              href={brand.href ?? `/shop?brand=${encodeURIComponent(brand.filterName ?? brand.name)}`}
+              href={brand.href ?? `/search?q=${encodeURIComponent(brand.filterName ?? brand.name)}`}
               initial={{ opacity: 0, y: 15 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}

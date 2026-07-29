@@ -152,13 +152,13 @@ export function ProductPage() {
           {product.CategoryHead && (
             <>
               <span>/</span>
-              <Link to={`/shop?categoryHead=${encodeURIComponent(product.CategoryHead)}`} className="hover:text-lago-600 dark:hover:text-white transition-colors">{product.CategoryHead}</Link>
+              <Link to={`/shop/home?categoryHead=${encodeURIComponent(product.CategoryHead)}`} className="hover:text-lago-600 dark:hover:text-white transition-colors">{product.CategoryHead}</Link>
             </>
           )}
           {product.Category && (
             <>
               <span>/</span>
-              <Link to={`/shop?category=${encodeURIComponent(product.Category)}`} className="hover:text-lago-600 dark:hover:text-white transition-colors">{product.Category}</Link>
+              <Link to={`/shop/home?category=${encodeURIComponent(product.Category)}`} className="hover:text-lago-600 dark:hover:text-white transition-colors">{product.Category}</Link>
             </>
           )}
           <span>/</span>
@@ -301,17 +301,17 @@ export function ProductPage() {
             {/* Category & Brand tags */}
             <div className="flex flex-wrap gap-2">
               {product.CategoryHead && (
-                <Link to={`/shop?categoryHead=${encodeURIComponent(product.CategoryHead)}`} className="px-3 py-1 rounded-full bg-gray-100 dark:bg-lago-800 text-xs font-semibold text-gray-600 dark:text-lago-200 hover:bg-lago-100 dark:hover:bg-lago-700 transition-colors">
+                <Link to={`/shop/home?categoryHead=${encodeURIComponent(product.CategoryHead)}`} className="px-3 py-1 rounded-full bg-gray-100 dark:bg-lago-800 text-xs font-semibold text-gray-600 dark:text-lago-200 hover:bg-lago-100 dark:hover:bg-lago-700 transition-colors">
                   {product.CategoryHead}
                 </Link>
               )}
               {product.Category && (
-                <Link to={`/shop?category=${encodeURIComponent(product.Category)}`} className="px-3 py-1 rounded-full bg-gray-100 dark:bg-lago-800 text-xs font-semibold text-gray-600 dark:text-lago-200 hover:bg-lago-100 dark:hover:bg-lago-700 transition-colors">
+                <Link to={`/shop/home?category=${encodeURIComponent(product.Category)}`} className="px-3 py-1 rounded-full bg-gray-100 dark:bg-lago-800 text-xs font-semibold text-gray-600 dark:text-lago-200 hover:bg-lago-100 dark:hover:bg-lago-700 transition-colors">
                   {product.Category}
                 </Link>
               )}
               {product.Brand && (
-                <Link to={`/shop?brand=${encodeURIComponent(product.Brand)}`} className="px-3 py-1 rounded-full bg-gray-100 dark:bg-lago-800 text-xs font-semibold text-gray-600 dark:text-lago-200 hover:bg-lago-100 dark:hover:bg-lago-700 transition-colors">
+                <Link to={`/shop/home?brand=${encodeURIComponent(product.Brand)}`} className="px-3 py-1 rounded-full bg-gray-100 dark:bg-lago-800 text-xs font-semibold text-gray-600 dark:text-lago-200 hover:bg-lago-100 dark:hover:bg-lago-700 transition-colors">
                   {product.Brand}
                 </Link>
               )}
@@ -383,7 +383,7 @@ export function ProductPage() {
                 <p className="text-lago-600 dark:text-lago-400 font-bold text-xs uppercase tracking-widest mb-1">You may also like</p>
                 <h2 className="text-2xl md:text-3xl font-display font-bold text-gray-900 dark:text-white">Related Products</h2>
               </div>
-              <Link to={`/shop?category=${encodeURIComponent(product.Category || '')}`} className="text-sm font-semibold text-lago-600 dark:text-lago-400 hover:text-lago-800 dark:hover:text-white transition-colors flex items-center gap-1">
+              <Link to={`/shop/home?category=${encodeURIComponent(product.Category || '')}`} className="text-sm font-semibold text-lago-600 dark:text-lago-400 hover:text-lago-800 dark:hover:text-white transition-colors flex items-center gap-1">
                 View All <ChevronLeft className="w-4 h-4 rotate-180" />
               </Link>
             </div>

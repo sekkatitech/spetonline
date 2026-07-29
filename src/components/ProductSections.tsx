@@ -154,7 +154,7 @@ export function FeaturedProducts() {
             <p className="text-lago-600 dark:text-lago-400 font-bold text-sm uppercase tracking-widest mb-2">Handpicked for You</p>
             <h2 className="text-4xl md:text-5xl font-display font-bold text-gray-900 dark:text-white">Featured Products</h2>
           </div>
-          <Link to="/shop?sort=featured" className="hidden md:flex items-center gap-2 text-sm font-semibold text-lago-600 dark:text-lago-400 hover:text-lago-800 dark:hover:text-white transition-colors">
+          <Link to="/shop/home?sort=featured" className="hidden md:flex items-center gap-2 text-sm font-semibold text-lago-600 dark:text-lago-400 hover:text-lago-800 dark:hover:text-white transition-colors">
             View All <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
@@ -226,7 +226,7 @@ export function FeaturedCategories() {
                   transition={{ delay: i * 0.07 }}
                 >
                   <Link
-                    to={`/shop?categoryHead=${encodeURIComponent(head)}`}
+                    to={`/shop/home?categoryHead=${encodeURIComponent(head)}`}
                     className={`group block rounded-2xl overflow-hidden relative aspect-square border border-gray-200 dark:border-lago-800 hover:border-lago-500 dark:hover:border-lago-500 transition-all shadow-sm hover:shadow-lg bg-gradient-to-br ${CATEGORY_GRADIENTS[i % CATEGORY_GRADIENTS.length]}`}
                   >
                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
