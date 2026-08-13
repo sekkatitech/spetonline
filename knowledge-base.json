@@ -1,0 +1,213 @@
+{
+  "version": "1.0",
+  "lastUpdated": "2026-08-02",
+  "company": {
+    "tradingName": "SPET Online",
+    "legalName": "Sekkati Petroleum Energy and Technology Trading (Pty) Ltd",
+    "type": "Authorised Online Dropshipping Reseller",
+    "website": "https://spetonline.co.za",
+    "country": "South Africa",
+    "location": "Pretoria, Gauteng",
+    "tagline": "South Africa's trusted online electronics retailer. Quality products, competitive prices, delivered nationwide."
+  },
+  "contact": {
+    "salesPhone": "0870 881 483",
+    "supportPhone": "+27 74 350 7142",
+    "whatsapp": "+27 74 116 4295",
+    "email": "sales@spetonline.co.za",
+    "businessHours": "Monday – Friday, 8:00 AM – 5:00 PM",
+    "socialMedia": ["Facebook", "Instagram", "WhatsApp"]
+  },
+  "products": {
+    "categories": [
+      "Laptops & Computers",
+      "Gaming",
+      "TVs & Audio",
+      "Accessories",
+      "Networking",
+      "Storage",
+      "Printers & Scanners",
+      "Security & CCTV",
+      "Servers & Enterprise",
+      "Software & Licenses",
+      "Components",
+      "Peripherals"
+    ],
+    "brands": [
+      "HP", "Dell", "Lenovo", "Asus", "Acer", "MSI", "Apple", "Microsoft",
+      "Intel", "AMD", "Sony", "Hisense", "LG", "Samsung", "TCL", "Skyworth",
+      "Logitech", "Razer", "BenQ", "ViewSonic", "TP-Link", "TRENDnet",
+      "D-Link", "Ubiquiti", "Seagate", "Western Digital", "SanDisk",
+      "Kingston", "Hikvision", "Dahua", "Epson", "Brother", "Huawei",
+      "Targus", "Gizzu", "WINX", "Xbox", "Toshiba"
+    ],
+    "suppliers": [
+      {
+        "name": "Esquire",
+        "section": "Home & Entertainment",
+        "url": "/shop/home",
+        "specialty": "Home electronics, TVs, audio, general consumer electronics",
+        "dbTable": "products"
+      },
+      {
+        "name": "Syntech",
+        "section": "Gaming & Computing",
+        "url": "/shop/tech",
+        "specialty": "Gaming gear, computer components, peripherals",
+        "dbTable": "syntech_products"
+      },
+      {
+        "name": "Axiz",
+        "section": "Axiz Digital",
+        "url": "/shop/axiz",
+        "specialty": "Enterprise IT, servers, networking, professional equipment",
+        "dbTable": "axiz_products"
+      },
+      {
+        "name": "Pinnacle",
+        "section": "Pinnacle",
+        "url": "/shop/pinnacle",
+        "specialty": "Storage, components, peripherals, general IT products",
+        "dbTable": "pinnacle_products"
+      }
+    ]
+  },
+  "pricing": {
+    "currency": "ZAR",
+    "vatIncluded": true,
+    "vatRate": "15%",
+    "foreignCurrency": false,
+    "pricesSubjectToChange": true
+  },
+  "shipping": {
+    "coverage": "Nationwide (all 9 provinces in South Africa)",
+    "provinces": ["Eastern Cape", "Free State", "Gauteng", "KwaZulu-Natal", "Limpopo", "Mpumalanga", "Northern Cape", "North West", "Western Cape"],
+    "freeShippingThreshold": 2500,
+    "flatRate": 90,
+    "flatRateWeightLimit": "5kg",
+    "heavyParcelProvider": "The Courier Guy (via ShipLogic API)",
+    "deliveryTimeframe": "3–7 business days",
+    "trackingProvided": true
+  },
+  "payments": {
+    "gateway": "PayFast",
+    "methods": [
+      "Visa (credit/debit)",
+      "Mastercard (credit/debit)",
+      "American Express (AMEX)",
+      "Bob Pay Instant EFT",
+      "Bob Pay Manual EFT",
+      "Capitec Pay",
+      "ABSA Pay",
+      "PayShap",
+      "Apple Pay",
+      "Google Pay"
+    ],
+    "cardDetailsStored": false,
+    "secure": true
+  },
+  "returns": {
+    "returnWindow": "7 days from delivery",
+    "conditions": [
+      "Item is defective, damaged, or not as described",
+      "Incorrect product received",
+      "Item in original packaging, unused, resalable condition"
+    ],
+    "nonReturnable": [
+      "Software, digital licences, opened consumables",
+      "Items damaged due to misuse or unauthorised modification",
+      "Products without original packaging"
+    ],
+    "refundTimeframe": "7–14 business days",
+    "refundMethod": "Original payment method",
+    "shippingCostsRefundable": false,
+    "coolingOffPeriod": "7 days (ECT Act Section 44)"
+  },
+  "warranty": {
+    "type": "Manufacturer's warranty",
+    "coverage": "Defects in materials/workmanship under normal use",
+    "exclusions": [
+      "Physical damage",
+      "Power surge damage",
+      "Unauthorised modifications/repairs",
+      "Normal wear and tear"
+    ],
+    "claimProcess": "Contact SPET Online with order number and defect description"
+  },
+  "cancellation": {
+    "beforeDispatch": "Full refund, no penalty",
+    "afterDispatch": "Cannot cancel; follow return policy",
+    "spetRightToCancel": [
+      "Stock unavailability",
+      "Pricing errors",
+      "Suspected fraud",
+      "Address outside service area"
+    ],
+    "refundTimeframe": "5–7 business days"
+  },
+  "enterprise": {
+    "portalUrl": "/enterprise",
+    "targetCustomers": ["Businesses", "Schools", "Municipalities", "Government organisations"],
+    "features": [
+      "Bulk pricing",
+      "Formal PDF quote generation",
+      "Flexible credit terms",
+      "Priority delivery",
+      "Dedicated account manager",
+      "Technical engineering team",
+      "Procurement lists",
+      "Order management dashboard"
+    ],
+    "categories": [
+      "IT & Computing",
+      "Servers & Storage",
+      "Networking",
+      "Security & CCTV"
+    ],
+    "authorisedPartners": ["Dell Technologies", "HP Enterprise", "Lenovo", "Ubiquiti", "Hikvision", "Microsoft"],
+    "applePortal": "/enterprise/apple"
+  },
+  "legal": {
+    "legislation": [
+      "ECT Act 25 of 2002",
+      "CPA 68 of 2008",
+      "POPIA 4 of 2013",
+      "VAT Act 89 of 1991",
+      "National Credit Act 34 of 2005"
+    ],
+    "disputeResolution": [
+      {"body": "National Consumer Commission (NCC)", "url": "www.thencc.org.za"},
+      {"body": "Consumer Goods and Services Ombud (CGSO)", "url": "www.cgso.org.za"},
+      {"body": "Information Regulator", "url": "www.inforegulator.org.za"}
+    ],
+    "privacyPolicy": "POPIA compliant — data used only for order fulfilment, never sold to third parties",
+    "governingLaw": "Laws of the Republic of South Africa"
+  },
+  "agentGuidelines": {
+    "tone": ["Friendly", "Professional", "Concise", "Helpful", "Honest"],
+    "doNot": [
+      "Share internal pricing margins or supplier costs",
+      "Share customer personal data from other accounts",
+      "Share technical infrastructure details",
+      "Promise specific delivery dates",
+      "Guarantee stock availability"
+    ],
+    "escalation": {
+      "orderIssues": "sales@spetonline.co.za or 0870 881 483",
+      "technicalSupport": "+27 74 350 7142",
+      "quickQuestions": "WhatsApp: +27 74 116 4295",
+      "enterpriseInquiries": "Enterprise Portal or sales@spetonline.co.za",
+      "returnsWarranty": "Email with order number and description"
+    },
+    "keySellingPoints": [
+      "Nationwide delivery across South Africa",
+      "Free delivery on orders over R2,500",
+      "Official manufacturer warranties on all products",
+      "10+ secure payment methods via PayFast",
+      "Products from 30+ global brands",
+      "7-day return policy under ECT Act",
+      "Enterprise portal for B2B with bulk pricing and quotes",
+      "Dedicated WhatsApp support"
+    ]
+  }
+}

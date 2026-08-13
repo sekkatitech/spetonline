@@ -26,7 +26,7 @@
     Referrer-Policy            = "strict-origin-when-cross-origin"
     Permissions-Policy         = "camera=(), microphone=(), geolocation=()"
     Strict-Transport-Security  = "max-age=63072000; includeSubDomains"
-    Content-Security-Policy    = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://firestore.googleapis.com https://generativelanguage.googleapis.com; font-src 'self' data:; frame-ancestors 'none';"
+    Content-Security-Policy    = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://api.mapbox.com; worker-src 'self' blob:; style-src 'self' 'unsafe-inline' https://api.mapbox.com; img-src 'self' data: blob: https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.mapbox.com https://events.mapbox.com https://firestore.googleapis.com https://generativelanguage.googleapis.com; font-src 'self' data: https://api.mapbox.com; frame-ancestors 'none';"
 
 # Long-lived cache for hashed assets (JS, CSS, images built by Vite)
 [[headers]]

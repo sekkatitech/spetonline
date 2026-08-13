@@ -1,4 +1,4 @@
-import { Hero, BrandShowcase, BrandCollageBanner, PromoBanner, TrustSection, AccountBenefits, Newsletter } from '../components/HomeSections';
+import { Hero, B2BBanner, BrandShowcase, BrandCollageBanner, PromoBanner, TrustSection, AccountBenefits, Newsletter } from '../components/HomeSections';
 import { FeaturedCategories, FeaturedProducts } from '../components/ProductSections';
 import { useSEO } from '../lib/useSEO';
 
@@ -12,6 +12,7 @@ export function HomePage() {
   return (
     <>
       <Hero />
+      <B2BBanner />
       <BrandShowcase />
       <BrandCollageBanner />
       <FeaturedCategories />

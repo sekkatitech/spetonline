@@ -2,11 +2,14 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Upload, Database, Settings, BarChart3, Users, Sparkles, AlertCircle, CheckCircle2,
-  Image as ImageIcon, Plus, Pencil, Trash2, ArrowUp, ArrowDown, X,
+  Image as ImageIcon, Plus, Pencil, Trash2, ArrowUp, ArrowDown, X, Globe, TrendingUp,
+  MapPin, Laptop, Smartphone, Download, ArrowRight, Compass, RefreshCw
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import type { DealBanner } from '../lib/api';
 import { useSEO } from '../lib/useSEO';
+import { VisitorMap } from '../components/VisitorMap';
+import { getVisitorAnalytics, recordVisit, TimeHorizon } from '../lib/visitorTracker';
 
 type BannerForm = {
   id: string | null;
@@ -41,7 +44,7 @@ export function AdminPage() {
 
   const navigate = useNavigate();
   const [checked, setChecked] = useState(false);
-  const [activeTab, setActiveTab] = useState('banners');
+  const [activeTab, setActiveTab] = useState('visitors');
   const [importStatus, setImportStatus] = useState<'idle' | 'uploading' | 'processing' | 'success' | 'error'>('idle');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -93,6 +96,12 @@ export function AdminPage() {
 
            <nav className="flex flex-col gap-2">
              <button
+               onClick={() => setActiveTab('visitors')}
+               className={`flex items-center gap-3 p-3 rounded-xl font-semibold transition-colors ${activeTab === 'visitors' ? 'bg-lago-800 text-white border border-lago-600' : 'text-lago-200 hover:bg-lago-900 hover:text-white'}`}
+             >
+               <Globe className={`w-5 h-5 ${activeTab === 'visitors' ? 'text-lago-400' : 'text-lago-500'}`} /> Site Visitors
+             </button>
+             <button
                onClick={() => setActiveTab('banners')}
                className={`flex items-center gap-3 p-3 rounded-xl font-semibold transition-colors ${activeTab === 'banners' ? 'bg-lago-800 text-white border border-lago-600' : 'text-lago-200 hover:bg-lago-900 hover:text-white'}`}
              >
@@ -127,6 +136,7 @@ export function AdminPage() {
 
         {/* Main Content Area */}
         <div className="flex-grow min-w-0">
+          {activeTab === 'visitors' && <VisitorsTab onNavigateToBanners={() => setActiveTab('banners')} />}
           {activeTab === 'banners' && <BannersTab />}
 
           {activeTab === 'import' && (
@@ -590,3 +600,307 @@ function BannersTab() {
     </div>
   );
 }
+
+// ── Site Visitors tab ────────────────────────────────────────────────────────
+
+function VisitorsTab({ onNavigateToBanners }: { onNavigateToBanners: () => void }) {
+  const [timeframe, setTimeframe] = useState<TimeHorizon>('weekly');
+  const analytics = getVisitorAnalytics(timeframe);
+
+  // Record current page visit telemetry
+  useEffect(() => {
+    recordVisit();
+  }, []);
+
+  const handleExportCSV = () => {
+    const headers = ['City', 'Province', 'Country', 'Visits', 'Percentage', 'Top Interest'];
+    const rows = analytics.topLocations.map((loc) => [
+      loc.city,
+      loc.province,
+      loc.country,
+      loc.visitsCount,
+      `${loc.percentage}%`,
+      `"${loc.topInterest}"`
+    ]);
+    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `SPET_Site_Visitors_${timeframe}_Report.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const timeframeLabels = {
+    daily: 'Daily (24 Hours)',
+    weekly: 'Weekly (7 Days)',
+    monthly: 'Monthly (30 Days)'
+  };
+
+  return (
+    <div>
+      {/* Page Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <h1 className="text-3xl font-display font-bold text-white">Site Visitors</h1>
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-green-900/40 text-green-400 border border-green-700/50">
+              <span className="w-2 h-2 rounded-full bg-green-400 animate-ping"></span>
+              {analytics.liveActiveUsers} Users Online Now
+            </span>
+          </div>
+          <p className="text-lago-200 max-w-2xl text-sm">
+            Monitor real-time visitors, view daily/weekly/monthly reports, and utilize location insights for targeted promotional banners.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-3 flex-wrap">
+          {/* Time horizon pill switch */}
+          <div className="flex items-center bg-[#0a141d] p-1 rounded-xl border border-lago-800">
+            {(['daily', 'weekly', 'monthly'] as TimeHorizon[]).map((t) => (
+              <button
+                key={t}
+                onClick={() => setTimeframe(t)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all capitalize ${
+                  timeframe === t
+                    ? 'bg-lago-600 text-white shadow-md'
+                    : 'text-lago-400 hover:text-white hover:bg-lago-800/50'
+                }`}
+              >
+                {t}
+              </button>
+            ))}
+          </div>
+
+          <button
+            onClick={handleExportCSV}
+            className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-lago-800 hover:bg-lago-700 text-white font-semibold text-xs border border-lago-700 transition-colors"
+          >
+            <Download className="w-4 h-4 text-lago-400" /> Export CSV
+          </button>
+        </div>
+      </div>
+
+      {/* KPI Cards Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        {/* Card 1: Total Visitors */}
+        <div className="bg-lago-900 border border-lago-800 rounded-2xl p-5 relative overflow-hidden group hover:border-lago-700 transition-all">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-xs font-bold text-lago-400 uppercase tracking-wider">Total Visitors</span>
+            <div className="p-2 rounded-xl bg-lago-800 text-accent-cyan">
+              <TrendingUp className="w-5 h-5" />
+            </div>
+          </div>
+          <p className="text-3xl font-display font-bold text-white mb-2">{analytics.totalVisitors.toLocaleString()}</p>
+          <div className="flex items-center gap-1.5 text-xs text-green-400 font-semibold">
+            <span className="px-1.5 py-0.5 rounded bg-green-900/40 border border-green-800">+ {analytics.growthRate}%</span>
+            <span className="text-lago-400">vs previous {timeframe}</span>
+          </div>
+        </div>
+
+        {/* Card 2: Unique Sessions */}
+        <div className="bg-lago-900 border border-lago-800 rounded-2xl p-5 relative overflow-hidden group hover:border-lago-700 transition-all">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-xs font-bold text-lago-400 uppercase tracking-wider">Unique Visitors</span>
+            <div className="p-2 rounded-xl bg-lago-800 text-accent-orange">
+              <Globe className="w-5 h-5" />
+            </div>
+          </div>
+          <p className="text-3xl font-display font-bold text-white mb-2">{analytics.uniqueVisitors.toLocaleString()}</p>
+          <p className="text-xs text-lago-300">
+            Avg Session: <strong className="text-white font-mono">{analytics.avgSessionDuration}</strong>
+          </p>
+        </div>
+
+        {/* Card 3: Total Page Views */}
+        <div className="bg-lago-900 border border-lago-800 rounded-2xl p-5 relative overflow-hidden group hover:border-lago-700 transition-all">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-xs font-bold text-lago-400 uppercase tracking-wider">Page Views</span>
+            <div className="p-2 rounded-xl bg-lago-800 text-lago-400">
+              <BarChart3 className="w-5 h-5" />
+            </div>
+          </div>
+          <p className="text-3xl font-display font-bold text-white mb-2">{analytics.pageViews.toLocaleString()}</p>
+          <p className="text-xs text-lago-300">
+            Pages / Visit: <strong className="text-white font-mono">{(analytics.pageViews / analytics.totalVisitors).toFixed(1)}</strong>
+          </p>
+        </div>
+
+        {/* Card 4: Bounce Rate & Device Split */}
+        <div className="bg-lago-900 border border-lago-800 rounded-2xl p-5 relative overflow-hidden group hover:border-lago-700 transition-all">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-xs font-bold text-lago-400 uppercase tracking-wider">Bounce Rate</span>
+            <div className="p-2 rounded-xl bg-lago-800 text-purple-400">
+              <Laptop className="w-5 h-5" />
+            </div>
+          </div>
+          <p className="text-3xl font-display font-bold text-white mb-2">{analytics.bounceRate}%</p>
+          <div className="flex items-center justify-between text-xs text-lago-400">
+            <span className="flex items-center gap-1"><Laptop className="w-3 h-3 text-accent-cyan" /> {analytics.deviceBreakdown.desktop}% Desktop</span>
+            <span className="flex items-center gap-1"><Smartphone className="w-3 h-3 text-accent-orange" /> {analytics.deviceBreakdown.mobile}% Mobile</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Mapbox Geographic Map */}
+      <VisitorMap locations={analytics.topLocations} timeframe={timeframeLabels[timeframe]} />
+
+      {/* Targeted Marketing Banner Callout */}
+      <div className="bg-gradient-to-r from-lago-900 via-[#0e2133] to-lago-900 border border-accent-cyan/40 rounded-2xl p-6 mb-8 shadow-xl relative overflow-hidden">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 z-10 relative">
+          <div className="max-w-2xl">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-xs font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-accent-orange/20 text-accent-orange border border-accent-orange/30">
+                Marketing Intelligence Insight
+              </span>
+            </div>
+            <h3 className="text-xl font-bold text-white mb-1.5">{analytics.marketingInsight.title}</h3>
+            <p className="text-sm text-lago-200 mb-2">{analytics.marketingInsight.description}</p>
+            <p className="text-xs text-accent-cyan font-semibold flex items-center gap-1.5">
+              💡 Recommended Action: {analytics.marketingInsight.recommendedPromo}
+            </p>
+          </div>
+
+          <button
+            onClick={onNavigateToBanners}
+            className="px-5 py-3 rounded-xl bg-accent-orange hover:bg-orange-600 text-white font-bold text-sm transition-all shadow-lg flex items-center gap-2 flex-shrink-0"
+          >
+            Create Location Banner <ArrowRight className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+
+      {/* Grid: Traffic Trend Chart & Traffic Acquisition Channels */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+        {/* Visitor Volume Trend Visualizer */}
+        <div className="lg:col-span-2 bg-lago-900 border border-lago-800 rounded-2xl p-6">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h3 className="text-lg font-bold text-white mb-0.5">Visitor Volume Trend</h3>
+              <p className="text-xs text-lago-300">Traffic distribution across the selected {timeframe} window</p>
+            </div>
+            <span className="text-xs font-bold text-lago-400 bg-lago-800 px-3 py-1 rounded-lg border border-lago-700">
+              Peak: {Math.max(...analytics.timeSeriesData.map((d) => d.visitors)).toLocaleString()} visits
+            </span>
+          </div>
+
+          {/* Bar Chart */}
+          <div className="h-56 flex items-end gap-2 pt-6 pb-2 border-b border-lago-800">
+            {analytics.timeSeriesData.map((dp, idx) => {
+              const maxVal = Math.max(...analytics.timeSeriesData.map((d) => d.visitors));
+              const heightPct = Math.max(12, Math.round((dp.visitors / maxVal) * 100));
+              return (
+                <div key={idx} className="flex-1 flex flex-col items-center gap-2 group relative">
+                  {/* Tooltip */}
+                  <div className="absolute bottom-full mb-2 hidden group-hover:flex flex-col items-center bg-[#0a141d] border border-lago-600 text-white text-[10px] font-bold p-2 rounded-lg z-20 shadow-xl pointer-events-none whitespace-nowrap">
+                    <span>{dp.date}</span>
+                    <span className="text-accent-cyan">{dp.visitors.toLocaleString()} visitors</span>
+                    <span className="text-lago-400">{dp.pageViews.toLocaleString()} views</span>
+                  </div>
+
+                  <div className="w-full bg-lago-800/60 rounded-t-md relative flex items-end overflow-hidden group-hover:bg-lago-700/60 transition-colors" style={{ height: '100%' }}>
+                    <div
+                      style={{ height: `${heightPct}%` }}
+                      className={`w-full transition-all duration-500 rounded-t-md ${
+                        idx === analytics.timeSeriesData.length - 1
+                          ? 'bg-accent-orange'
+                          : 'bg-accent-cyan/80 group-hover:bg-accent-cyan'
+                      }`}
+                    />
+                  </div>
+                  <span className="text-[10px] text-lago-400 font-mono truncate w-full text-center">{dp.date}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Traffic Sources & Channels */}
+        <div className="bg-lago-900 border border-lago-800 rounded-2xl p-6">
+          <h3 className="text-lg font-bold text-white mb-1">Traffic Channels</h3>
+          <p className="text-xs text-lago-300 mb-6">How visitors find SPET Online</p>
+
+          <div className="space-y-4">
+            {analytics.trafficSources.map((source, idx) => (
+              <div key={idx}>
+                <div className="flex items-center justify-between text-xs font-semibold mb-1">
+                  <span className="text-white">{source.name}</span>
+                  <span className="text-lago-300 font-mono">{source.percentage}% ({source.count.toLocaleString()})</span>
+                </div>
+                <div className="w-full h-2 bg-[#0a141d] rounded-full overflow-hidden border border-lago-800">
+                  <div
+                    style={{ width: `${source.percentage}%` }}
+                    className={`h-full rounded-full ${
+                      idx === 0 ? 'bg-accent-cyan' : idx === 1 ? 'bg-accent-orange' : idx === 2 ? 'bg-purple-400' : 'bg-lago-500'
+                    }`}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Top Visitor Locations Breakdown Table */}
+      <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+        <MapPin className="w-5 h-5 text-accent-cyan" /> Geographic Breakdown ({analytics.topLocations.length} Regions)
+      </h2>
+      <div className="overflow-x-auto bg-[#0a141d] border border-lago-800 rounded-2xl mb-8">
+        <table className="w-full text-left text-sm text-lago-200">
+          <thead className="bg-lago-900 border-b border-lago-800 text-lago-100 uppercase text-xs font-bold tracking-wider">
+            <tr>
+              <th className="px-6 py-4">City / Region</th>
+              <th className="px-6 py-4">Province / Country</th>
+              <th className="px-6 py-4">Visits ({timeframe})</th>
+              <th className="px-6 py-4">Traffic Share</th>
+              <th className="px-6 py-4">Top Interested Category</th>
+              <th className="px-6 py-4 text-right">Action</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-lago-800">
+            {analytics.topLocations.map((loc, idx) => (
+              <tr key={idx} className="hover:bg-lago-900/60 transition-colors">
+                <td className="px-6 py-4 font-bold text-white flex items-center gap-2">
+                  <span className="w-6 h-6 rounded-full bg-lago-800 text-lago-300 text-xs flex items-center justify-center font-mono">
+                    {idx + 1}
+                  </span>
+                  {loc.city}
+                </td>
+                <td className="px-6 py-4 text-lago-300">
+                  {loc.province}, <span className="text-lago-400">{loc.country}</span>
+                </td>
+                <td className="px-6 py-4 font-mono font-bold text-white">
+                  {loc.visitsCount.toLocaleString()}
+                </td>
+                <td className="px-6 py-4">
+                  <div className="flex items-center gap-3">
+                    <span className="font-mono text-xs font-bold text-lago-300 min-w-[40px]">{loc.percentage}%</span>
+                    <div className="w-24 h-2 bg-lago-800 rounded-full overflow-hidden">
+                      <div
+                        style={{ width: `${loc.percentage}%` }}
+                        className={`h-full rounded-full ${idx === 0 ? 'bg-accent-orange' : 'bg-accent-cyan'}`}
+                      />
+                    </div>
+                  </div>
+                </td>
+                <td className="px-6 py-4 text-accent-cyan font-medium text-xs">
+                  {loc.topInterest}
+                </td>
+                <td className="px-6 py-4 text-right">
+                  <button
+                    onClick={onNavigateToBanners}
+                    className="px-3 py-1.5 rounded-lg bg-lago-800 hover:bg-lago-700 text-white text-xs font-semibold border border-lago-600 transition-colors"
+                  >
+                    Target Promo
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+

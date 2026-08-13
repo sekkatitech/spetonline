@@ -65,6 +65,31 @@ export function Hero() {
   );
 }
 
+export function B2BBanner() {
+  return (
+    <section className="py-6 bg-white dark:bg-[#0a141d] transition-colors duration-300">
+      <div className="container mx-auto px-4 md:px-6">
+        <motion.a
+          href="/b2b"
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, ease: 'easeOut' }}
+          whileHover={{ scale: 1.005 }}
+          className="block rounded-2xl overflow-hidden shadow-md hover:shadow-2xl dark:hover:shadow-lago-900/70 transition-shadow duration-300 cursor-pointer border border-gray-100 dark:border-lago-800"
+        >
+          <img
+            src="/images/spet-online-hero-promo.png"
+            alt="SPET Online — The New B2B eCommerce Experience. Smarter sourcing, better prices, stronger business."
+            className="w-full h-auto block"
+            loading="eager"
+          />
+        </motion.a>
+      </div>
+    </section>
+  );
+}
+
 // Brand-to-domain mapping for logo.dev API.
 // `name` is the display label; `filterName` (if different) is the exact value
 // stored in products.Brand so the /shop?brand= link actually returns results.
@@ -100,7 +125,17 @@ const BRAND_DATA = [
   { name: 'ViewSonic', domain: 'viewsonic.com' },
   { name: 'BenQ', domain: 'benq.com' },
   { name: 'Xbox', domain: 'xbox.com' },
-  { name: 'Apple', domain: 'apple.com', href: '/enterprise/apple' },
+  // Added for Axiz/Pinnacle/Syntech brand coverage — these are real, high-
+  // volume brands in our catalog (Sandisk alone is 149 products via
+  // Pinnacle) that weren't in the original showcase list.
+  { name: 'Sandisk', domain: 'sandisk.com' },
+  { name: 'Huawei', domain: 'huawei.com' },
+  { name: 'Lenovo', domain: 'lenovo.com' },
+  { name: 'Intel', domain: 'intel.com' },
+  { name: 'Acer', domain: 'acer.com' },
+  { name: 'Targus', domain: 'targus.com' },
+  { name: 'D-Link', domain: 'dlink.com' },
+  { name: 'Apple', domain: 'apple.com', href: '/enterprise' },
 ];
 
 const LOGO_API_TOKEN = 'pk_RSkNTnvvScKErzhoXO5UUg';
@@ -210,8 +245,8 @@ export function BrandCollageBanner() {
       <div className="container mx-auto px-4 md:px-6">
         <div className="rounded-3xl overflow-hidden border border-gray-200 dark:border-lago-800 shadow-sm hover:shadow-xl dark:hover:shadow-lago-900/60 transition-shadow duration-300">
           <img
-            src="/images/gizzu-family-banner.jpg"
-            alt="Featured brands — Gizzu, Xiaomi, WINX, Port Designs, ASUS, HP and more"
+            src="/images/spet-promo.png"
+            alt="All the Tech You Need — SPET Online B2B store featuring Gizzu, Xiaomi, WINX, ASUS, HP, LG and more"
             className="w-full h-auto block"
             loading="lazy"
           />
