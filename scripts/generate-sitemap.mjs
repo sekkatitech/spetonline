@@ -24,7 +24,7 @@ const SITE_URL = 'https://spetonline.co.za'
 const OUT_PATH = join(__dirname, '..', 'public', 'sitemap.xml')
 
 // Static, always-present routes
-const STATIC_ROUTES = ['/', '/shop', '/shop/home', '/shop/tech', '/deals', '/categories', '/b2b']
+const STATIC_ROUTES = ['/', '/shop', '/shop/home', '/shop/tech', '/deals', '/categories', '/b2b', '/contact']
 
 function xmlEscape(str) {
   return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')

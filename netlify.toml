@@ -21,6 +21,10 @@
 [functions."claude-chat"]
   included_files = ["knowledge-base.md"]
 
+# Contact form: drafts a suggested reply from the knowledge base
+[functions."contact-enquiry"]
+  included_files = ["knowledge-base.md"]
+
 # Emails yesterday's visitor summary, written by Claude, at 06:00 SAST
 [functions."daily-visitor-report"]
   schedule = "0 4 * * *"

@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, useLocation, Link, useNavigationType } fr
 import { useEffect } from 'react';
 import { Navbar, Footer, WhatsAppButton } from './components/Layout';
 import { AIChatWidget } from './components/AIChatWidget';
+import { ContactPage } from './pages/ContactPage';
 import { AuthProvider } from './lib/AuthContext';
 import { trackPageView } from './lib/visitorTracker';
 // Pages
@@ -101,6 +102,7 @@ function AppShell() {
           <Route path="/payment-success" element={<PaymentSuccess />} />
           <Route path="/payment-cancel"  element={<PaymentCancel />} />
           <Route path="/search"          element={<SearchPage />} />
+          <Route path="/contact"         element={<ContactPage />} />
 
           {/* Catch-all 404 */}
           <Route path="*" element={

@@ -500,7 +500,7 @@ export function Footer() {
                     { label: 'My Account',  to: '/account' },
                     { label: 'Track Order', to: '/account' },
                     { label: 'Cart',        to: '/cart' },
-                    { label: 'Contact Us',  to: 'mailto:sales@spetonline.co.za' },
+                    { label: 'Contact Us',  to: '/contact' },
                   ].map(({ label, to }) => (
                     <li key={label}>
                       {to.startsWith('mailto') ? (
