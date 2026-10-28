@@ -446,7 +446,7 @@ A: Yes. Under the ECT Act, you have 7 days from delivery to return an unused ite
 | **Serverless Functions** | Netlify Functions (Node.js) |
 | **Payment Gateway** | PayFast |
 | **Shipping API** | ShipLogic (The Courier Guy) |
-| **AI Assistant** | Google Gemini (gemini-2.0-flash) |
+| **AI Assistant** | Anthropic Claude |
 | **Maps** | Mapbox GL |
 | **CRM** | Zoho (webhook sync) |
 
@@ -465,18 +465,19 @@ A: Yes. Under the ECT Act, you have 7 days from delivery to return an unused ite
 | `calculate-shipping.js` | Calculates shipping cost based on weight, value, and location |
 | `payfast-itn.js` | Receives PayFast payment notifications (ITN) |
 | `send-order-email.js` | Sends order confirmation emails |
-| `gemini.ts` | AI assistant backend (keeps API key server-side) |
+| `claude-chat.mjs` | AI shopping assistant backend (keeps API key server-side) |
+| `generate-descriptions-background.js` | Daily AI product descriptions for Axiz/Pinnacle |
+| `daily-visitor-report.mjs` | Daily AI visitor summary email |
 | `create-enterprise-account.js` | Enterprise account registration |
 | `axiz-sync.js` | Syncs product data from Axiz supplier |
 | `import-core-products.js` | Imports core product catalog |
 | `zoho-sync.js` / `zoho-webhook.js` | CRM integration with Zoho |
 
 ### 14.4 AI Chat System
-The AI chat is powered by **Google Gemini (gemini-2.0-flash)**:
-- Frontend client: `src/lib/gemini-client.ts` — secure proxy calls through Netlify function
-- Backend: `netlify/functions/gemini.ts` — keeps API key server-side
-- Supports single-question and multi-turn chat sessions
-- System instruction: "You are a helpful assistant for SPET Online, a premium electronics store"
+The AI chat is powered by **Anthropic Claude**:
+- Frontend: `src/components/AIChatWidget.tsx` — calls `/api/chat`
+- Backend: `netlify/functions/claude-chat.mjs` — keeps API key server-side, searches all four supplier tables live, and uses this knowledge base (minus this technical section)
+- Switched on/off in /admin → AI Features (Supabase `ai_features` table)
 
 ---
 

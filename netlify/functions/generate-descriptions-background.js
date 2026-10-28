@@ -21,7 +21,7 @@ const supabase = createClient(
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-const MODEL = 'claude-haiku-4-5-20251001';
+const MODEL = 'claude-haiku-5-5';
 const BATCH_PER_TABLE = 2000; // comfortably covers the whole current backlog in one run
 const CONCURRENCY = 10;
 
@@ -56,11 +56,13 @@ async function generateDescription(product, source) {
   try {
     const msg = await anthropic.messages.create({
       model: MODEL,
-      max_tokens: 200,
+      max_tokens: 1024, // room for thinking plus the 2-3 sentence answer
+      output_config: { effort: 'low' },
       messages: [{ role: 'user', content: buildPrompt(product, source) }],
     });
-    const block = msg.content?.[0];
-    return block?.type === 'text' ? block.text.trim() : null;
+    // Haiku 5.5 can open with a thinking block, so find the text rather than reading content[0]
+    const block = msg.content?.find(b => b.type === 'text');
+    return block ? block.text.trim() : null;
   } catch (err) {
     console.error(`[generate-descriptions] ${source} ${product.id} failed:`, err.message);
     return null;
@@ -93,7 +95,26 @@ async function processTable(table, source, selectCols) {
   return { table, found: products.length, updated };
 }
 
+// Admin on/off switch + last-run status (ai_features, see /admin → AI Features)
+async function isEnabled() {
+  const { data } = await supabase.from('ai_features').select('enabled').eq('key', 'product_descriptions').maybeSingle();
+  return data?.enabled !== false;
+}
+
+async function recordRun(status, result) {
+  await supabase
+    .from('ai_features')
+    .update({ last_run_at: new Date().toISOString(), last_status: status, last_result: result })
+    .eq('key', 'product_descriptions');
+}
+
 exports.handler = async () => {
+  if (!(await isEnabled())) {
+    console.log('[generate-descriptions] switched off in admin, skipping');
+    await recordRun('skipped', { reason: 'switched off' });
+    return { statusCode: 200, body: JSON.stringify({ success: true, skipped: true }) };
+  }
+
   const startTime = Date.now();
   const results = [];
 
@@ -107,5 +128,6 @@ exports.handler = async () => {
   }
 
   console.log(`[generate-descriptions] Done in ${Date.now() - startTime}ms:`, JSON.stringify(results));
+  await recordRun(results.some(r => r.error) ? 'error' : 'ok', { results, ms: Date.now() - startTime });
   return { statusCode: 200, body: JSON.stringify({ success: true, results }) };
 };

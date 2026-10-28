@@ -25,6 +25,33 @@ type BannerForm = {
   ends_at: string;
 };
 
+type AIFeature = {
+  key: string;
+  enabled: boolean;
+  last_run_at: string | null;
+  last_status: 'ok' | 'error' | 'skipped' | null;
+  last_result: Record<string, unknown> | null;
+};
+
+// Rows live in Supabase `ai_features` (spet-admin/supabase/migrations/*_ai_features.sql)
+const AI_FEATURE_INFO: Record<string, { title: string; description: string; schedule: string }> = {
+  chat_assistant: {
+    title: 'Shopping Assistant Chatbot',
+    description: 'Claude answers customer questions in the chat bubble on the storefront, searching all four supplier catalogues live and using the knowledge base for policies and contact details.',
+    schedule: 'Live, on every customer message',
+  },
+  product_descriptions: {
+    title: 'Automated Product Descriptions',
+    description: 'Writes short descriptions for Axiz and Pinnacle products whose supplier feed has none.',
+    schedule: 'Daily at 05:00 SAST, after the supplier syncs',
+  },
+  daily_visitor_report: {
+    title: 'Daily Visitor Report Email',
+    description: "Emails a short summary of yesterday's site visitors with suggestions, written by Claude from the Site Visitors data.",
+    schedule: 'Daily at 06:00 SAST',
+  },
+};
+
 const EMPTY_FORM: BannerForm = {
   id: null,
   title: '',
@@ -228,40 +255,7 @@ export function AdminPage() {
             </div>
           )}
 
-          {activeTab === 'ai' && (
-            <div>
-              <h1 className="text-3xl font-display font-bold text-white mb-4">AI Features Settings</h1>
-              <p className="text-lago-200 mb-8 max-w-2xl">
-                Manage the AI integrations for your store, powered by Gemini.
-              </p>
-
-              <div className="grid grid-cols-1 gap-6">
-                <div className="bg-lago-900 border border-lago-800 rounded-2xl p-6 flex justify-between items-start">
-                   <div>
-                     <h3 className="text-lg font-bold text-white mb-2 flex items-center gap-2">
-                       <Sparkles className="w-5 h-5 text-accent-cyan" /> Shopping Assistant Chatbot
-                     </h3>
-                     <p className="text-lago-200 text-sm max-w-md">Enable the AI-powered chatbot to help customers find products, compare specs, and check order statuses.</p>
-                   </div>
-                   <div className="w-12 h-6 bg-lago-500 rounded-full relative cursor-pointer shadow-[0_0_10px_rgba(5,125,205,0.5)]">
-                      <div className="absolute right-1 top-1 w-4 h-4 bg-white rounded-full"></div>
-                   </div>
-                </div>
-
-                <div className="bg-lago-900 border border-lago-800 rounded-2xl p-6 flex justify-between items-start">
-                   <div>
-                     <h3 className="text-lg font-bold text-white mb-2 flex items-center gap-2">
-                       <Sparkles className="w-5 h-5 text-lago-500" /> Automated Product Descriptions
-                     </h3>
-                     <p className="text-lago-200 text-sm max-w-md">Automatically generate high-converting SEO descriptions during CSV product imports based on basic specs.</p>
-                   </div>
-                   <div className="w-12 h-6 bg-lago-800 border border-lago-600 rounded-full relative cursor-pointer">
-                      <div className="absolute left-1 top-1 w-4 h-4 bg-lago-400 rounded-full"></div>
-                   </div>
-                </div>
-              </div>
-            </div>
-          )}
+          {activeTab === 'ai' && <AIFeaturesTab />}
 
           {(activeTab === 'analytics' || activeTab === 'customers') && (
             <div className="flex flex-col items-center justify-center p-20 text-center border border-dashed border-lago-800 rounded-2xl">
@@ -272,6 +266,108 @@ export function AdminPage() {
           )}
         </div>
 
+      </div>
+    </div>
+  );
+}
+
+// ── AI Features tab ─────────────────────────────────────────────────────────
+
+function AIFeaturesTab() {
+  const [features, setFeatures] = useState<AIFeature[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState<string | null>(null);
+
+  const load = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from('ai_features')
+      .select('key, enabled, last_run_at, last_status, last_result')
+      .order('key');
+    setError(error ? `Couldn't load AI settings (${error.message}). Has the ai_features migration been run?` : null);
+    setFeatures((data as AIFeature[]) ?? []);
+    setLoading(false);
+  };
+
+  useEffect(() => { load(); }, []);
+
+  const toggle = async (f: AIFeature) => {
+    setSaving(f.key);
+    const { error } = await supabase
+      .from('ai_features')
+      .update({ enabled: !f.enabled, updated_at: new Date().toISOString() })
+      .eq('key', f.key);
+    if (error) setError(`Couldn't save: ${error.message}`);
+    else setFeatures(prev => prev.map(x => x.key === f.key ? { ...x, enabled: !f.enabled } : x));
+    setSaving(null);
+  };
+
+  const statusStyle: Record<string, string> = {
+    ok: 'text-emerald-400',
+    error: 'text-red-400',
+    skipped: 'text-lago-400',
+  };
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="text-3xl font-display font-bold text-white">AI Features Settings</h1>
+        <button onClick={load} className="flex items-center gap-2 text-sm text-lago-300 hover:text-white">
+          <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} /> Refresh
+        </button>
+      </div>
+      <p className="text-lago-200 mb-8 max-w-2xl">
+        Switch the store's AI features on or off and see when each one last ran. Powered by Claude.
+      </p>
+
+      {error && (
+        <div className="mb-6 flex items-start gap-2 rounded-xl border border-red-500/40 bg-red-500/10 p-4 text-sm text-red-300">
+          <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" /> {error}
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 gap-6">
+        {features.map(f => {
+          const info = AI_FEATURE_INFO[f.key] ?? { title: f.key, description: '', schedule: '' };
+          return (
+            <div key={f.key} className="bg-lago-900 border border-lago-800 rounded-2xl p-6 flex justify-between items-start gap-6">
+              <div className="min-w-0">
+                <h3 className="text-lg font-bold text-white mb-2 flex items-center gap-2">
+                  <Sparkles className={`w-5 h-5 ${f.enabled ? 'text-accent-cyan' : 'text-lago-500'}`} /> {info.title}
+                </h3>
+                <p className="text-lago-200 text-sm max-w-xl">{info.description}</p>
+                <p className="text-lago-400 text-xs mt-3">{info.schedule}</p>
+                {f.key !== 'chat_assistant' && (
+                  <p className="text-xs mt-1 text-lago-300">
+                    Last run:{' '}
+                    {f.last_run_at ? (
+                      <>
+                        {new Date(f.last_run_at).toLocaleString('en-ZA')}{' '}
+                        <span className={`font-semibold ${statusStyle[f.last_status ?? ''] ?? ''}`}>({f.last_status})</span>
+                      </>
+                    ) : 'never'}
+                  </p>
+                )}
+                {f.last_status === 'error' && f.last_result && (
+                  <p className="text-xs mt-1 text-red-300 break-words">{JSON.stringify(f.last_result).slice(0, 300)}</p>
+                )}
+              </div>
+              <button
+                role="switch"
+                aria-checked={f.enabled}
+                aria-label={`${info.title} ${f.enabled ? 'on' : 'off'}`}
+                disabled={saving === f.key}
+                onClick={() => toggle(f)}
+                className={`w-12 h-6 rounded-full relative flex-shrink-0 transition-colors disabled:opacity-50 ${
+                  f.enabled ? 'bg-lago-500 shadow-[0_0_10px_rgba(5,125,205,0.5)]' : 'bg-lago-800 border border-lago-600'
+                }`}
+              >
+                <span className={`absolute top-1 w-4 h-4 rounded-full transition-all ${f.enabled ? 'right-1 bg-white' : 'left-1 bg-lago-400'}`} />
+              </button>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

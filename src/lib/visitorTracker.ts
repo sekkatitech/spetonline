@@ -163,3 +163,46 @@ export function recordVisit() {
     /* ignore storage errors */
   }
 }
+
+// ── Real page-view tracking ──────────────────────────────────────────────
+// Sends one beacon per route change to the `track-visit` Netlify function,
+// which stores it in Supabase for the admin dashboard's Site Visitors page.
+// IDs are random UUIDs (no personal data); a session ends after 30 minutes
+// of inactivity.
+const VISITOR_KEY = 'spet_vid';
+const SESSION_KEY = 'spet_sid';
+const SESSION_IDLE_MS = 30 * 60 * 1000;
+
+function getIds() {
+  let visitorId = localStorage.getItem(VISITOR_KEY);
+  if (!visitorId) {
+    visitorId = crypto.randomUUID();
+    localStorage.setItem(VISITOR_KEY, visitorId);
+  }
+  const now = Date.now();
+  let session: { id: string; last: number } | null = null;
+  try { session = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null'); } catch { /* reset below */ }
+  if (!session || now - session.last > SESSION_IDLE_MS) session = { id: crypto.randomUUID(), last: now };
+  session.last = now;
+  localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+  return { visitorId, sessionId: session.id };
+}
+
+let lastTracked = '';
+
+export function trackPageView(path: string) {
+  if (path === lastTracked || path.startsWith('/admin')) return;
+  lastTracked = path;
+  try {
+    const { visitorId, sessionId } = getIds();
+    const body = JSON.stringify({ visitorId, sessionId, path, referrer: document.referrer || null });
+    fetch('/.netlify/functions/track-visit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body,
+      keepalive: true,
+    }).catch(() => { /* analytics must never break the site */ });
+  } catch {
+    /* storage blocked (private mode etc.) — skip tracking */
+  }
+}

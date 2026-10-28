@@ -1,7 +1,9 @@
 import { BrowserRouter, Routes, Route, useLocation, Link, useNavigationType } from 'react-router-dom';
 import { useEffect } from 'react';
 import { Navbar, Footer, WhatsAppButton } from './components/Layout';
+import { AIChatWidget } from './components/AIChatWidget';
 import { AuthProvider } from './lib/AuthContext';
+import { trackPageView } from './lib/visitorTracker';
 // Pages
 import { HomePage }         from './pages/HomePage';
 import { ShopLandingPage }  from './pages/ShopLandingPage';
@@ -52,6 +54,9 @@ function ScrollToTop() {
 function AppShell() {
   const { pathname } = useLocation();
   const isEnterprise = pathname.startsWith('/enterprise');
+
+  // Record a page view for the admin dashboard's Site Visitors analytics
+  useEffect(() => { trackPageView(pathname); }, [pathname]);
 
   return (
     <>
@@ -112,6 +117,7 @@ function AppShell() {
       </main>
       {!isEnterprise && <Footer />}
       {!isEnterprise && <WhatsAppButton />}
+      {!isEnterprise && <AIChatWidget />}
     </>
   );
 }

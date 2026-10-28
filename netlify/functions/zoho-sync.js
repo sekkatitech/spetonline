@@ -8,7 +8,7 @@ const { createClient } = require('@supabase/supabase-js');
 const { findOrCreateContact, createInvoiceFromOrder, zohoAPI } = require('./zoho-lib');
 
 const supabase = createClient(
-  process.env.VITE_SUPABASE_URL,
+  process.env.SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 

@@ -17,6 +17,14 @@
 [functions."generate-descriptions-background"]
   schedule = "0 3 * * *"
 
+# Storefront AI shopping assistant reads the knowledge base at runtime
+[functions."claude-chat"]
+  included_files = ["knowledge-base.md"]
+
+# Emails yesterday's visitor summary, written by Claude, at 06:00 SAST
+[functions."daily-visitor-report"]
+  schedule = "0 4 * * *"
+
 # Security headers — applied to every response
 [[headers]]
   for = "/*"
@@ -26,7 +34,7 @@
     Referrer-Policy            = "strict-origin-when-cross-origin"
     Permissions-Policy         = "camera=(), microphone=(), geolocation=()"
     Strict-Transport-Security  = "max-age=63072000; includeSubDomains"
-    Content-Security-Policy    = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://api.mapbox.com; worker-src 'self' blob:; style-src 'self' 'unsafe-inline' https://api.mapbox.com; img-src 'self' data: blob: https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.mapbox.com https://events.mapbox.com https://firestore.googleapis.com https://generativelanguage.googleapis.com; font-src 'self' data: https://api.mapbox.com; frame-ancestors 'none';"
+    Content-Security-Policy    = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://api.mapbox.com; worker-src 'self' blob:; style-src 'self' 'unsafe-inline' https://api.mapbox.com; img-src 'self' data: blob: https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.mapbox.com https://events.mapbox.com https://firestore.googleapis.com; font-src 'self' data: https://api.mapbox.com; frame-ancestors 'none';"
 
 # Long-lived cache for hashed assets (JS, CSS, images built by Vite)
 [[headers]]

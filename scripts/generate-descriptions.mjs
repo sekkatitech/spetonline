@@ -86,8 +86,9 @@ function parseResponse(text) {
 
 async function generateOne(product) {
   const message = await anthropic.messages.create({
-    model: 'claude-haiku-4-5',
-    max_tokens: 700,
+    model: 'claude-haiku-5-5',
+    max_tokens: 2000, // Haiku 5.5 thinks by default; leave room for it plus the JSON
+    output_config: { effort: 'low' },
     messages: [{ role: 'user', content: buildPrompt(product) }],
   })
 
