@@ -5,6 +5,7 @@ import AppleLegalModal, { type AppleLegalSection } from './AppleLegalModal'
 const LOADERS: Record<string, () => Promise<AppleLegalSection[]>> = {
   Mac: () => import('../data/appleLegalMac').then(m => m.MAC_LEGAL),
   iPhone: () => import('../data/appleLegalIphone').then(m => m.IPHONE_LEGAL),
+  iPad: () => import('../data/appleLegalIpad').then(m => m.IPAD_LEGAL),
 }
 
 // "Disclaimers" link shown below the products of a range. On a filtered view it opens with that range's notes only.
