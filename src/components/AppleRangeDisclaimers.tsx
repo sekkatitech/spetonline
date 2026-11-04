@@ -4,6 +4,7 @@ import AppleLegalModal, { type AppleLegalSection } from './AppleLegalModal'
 // Loaded on demand because the legal text is long. Add a range here once its document is loaded.
 const LOADERS: Record<string, () => Promise<AppleLegalSection[]>> = {
   Mac: () => import('../data/appleLegalMac').then(m => m.MAC_LEGAL),
+  iPhone: () => import('../data/appleLegalIphone').then(m => m.IPHONE_LEGAL),
 }
 
 // "Disclaimers" link shown below the products of a range. On a filtered view it opens with that range's notes only.
