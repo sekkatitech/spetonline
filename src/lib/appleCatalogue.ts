@@ -16,7 +16,7 @@ export interface AppleQuoteRequest {
   notes: string
 }
 
-export async function submitAppleQuote(request: AppleQuoteRequest): Promise<string> {
+export async function submitAppleQuote(request: AppleQuoteRequest): Promise<{ reference: string; customerEmailed: boolean }> {
   const response = await fetch('/.netlify/functions/apple-quote', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -26,7 +26,7 @@ export async function submitAppleQuote(request: AppleQuoteRequest): Promise<stri
   if (!response.ok || !result?.reference) {
     throw new Error(result?.error || 'We couldn\'t save your quote. Please try again.')
   }
-  return result.reference
+  return { reference: result.reference, customerEmailed: result.customerEmailed === true }
 }
 
 async function request<T>(query: string): Promise<T> {

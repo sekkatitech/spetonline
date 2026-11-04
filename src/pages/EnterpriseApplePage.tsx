@@ -482,10 +482,11 @@ const quoteQtyBtn: React.CSSProperties = {
 }
 
 function QuoteSidebar({
-  items, reference, submitting, error, contact, onContactChange, onQtyChange, onRemove, onSubmit, onClose,
+  items, reference, customerEmailed, submitting, error, contact, onContactChange, onQtyChange, onRemove, onSubmit, onClose,
 }: {
   items: AppleQuoteItem[]
   reference: string | null
+  customerEmailed: boolean
   submitting: boolean
   error: string
   contact: QuoteContact
@@ -507,12 +508,13 @@ function QuoteSidebar({
         padding: 32, boxSizing: 'border-box',
         fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif",
       }}>
-        <div style={{ fontSize: 22, fontWeight: 600, color: A.black, marginBottom: 12 }}>Quote request received</div>
-        <p style={{ fontSize: 14, color: A.grey300, lineHeight: 1.6, margin: '0 0 8px' }}>
-          Your reference is <strong style={{ color: A.black }}>{reference}</strong>. We've emailed you a copy.
+        <div style={{ fontSize: 22, fontWeight: 600, color: A.black, marginBottom: 8 }}>Shop with Confidence!</div>
+        <p style={{ fontSize: 14, color: A.grey500, lineHeight: 1.6, margin: '0 0 24px' }}>
+          Our team will confirm product availability and keep you informed throughout your order. If an item is temporarily out of stock, we'll gladly assist with a special order or a suitable alternative.
         </p>
+        <div style={{ fontSize: 15, fontWeight: 600, color: A.black, marginBottom: 6 }}>Quote request received</div>
         <p style={{ fontSize: 14, color: A.grey300, lineHeight: 1.6, margin: '0 0 24px' }}>
-          We'll check availability and let you know if any item is unavailable or on order.
+          Your reference is <strong style={{ color: A.black }}>{reference}</strong>.{customerEmailed && " We've emailed you a copy."}
         </p>
         <button onClick={onClose} style={{
           width: '100%', padding: '14px 0', borderRadius: 980, background: A.blue, color: A.white,
@@ -646,6 +648,7 @@ export default function EnterpriseApplePage() {
   const [showQuote, setShowQuote] = useState(searchParams.get('quote') === 'open')
   const [contact, setContact] = useState<QuoteContact>({ name: '', phone: '', organisation: '', notes: '' })
   const [quoteReference, setQuoteReference] = useState<string | null>(null)
+  const [quoteEmailed, setQuoteEmailed] = useState(false)
   const [submittingQuote, setSubmittingQuote] = useState(false)
   const [quoteError, setQuoteError] = useState('')
   const [toast, setToast] = useState('')
@@ -726,7 +729,7 @@ export default function EnterpriseApplePage() {
     setSubmittingQuote(true)
     setQuoteError('')
     try {
-      const reference = await submitAppleQuote({
+      const { reference, customerEmailed } = await submitAppleQuote({
         accessToken: session.access_token,
         items: quoteItems.map(i => ({ product_id: i.id, qty: i.qty })),
         contactName: contact.name,
@@ -737,6 +740,7 @@ export default function EnterpriseApplePage() {
       clearQuote()
       setContact(c => ({ ...c, notes: '' }))
       setQuoteReference(reference)
+      setQuoteEmailed(customerEmailed)
     } catch (err) {
       setQuoteError(err instanceof Error ? err.message : 'We couldn\'t save your quote. Please try again.')
     } finally {
@@ -921,6 +925,7 @@ export default function EnterpriseApplePage() {
           <QuoteSidebar
             items={quoteItems}
             reference={quoteReference}
+            customerEmailed={quoteEmailed}
             submitting={submittingQuote}
             error={quoteError}
             contact={contact}

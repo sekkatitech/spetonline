@@ -9,6 +9,8 @@ const BREVO_API_KEY = process.env.BREVO_API_KEY;
 const SENDER_EMAIL = process.env.SENDER_EMAIL || 'sales@spetonline.co.za';
 const SENDER_NAME = process.env.SENDER_NAME || 'SPET Online';
 const APPLE_ALERT_EMAIL = process.env.QUOTE_ALERT_EMAIL || 'info@sekkatitech.co.za';
+// The address orders are sent from. SENDER_EMAIL stays the staff inbox for order notices.
+const FROM_EMAIL = 'admin@spetonline.co.za';
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -132,7 +134,7 @@ async function sendEmail({ to, toName, subject, htmlContent }) {
       'api-key': BREVO_API_KEY,
     },
     body: JSON.stringify({
-      sender: { name: SENDER_NAME, email: SENDER_EMAIL },
+      sender: { name: SENDER_NAME, email: FROM_EMAIL },
       to: [{ email: to, name: toName || to }],
       subject,
       htmlContent,

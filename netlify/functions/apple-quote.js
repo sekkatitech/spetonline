@@ -12,7 +12,7 @@ const supabase = createClient(
 );
 
 const BREVO_API_KEY = process.env.BREVO_API_KEY;
-const SENDER_EMAIL = process.env.SENDER_EMAIL || 'sales@spetonline.co.za';
+const SENDER_EMAIL = 'admin@spetonline.co.za';
 const SENDER_NAME = process.env.SENDER_NAME || 'SPET Online';
 const QUOTE_ALERT_EMAIL = process.env.QUOTE_ALERT_EMAIL || 'info@sekkatitech.co.za';
 
@@ -63,7 +63,8 @@ function customerEmailHtml(quote, lines, total, contact) {
     <div style="background:#0a141d;padding:24px;text-align:center"><h1 style="color:#fff;margin:0;font-size:22px">SPET Online</h1></div>
     <div style="padding:32px 24px">
       <h2 style="color:#1f2937;font-size:20px;margin-top:0">We've received your quote request</h2>
-      <p style="color:#6b7280;font-size:14px;line-height:1.6">Hi ${esc(contact.name)}, thank you. Your reference is <b>${esc(quote.ref || quote.id)}</b>. We'll check availability and get back to you, and we'll let you know if any item is unavailable or on order.</p>
+      <p style="color:#6b7280;font-size:14px;line-height:1.6">Hi ${esc(contact.name)}, thank you. Your reference is <b>${esc(quote.ref || quote.id)}</b>.</p>
+      <p style="color:#1f2937;font-size:14px;line-height:1.6"><b>Shop with Confidence!</b> Our team will confirm product availability and keep you informed throughout your order. If an item is temporarily out of stock, we'll gladly assist with a special order or a suitable alternative.</p>
       <table style="width:100%;border-collapse:collapse">${itemRows(lines)}</table>
       <p style="font-size:16px;color:#1f2937"><b>Estimated total: ${money(total)}</b> incl. VAT</p>
       <p style="color:#6b7280;font-size:13px;line-height:1.6">Delivery is 3 to 14 days, pending stock availability. If an item isn't available, you can cancel for a 100% refund of anything you've paid.</p>
@@ -185,9 +186,25 @@ exports.handler = async (event) => {
         htmlContent: customerEmailHtml(quote, lines, total, contact),
       }),
     ]);
-    results.filter((r) => r.status === 'rejected').forEach((r) => console.error('apple-quote: email failed:', r.reason.message));
+    const [staffResult, customerResult] = results;
 
-    return respond(200, { success: true, reference, total });
+    // Failures go in the staff-only notes field so a quote that nobody was told about can
+    // still be spotted. Not admin_notes: customers can read that on their quotes page.
+    const problems = [];
+    if (lineError) problems.push(`line items not saved: ${lineError.message}`);
+    if (staffResult.status === 'rejected') problems.push(`staff alert failed: ${staffResult.reason.message}`);
+    if (customerResult.status === 'rejected') problems.push(`customer email failed: ${customerResult.reason.message}`);
+    if (problems.length > 0) {
+      console.error('apple-quote:', problems.join('; '));
+      const systemNote = `[System] ${problems.join('; ')}`.slice(0, 1000);
+      const { error: noteError } = await supabase
+        .from('quote_requests')
+        .update({ notes: notes ? `${notes}\n${systemNote}` : systemNote })
+        .eq('id', quote.id);
+      if (noteError) console.error('apple-quote: could not record problems:', noteError.message);
+    }
+
+    return respond(200, { success: true, reference, total, customerEmailed: customerResult.status === 'fulfilled' });
   } catch (err) {
     console.error('apple-quote error:', err);
     return respond(500, { error: "We couldn't save your quote. Please try again or email sales@spetonline.co.za." });
