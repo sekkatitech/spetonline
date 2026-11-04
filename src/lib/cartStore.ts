@@ -13,9 +13,19 @@ export interface CartItem {
   supplier: 'esquire' | 'syntech' | 'axiz' | 'pinnacle';  // ← tells server which table to verify price in
 }
 
+/** The order last sent to PayFast, kept until it is paid so a retry can reuse its promo. */
+export interface PendingOrder {
+  id: string;
+  promoDiscount: number;
+  promoCode: string | null;
+  promoId: string | null;
+}
+
 interface CartStore {
   items: CartItem[];
-  addItem: (item: Omit<CartItem, 'qty'>) => void;
+  pendingOrder: PendingOrder | null;
+  setPendingOrder: (order: PendingOrder) => void;
+  addItem: (item: Omit<CartItem, 'qty'>, qty?: number) => void;
   removeItem: (product_id: string) => void;
   updateQty: (product_id: string, qty: number) => void;
   clearCart: () => void;
@@ -27,17 +37,21 @@ export const useCartStore = create<CartStore>()(
   persist(
     (set, get) => ({
       items: [],
+      pendingOrder: null,
 
-      addItem: (item) => {
+      setPendingOrder: (order) => set({ pendingOrder: order }),
+
+      addItem: (item, qty = 1) => {
+        const quantity = Math.max(1, Math.floor(qty) || 1);
         const existing = get().items.find((i) => i.product_id === item.product_id);
         if (existing) {
           set((state) => ({
             items: state.items.map((i) =>
-              i.product_id === item.product_id ? { ...i, qty: i.qty + 1 } : i
+              i.product_id === item.product_id ? { ...i, qty: i.qty + quantity } : i
             ),
           }));
         } else {
-          set((state) => ({ items: [...state.items, { ...item, qty: 1 }] }));
+          set((state) => ({ items: [...state.items, { ...item, qty: quantity }] }));
         }
       },
 
@@ -55,7 +69,7 @@ export const useCartStore = create<CartStore>()(
         }));
       },
 
-      clearCart: () => set({ items: [] }),
+      clearCart: () => set({ items: [], pendingOrder: null }),
 
       totalItems: () => get().items.reduce((sum, i) => sum + i.qty, 0),
 

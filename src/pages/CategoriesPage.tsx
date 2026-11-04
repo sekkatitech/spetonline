@@ -1,94 +1,199 @@
-// @ts-nocheck
-import { useState, useEffect } from 'react';
-import { motion } from 'motion/react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowRight, Grid3x3, Zap, Home, Package } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
+import { ArrowRight, Grid3x3 } from 'lucide-react';
 import { useCategories, useCategoryHeads } from '../lib/api';
-import { SafeImage } from '../components/SafeImage';
-import { NavSpacer } from '../components/Layout';
-import { supabase } from '../lib/supabase';
+import { fetchActiveRows, SUPPLIERS, type SupplierConfig, type SupplierKey } from '../lib/supplierCatalog';
 import { useSEO } from '../lib/useSEO';
+import { SafeImage } from '../components/SafeImage';
+import { ButtonLink, PageShell, SectionHeader, Skeleton, Tabs, panelStyles } from '../components/ui';
 
-// ── Fetches first product image for a category from any supplier table ────────
-function CategoryImage({ table, categoryName }: { table: string; categoryName: string }) {
-  const [image, setImage] = useState<string | null>(null);
-
-  useEffect(() => {
-    setImage(null);
-    supabase
-      .from(table)
-      .select('thumbnail_url, images')
-      .eq('category', categoryName)
-      .eq('is_active', true)
-      .not('thumbnail_url', 'is', null)
-      .limit(1)
-      .single()
-      .then(({ data }) => {
-        if (data?.thumbnail_url) setImage(data.thumbnail_url);
-      });
-  }, [table, categoryName]);
-
-  if (!image) {
-    return (
-      <div className="w-16 h-16 rounded-2xl bg-lago-50 flex items-center justify-center">
-        <Zap className="w-8 h-8 text-lago-400" />
-      </div>
-    );
-  }
-
-  return (
-    <img
-      src={image}
-      alt={categoryName}
-      className="max-w-full max-h-full object-contain group-hover:scale-105 transition-transform duration-300"
-      referrerPolicy="no-referrer"
-      onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-    />
-  );
-}
-
-// ── Syntech categories with friendly display names ────────────────────────────
-const SYNTECH_CATEGORY_NAMES: Record<string, string> = {
-  'Computer peripherals': 'Computer Peripherals',
-  'Components':           'PC Components',
-  'Cables':               'Cables & Adapters',
-  'Bags & luggage':       'Bags & Luggage',
-  'Appliances':           'Appliances',
-  'Power':                'Power Solutions',
-  'Networking & security':'Networking & Security',
-  'TV & audio':           'TV & Audio',
-  'Mobile':               'Mobile Accessories',
-  'Software':             'Software',
-  'Lifestyle & home tech':'Lifestyle & Home Tech',
-  'Computers':            'Computers',
+// Syntech categories with friendly display names
+const CATEGORY_LABELS: Record<string, string> = {
+  'Computer peripherals': 'Computer peripherals',
+  Components: 'PC components',
+  Cables: 'Cables & adapters',
+  'Bags & luggage': 'Bags & luggage',
+  Appliances: 'Appliances',
+  Power: 'Power solutions',
+  'Networking & security': 'Networking & security',
+  'TV & audio': 'TV & audio',
+  Mobile: 'Mobile accessories',
+  Software: 'Software',
+  'Lifestyle & home tech': 'Lifestyle & home tech',
+  Computers: 'Computers',
 };
 
-// ── Generic "categories with counts" hook, used for any supplier table that
-// has a flat `category` text column (Syntech, Axiz, Pinnacle) ────────────────
+type TabId = 'home' | 'gaming' | 'axiz' | 'pinnacle';
+
+const SUPPLIER_TABS: { id: Exclude<TabId, 'home'>; supplier: SupplierKey }[] = [
+  { id: 'gaming', supplier: 'syntech' },
+  { id: 'axiz', supplier: 'axiz' },
+  { id: 'pinnacle', supplier: 'pinnacle' },
+];
+
+const TABS = [
+  { id: 'home', label: 'Home & entertainment' },
+  ...SUPPLIER_TABS.map(({ id, supplier }) => ({ id, label: SUPPLIERS[supplier].label })),
+];
+
+const GRID = 'grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5';
+
+interface SupplierCategory {
+  name: string;
+  count: number;
+  image: string | null;
+}
+
+/** One query per supplier: counts and a representative image for every category. */
 function useSupplierCategories(table: string) {
-  const [categories, setCategories] = useState<{ name: string; count: number }[]>([]);
+  const [categories, setCategories] = useState<SupplierCategory[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    supabase
-      .from(table)
-      .select('category')
-      .eq('is_active', true)
-      .not('category', 'is', null)
-      .then(({ data }) => {
-        const counts: Record<string, number> = {};
-        (data ?? []).forEach((d: any) => {
-          if (d.category) counts[d.category] = (counts[d.category] || 0) + 1;
-        });
-        const sorted = Object.entries(counts)
-          .sort((a, b) => b[1] - a[1])
-          .map(([name, count]) => ({ name, count }));
-        setCategories(sorted);
-        setLoading(false);
-      });
+    let cancelled = false;
+    setLoading(true);
+    fetchActiveRows<{ category: string | null; thumbnail_url: string | null }>(table, 'category, thumbnail_url').then((rows) => {
+      if (cancelled) return;
+      const byName = new Map<string, SupplierCategory>();
+      for (const row of rows) {
+        if (!row.category) continue;
+        const entry = byName.get(row.category) ?? { name: row.category, count: 0, image: null };
+        entry.count += 1;
+        entry.image = entry.image ?? row.thumbnail_url;
+        byName.set(row.category, entry);
+      }
+      setCategories([...byName.values()].sort((a, b) => b.count - a.count));
+      setLoading(false);
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [table]);
 
   return { categories, loading };
+}
+
+function CategoryCard({ to, title, meta, image }: { to: string; title: string; meta: string; image: string | null }) {
+  return (
+    <Link to={to} className={`${panelStyles} group block overflow-hidden transition-colors hover:border-spet-blue`}>
+      <div className="flex aspect-[4/3] items-center justify-center bg-white p-4">
+        {image ? (
+          <SafeImage
+            src={image}
+            alt=""
+            loading="lazy"
+            decoding="async"
+            referrerPolicy="no-referrer"
+            className="max-h-full max-w-full object-contain transition-transform duration-300 group-hover:scale-[1.03] motion-reduce:transform-none"
+          />
+        ) : (
+          <Grid3x3 className="h-8 w-8 text-spet-was" aria-hidden="true" />
+        )}
+      </div>
+      <div className="p-3.5">
+        <h3 className="text-[14px] font-semibold leading-snug text-spet-ink group-hover:text-spet-blue">{title}</h3>
+        <p className="mt-0.5 text-[12px] text-spet-muted">{meta}</p>
+      </div>
+    </Link>
+  );
+}
+
+function SkeletonGrid({ count }: { count: number }) {
+  return (
+    <div className={GRID}>
+      {Array.from({ length: count }).map((_, index) => (
+        <Skeleton key={index} className="aspect-[4/3] rounded-2xl" />
+      ))}
+    </div>
+  );
+}
+
+function AllProductsLink({ to }: { to: string }) {
+  return (
+    <Link to={to} className="flex min-h-11 shrink-0 items-center gap-1 text-[13px] font-semibold text-spet-link hover:underline">
+      All products <ArrowRight className="h-4 w-4" aria-hidden="true" />
+    </Link>
+  );
+}
+
+function HomeTab() {
+  const { categories, loading } = useCategories();
+  const { categoryHeads, categoryImages, loading: headsLoading } = useCategoryHeads();
+  const isLoading = loading || headsLoading;
+
+  const subCategoryCount = new Map<string, number>();
+  for (const category of categories) {
+    const head = category.parent_id || 'Other';
+    subCategoryCount.set(head, (subCategoryCount.get(head) ?? 0) + 1);
+  }
+
+  return (
+    <>
+      <SectionHeader title="Shop by department" action={<AllProductsLink to="/shop/home" />} />
+      {isLoading ? (
+        <SkeletonGrid count={10} />
+      ) : (
+        <div className={GRID}>
+          {categoryHeads.map((head) => {
+            const count = subCategoryCount.get(head) ?? 0;
+            return (
+              <CategoryCard
+                key={head}
+                to={`/shop/home?categoryHead=${encodeURIComponent(head)}`}
+                title={head}
+                meta={count > 0 ? `${count} sub-categor${count === 1 ? 'y' : 'ies'}` : 'View products'}
+                image={categoryImages[head] ?? null}
+              />
+            );
+          })}
+        </div>
+      )}
+
+      {!isLoading && categories.length > 0 && (
+        <div className="mt-10">
+          <SectionHeader title="All sub-categories" />
+          <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+            {categories.map((category) => (
+              <li key={category.id}>
+                <Link
+                  to={`/shop/home?category=${encodeURIComponent(category.name)}`}
+                  className="flex h-full min-h-11 flex-col justify-center rounded-lg border border-spet-line bg-spet-surface px-3 py-2 transition-colors hover:border-spet-blue"
+                >
+                  <span className="text-[13px] font-medium leading-snug text-spet-ink">{category.name}</span>
+                  {category.parent_id && <span className="mt-0.5 text-[11px] text-spet-muted">{category.parent_id}</span>}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </>
+  );
+}
+
+function SupplierTab({ config }: { config: SupplierConfig }) {
+  const { categories, loading } = useSupplierCategories(config.table);
+
+  return (
+    <>
+      <SectionHeader title={config.label} action={<AllProductsLink to={config.route} />} />
+      {loading ? (
+        <SkeletonGrid count={12} />
+      ) : (
+        <div className={GRID}>
+          {categories.map((category) => (
+            <CategoryCard
+              key={category.name}
+              to={`${config.route}?category=${encodeURIComponent(category.name)}`}
+              title={CATEGORY_LABELS[category.name] ?? category.name}
+              meta={`${category.count} product${category.count === 1 ? '' : 's'}`}
+              image={category.image}
+            />
+          ))}
+        </div>
+      )}
+    </>
+  );
 }
 
 export function CategoriesPage() {
@@ -97,449 +202,44 @@ export function CategoriesPage() {
     description: 'Browse SPET Online by category — laptops, smartphones, TVs, gaming, audio and more, all in one place.',
   });
 
-  const { categories, loading } = useCategories();
-  const { categoryHeads, categoryImages, loading: headsLoading } = useCategoryHeads();
-  const { categories: syntechCats, loading: syntechLoading } = useSupplierCategories('syntech_products');
-  const { categories: axizCats, loading: axizLoading } = useSupplierCategories('axiz_products');
-  const { categories: pinnacleCats, loading: pinnacleLoading } = useSupplierCategories('pinnacle_products');
-  const navigate = useNavigate();
-
   const [searchParams, setSearchParams] = useSearchParams();
-  const activeTab: 'home' | 'gaming' | 'axiz' | 'pinnacle' =
-    (['gaming', 'axiz', 'pinnacle'] as const).includes(searchParams.get('tab') as any)
-      ? (searchParams.get('tab') as 'gaming' | 'axiz' | 'pinnacle')
-      : 'home'
-  const setActiveTab = (tab: 'home' | 'gaming' | 'axiz' | 'pinnacle') => setSearchParams(tab === 'home' ? {} : { tab })
-
-  // Group categories by CategoryHead
-  const categoryMap = new Map<string, typeof categories>();
-  for (const cat of categories) {
-    const head = cat.parent_id || 'Other';
-    if (!categoryMap.has(head)) categoryMap.set(head, []);
-    categoryMap.get(head)!.push(cat);
-  }
-
-  const isLoading = loading || headsLoading;
+  const requested = searchParams.get('tab');
+  const activeTab: TabId = SUPPLIER_TABS.some((tab) => tab.id === requested) ? (requested as TabId) : 'home';
+  const activeSupplier = SUPPLIER_TABS.find((tab) => tab.id === activeTab)?.supplier;
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#0a141d] pb-20">
-    
-     {/* ── Hero banner — fixed parallax ── */}
-      <div
-        className="relative w-full flex flex-col items-center justify-center text-center px-4"
-       style={{
-          height: '100vh',
-          backgroundImage: 'url(/images/store-hero.png)',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundAttachment: 'fixed',
-        }}
-      >
-        <div className="absolute inset-0 bg-black/55" />
-        <NavSpacer />
-        <div className="relative z-10">
-          <h1 className="text-4xl md:text-6xl font-display font-black text-white mb-3 drop-shadow-lg">
-            All Categories
-          </h1>
-          <p className="text-gray-200 text-base drop-shadow max-w-xl mx-auto">
-            Browse our full range of technology products across all departments.
-          </p>
-        </div>
+    <PageShell
+      breadcrumbs={[{ label: 'Home', to: '/' }, { label: 'Categories' }]}
+      title="All categories"
+      description="Browse the full range across every department."
+    >
+      <Tabs
+        label="Category sections"
+        items={TABS}
+        value={activeTab}
+        onChange={(id) => setSearchParams(id === 'home' ? {} : { tab: id })}
+        className="mb-6"
+      />
+
+      <div role="tabpanel" id={`panel-${activeTab}`} aria-labelledby={`tab-${activeTab}`}>
+        {activeSupplier ? <SupplierTab key={activeSupplier} config={SUPPLIERS[activeSupplier]} /> : <HomeTab />}
       </div>
 
-      {/* ── Page header ── */}
-      <div className="bg-white dark:bg-lago-900 border-b border-gray-200 dark:border-lago-800">
-        <div className="container mx-auto px-4 md:px-6 py-8">
-          <button
-            onClick={() => window.history.state?.idx > 0 ? navigate(-1) : navigate('/')}
-            className="text-sm text-gray-500 dark:text-lago-400 hover:text-lago-600 dark:hover:text-lago-300 font-medium mb-4 flex items-center gap-1 transition-colors"
+      <div className="mt-12 flex flex-col items-start justify-between gap-5 rounded-2xl bg-spet-navy p-6 md:flex-row md:items-center md:p-8">
+        <div>
+          <h2 className="font-display text-[24px] font-semibold tracking-tight text-white">Can’t find what you’re looking for?</h2>
+          <p className="mt-1 text-[14px] text-white/70">Browse a full range or contact our sales team.</p>
+        </div>
+        <div className="flex flex-wrap gap-3">
+          <ButtonLink to="/shop">Go to shop</ButtonLink>
+          <Link
+            to="/contact"
+            className="inline-flex h-11 items-center justify-center rounded-lg border border-white/30 px-4 text-[13px] font-semibold text-white transition-colors hover:bg-white/10"
           >
-            ← Back
-          </button>
-          <div className="flex items-center gap-3 mb-2">
-            <Grid3x3 className="w-5 h-5 text-lago-600 dark:text-lago-400" />
-            <span className="text-lago-600 dark:text-lago-400 font-bold text-sm uppercase tracking-widest">Browse</span>
-          </div>
-          
-        </div>
-
-        {/* Tab switcher */}
-        <div className="container mx-auto px-4 md:px-6">
-          <div className="flex gap-0 border-b border-gray-200 dark:border-lago-800">
-            <button
-              onClick={() => setActiveTab('home')}
-              className={`flex items-center gap-2 px-6 py-3.5 text-sm font-semibold border-b-2 transition-colors ${
-                activeTab === 'home'
-                  ? 'border-lago-600 text-lago-600 dark:text-lago-400 dark:border-lago-400'
-                  : 'border-transparent text-gray-500 dark:text-lago-500 hover:text-gray-700 dark:hover:text-lago-300'
-              }`}
-            >
-              <Home className="w-4 h-4" />
-              Home & Entertainment
-            </button>
-            <button
-              onClick={() => setActiveTab('gaming')}
-              className={`flex items-center gap-2 px-6 py-3.5 text-sm font-semibold border-b-2 transition-colors ${
-                activeTab === 'gaming'
-                  ? 'border-lago-600 text-lago-600 dark:text-lago-400 dark:border-lago-400'
-                  : 'border-transparent text-gray-500 dark:text-lago-500 hover:text-gray-700 dark:hover:text-lago-300'
-              }`}
-            >
-              <Zap className="w-4 h-4" />
-              Gaming & Computing
-            </button>
-            <button
-              onClick={() => setActiveTab('axiz')}
-              className={`flex items-center gap-2 px-6 py-3.5 text-sm font-semibold border-b-2 transition-colors ${
-                activeTab === 'axiz'
-                  ? 'border-lago-600 text-lago-600 dark:text-lago-400 dark:border-lago-400'
-                  : 'border-transparent text-gray-500 dark:text-lago-500 hover:text-gray-700 dark:hover:text-lago-300'
-              }`}
-            >
-              <Package className="w-4 h-4" />
-              Axiz Digital
-            </button>
-            <button
-              onClick={() => setActiveTab('pinnacle')}
-              className={`flex items-center gap-2 px-6 py-3.5 text-sm font-semibold border-b-2 transition-colors ${
-                activeTab === 'pinnacle'
-                  ? 'border-lago-600 text-lago-600 dark:text-lago-400 dark:border-lago-400'
-                  : 'border-transparent text-gray-500 dark:text-lago-500 hover:text-gray-700 dark:hover:text-lago-300'
-              }`}
-            >
-              <Package className="w-4 h-4" />
-              Pinnacle
-            </button>
-          </div>
+            Contact us
+          </Link>
         </div>
       </div>
-
-      <div className="container mx-auto px-4 md:px-6 py-10">
-
-        {/* ── HOME & ENTERTAINMENT tab ── */}
-        {activeTab === 'home' && (
-          <>
-            {/* Department cards */}
-            <div className="mb-12">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-display font-bold text-gray-900 dark:text-white">
-                  Shop by Department
-                </h2>
-                <Link to="/shop/home" className="flex items-center gap-1.5 text-sm font-semibold text-lago-600 dark:text-lago-400 hover:text-lago-800 dark:hover:text-white transition-colors">
-                  All products <ArrowRight className="w-4 h-4" />
-                </Link>
-              </div>
-
-              {isLoading ? (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                  {Array.from({ length: 10 }).map((_, i) => (
-                    <div key={i} className="aspect-[4/3] bg-gray-200 dark:bg-lago-800 rounded-2xl animate-pulse" />
-                  ))}
-                </div>
-              ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                  {categoryHeads.map((head, i) => {
-                    const subCats = categoryMap.get(head) || [];
-                    return (
-                      <motion.div
-                        key={head}
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ delay: i * 0.04 }}
-                      >
-                        <Link
-                          to={`/shop/home?categoryHead=${encodeURIComponent(head)}`}
-                          className="group block bg-white dark:bg-lago-900 border border-gray-200 dark:border-lago-800 rounded-2xl overflow-hidden hover:border-lago-400 dark:hover:border-lago-500 hover:shadow-lg transition-all duration-300"
-                        >
-                          {/* ✅ White background on product image — no blue overlay */}
-                          <div className="relative aspect-[4/3] bg-white dark:bg-gray-100 overflow-hidden">
-                            {categoryImages[head] ? (
-                              <SafeImage
-                                src={categoryImages[head]}
-                                alt={head}
-                                className="absolute inset-0 w-full h-full object-contain p-4 group-hover:scale-108 transition-transform duration-500"
-                                fallbackClassName="bg-transparent border-none"
-                              />
-                            ) : (
-                              <div className="absolute inset-0 flex items-center justify-center">
-                                <Grid3x3 className="w-10 h-10 text-gray-300" />
-                              </div>
-                            )}
-                            {/* Subtle bottom fade only */}
-                            <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-black/20 to-transparent" />
-                            {/* Explore button on hover */}
-                            <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <div className="w-7 h-7 rounded-full bg-lago-600 flex items-center justify-center shadow">
-                                <ArrowRight className="w-3.5 h-3.5 text-white" />
-                              </div>
-                            </div>
-                          </div>
-                          <div className="p-3.5">
-                            <h3 className="font-bold text-sm text-gray-900 dark:text-white group-hover:text-lago-600 dark:group-hover:text-lago-400 transition-colors leading-snug">
-                              {head}
-                            </h3>
-                            <p className="text-xs text-gray-400 dark:text-lago-500 mt-0.5">
-                              {subCats.length > 0 ? `${subCats.length} sub-categor${subCats.length === 1 ? 'y' : 'ies'}` : 'View products'}
-                            </p>
-                          </div>
-                        </Link>
-                      </motion.div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-
-            {/* Sub-categories */}
-            {categoryHeads.length > 0 && !isLoading && (
-              <div className="mb-12">
-                <h2 className="text-xl font-display font-bold text-gray-900 dark:text-white mb-6">All Sub-Categories</h2>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-                  {categories.map((cat, i) => (
-                    <motion.div
-                      key={cat.id}
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      whileInView={{ opacity: 1, scale: 1 }}
-                      viewport={{ once: true }}
-                      transition={{ delay: i * 0.02 }}
-                    >
-                      <Link
-                        to={`/shop/home?category=${encodeURIComponent(cat.name)}`}
-                        className="group flex flex-col items-center text-center p-4 bg-white dark:bg-lago-900 border border-gray-200 dark:border-lago-800 rounded-2xl hover:border-lago-400 dark:hover:border-lago-500 hover:shadow-md transition-all"
-                      >
-                        <div className="w-10 h-10 rounded-xl bg-lago-50 dark:bg-lago-800 flex items-center justify-center mb-2 group-hover:bg-lago-100 dark:group-hover:bg-lago-700 transition-colors">
-                          <Grid3x3 className="w-4 h-4 text-lago-600 dark:text-lago-400" />
-                        </div>
-                        <p className="text-xs font-bold text-gray-900 dark:text-white group-hover:text-lago-600 dark:group-hover:text-lago-400 transition-colors leading-snug">
-                          {cat.name}
-                        </p>
-                        {cat.parent_id && (
-                          <p className="text-[10px] text-gray-400 dark:text-lago-500 mt-0.5">{cat.parent_id}</p>
-                        )}
-                      </Link>
-                    </motion.div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </>
-        )}
-
-        {/* ── GAMING & COMPUTING tab ── */}
-        {activeTab === 'gaming' && (
-          <div className="mb-12">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-display font-bold text-gray-900 dark:text-white">
-                Gaming & Computing Categories
-              </h2>
-              <Link to="/shop/tech" className="flex items-center gap-1.5 text-sm font-semibold text-lago-600 dark:text-lago-400 hover:text-lago-800 dark:hover:text-white transition-colors">
-                All products <ArrowRight className="w-4 h-4" />
-              </Link>
-            </div>
-
-            {syntechLoading ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                {Array.from({ length: 12 }).map((_, i) => (
-                  <div key={i} className="aspect-[4/3] bg-gray-200 dark:bg-lago-800 rounded-2xl animate-pulse" />
-                ))}
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                {syntechCats.map((cat, i) => {
-                  const displayName = SYNTECH_CATEGORY_NAMES[cat.name] ?? cat.name;
-                  return (
-                    <motion.div
-                      key={cat.name}
-                      initial={{ opacity: 0, y: 20 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      viewport={{ once: true }}
-                      transition={{ delay: i * 0.04 }}
-                    >
-                      <Link
-                        to={`/shop/tech?category=${encodeURIComponent(cat.name)}`}
-                        className="group block bg-white dark:bg-lago-900 border border-gray-200 dark:border-lago-800 rounded-2xl overflow-hidden hover:border-lago-400 dark:hover:border-lago-500 hover:shadow-lg transition-all duration-300"
-                      >
-                        {/* Product image from category — fetch first product image */}
-                        <div className="relative aspect-[4/3] bg-white dark:bg-gray-100 overflow-hidden flex items-center justify-center p-6">
-                          <div className="w-full h-full flex items-center justify-center">
-                            <CategoryImage table="syntech_products" categoryName={cat.name} />
-                          </div>
-                          <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <div className="w-7 h-7 rounded-full bg-lago-600 flex items-center justify-center shadow">
-                              <ArrowRight className="w-3.5 h-3.5 text-white" />
-                            </div>
-                          </div>
-                        </div>
-                        <div className="p-3.5">
-                          <h3 className="font-bold text-sm text-gray-900 dark:text-white group-hover:text-lago-600 dark:group-hover:text-lago-400 transition-colors leading-snug">
-                            {displayName}
-                          </h3>
-                          <p className="text-xs text-gray-400 dark:text-lago-500 mt-0.5">
-                            {cat.count} product{cat.count !== 1 ? 's' : ''}
-                          </p>
-                        </div>
-                      </Link>
-                    </motion.div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* ── AXIZ DIGITAL tab ── */}
-        {activeTab === 'axiz' && (
-          <div className="mb-12">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-display font-bold text-gray-900 dark:text-white">
-                Axiz Digital Categories
-              </h2>
-              <Link to="/shop/axiz" className="flex items-center gap-1.5 text-sm font-semibold text-lago-600 dark:text-lago-400 hover:text-lago-800 dark:hover:text-white transition-colors">
-                All products <ArrowRight className="w-4 h-4" />
-              </Link>
-            </div>
-
-            {axizLoading ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                {Array.from({ length: 12 }).map((_, i) => (
-                  <div key={i} className="aspect-[4/3] bg-gray-200 dark:bg-lago-800 rounded-2xl animate-pulse" />
-                ))}
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                {axizCats.map((cat, i) => (
-                  <motion.div
-                    key={cat.name}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: i * 0.04 }}
-                  >
-                    <Link
-                      to={`/shop/axiz?category=${encodeURIComponent(cat.name)}`}
-                      className="group block bg-white dark:bg-lago-900 border border-gray-200 dark:border-lago-800 rounded-2xl overflow-hidden hover:border-lago-400 dark:hover:border-lago-500 hover:shadow-lg transition-all duration-300"
-                    >
-                      <div className="relative aspect-[4/3] bg-white dark:bg-gray-100 overflow-hidden flex items-center justify-center p-6">
-                        <div className="w-full h-full flex items-center justify-center">
-                          <CategoryImage table="axiz_products" categoryName={cat.name} />
-                        </div>
-                        <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <div className="w-7 h-7 rounded-full bg-lago-600 flex items-center justify-center shadow">
-                            <ArrowRight className="w-3.5 h-3.5 text-white" />
-                          </div>
-                        </div>
-                      </div>
-                      <div className="p-3.5">
-                        <h3 className="font-bold text-sm text-gray-900 dark:text-white group-hover:text-lago-600 dark:group-hover:text-lago-400 transition-colors leading-snug">
-                          {cat.name}
-                        </h3>
-                        <p className="text-xs text-gray-400 dark:text-lago-500 mt-0.5">
-                          {cat.count} product{cat.count !== 1 ? 's' : ''}
-                        </p>
-                      </div>
-                    </Link>
-                  </motion.div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* ── PINNACLE tab ── */}
-        {activeTab === 'pinnacle' && (
-          <div className="mb-12">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-display font-bold text-gray-900 dark:text-white">
-                Pinnacle Categories
-              </h2>
-              <Link to="/shop/pinnacle" className="flex items-center gap-1.5 text-sm font-semibold text-lago-600 dark:text-lago-400 hover:text-lago-800 dark:hover:text-white transition-colors">
-                All products <ArrowRight className="w-4 h-4" />
-              </Link>
-            </div>
-
-            {pinnacleLoading ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                {Array.from({ length: 12 }).map((_, i) => (
-                  <div key={i} className="aspect-[4/3] bg-gray-200 dark:bg-lago-800 rounded-2xl animate-pulse" />
-                ))}
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                {pinnacleCats.map((cat, i) => (
-                  <motion.div
-                    key={cat.name}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: i * 0.04 }}
-                  >
-                    <Link
-                      to={`/shop/pinnacle?category=${encodeURIComponent(cat.name)}`}
-                      className="group block bg-white dark:bg-lago-900 border border-gray-200 dark:border-lago-800 rounded-2xl overflow-hidden hover:border-lago-400 dark:hover:border-lago-500 hover:shadow-lg transition-all duration-300"
-                    >
-                      <div className="relative aspect-[4/3] bg-white dark:bg-gray-100 overflow-hidden flex items-center justify-center p-6">
-                        <div className="w-full h-full flex items-center justify-center">
-                          <CategoryImage table="pinnacle_products" categoryName={cat.name} />
-                        </div>
-                        <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <div className="w-7 h-7 rounded-full bg-lago-600 flex items-center justify-center shadow">
-                            <ArrowRight className="w-3.5 h-3.5 text-white" />
-                          </div>
-                        </div>
-                      </div>
-                      <div className="p-3.5">
-                        <h3 className="font-bold text-sm text-gray-900 dark:text-white group-hover:text-lago-600 dark:group-hover:text-lago-400 transition-colors leading-snug">
-                          {cat.name}
-                        </h3>
-                        <p className="text-xs text-gray-400 dark:text-lago-500 mt-0.5">
-                          {cat.count} product{cat.count !== 1 ? 's' : ''}
-                        </p>
-                      </div>
-                    </Link>
-                  </motion.div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* ── CTA ── */}
-        <div className="rounded-3xl bg-gradient-to-r from-lago-900 to-[#0a141d] border border-lago-700 p-8 md:p-12 flex flex-col md:flex-row items-center justify-between gap-6">
-          <div>
-            <h2 className="text-2xl md:text-3xl font-display font-bold text-white mb-2">
-              Can't find what you're looking for?
-            </h2>
-            <p className="text-lago-300">Search across all our products from top tech brands.</p>
-          </div>
-          <div className="flex flex-wrap gap-3 flex-shrink-0">
-            <Link
-              to="/shop/home"
-              className="flex items-center gap-2 px-6 py-3.5 rounded-full bg-white text-lago-800 font-bold transition-colors hover:bg-lago-50 shadow-lg"
-            >
-              <Home className="w-4 h-4" /> Home & Entertainment
-            </Link>
-            <Link
-              to="/shop/tech"
-              className="flex items-center gap-2 px-6 py-3.5 rounded-full bg-lago-600 hover:bg-lago-500 text-white font-bold transition-colors shadow-lg"
-            >
-              <Zap className="w-4 h-4" /> Gaming & Computing
-            </Link>
-            <Link
-              to="/shop/axiz"
-              className="flex items-center gap-2 px-6 py-3.5 rounded-full bg-white text-lago-800 font-bold transition-colors hover:bg-lago-50 shadow-lg"
-            >
-              <Package className="w-4 h-4" /> Axiz Digital
-            </Link>
-            <Link
-              to="/shop/pinnacle"
-              className="flex items-center gap-2 px-6 py-3.5 rounded-full bg-lago-600 hover:bg-lago-500 text-white font-bold transition-colors shadow-lg"
-            >
-              <Package className="w-4 h-4" /> Pinnacle
-            </Link>
-          </div>
-        </div>
-      </div>
-    </div>
+    </PageShell>
   );
 }

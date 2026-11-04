@@ -29,15 +29,28 @@ export interface Product {
   is_featured: boolean;
   is_on_sale: boolean;
   sale_price: number | null;
-  // ── Syntech fields (optional) ───────────────────
+  // ── Syntech / Axiz / Pinnacle fields (optional) ─
   name?: string;
   sku?: string;
   brand?: string;
+  category?: string | null;
   price_display?: number;
-  price_rrp?: number;
+  price_rrp?: number | null;
   stock_qty?: number;
   thumbnail_url?: string | null;
   is_clearance?: boolean;
+  is_unboxed?: boolean;
+  warranty_months?: number | null;
+  colour?: string | null;
+  short_description?: string | null;
+  full_description?: string | null;
+  specifications?: Record<string, unknown> | null;
+  raw_data?: Record<string, unknown> | null;
+}
+
+/** Escapes the LIKE wildcards in shopper input so `%` and `_` match literally. */
+export function escapeLike(term: string): string {
+  return term.replace(/[\\%_]/g, (char) => `\\${char}`);
 }
 
 export interface ShopFilters {
@@ -48,6 +61,8 @@ export interface ShopFilters {
   minPrice?: number;
   maxPrice?: number;
   inStockOnly?: boolean;
+  /** Only products flagged as on sale — used by the homepage deals shelf. */
+  onSaleOnly?: boolean;
   sortBy?: 'newest' | 'price_asc' | 'price_desc' | 'featured';
   page?: number;
   perPage?: number;
@@ -55,7 +70,7 @@ export interface ShopFilters {
 }
 
 export async function fetchProducts(filters: ShopFilters = {}) {
-  const { search, brands, categories, categoryHeads, minPrice, maxPrice, inStockOnly, sortBy = 'newest', page = 1, perPage = 20, skus } = filters;
+  const { search, brands, categories, categoryHeads, minPrice, maxPrice, inStockOnly, onSaleOnly, sortBy = 'newest', page = 1, perPage = 20, skus } = filters;
 
   let query = supabase
     .from('products')
@@ -70,6 +85,7 @@ export async function fetchProducts(filters: ShopFilters = {}) {
   if (minPrice !== undefined) query = query.gte('Price', minPrice);
   if (maxPrice !== undefined) query = query.lte('Price', maxPrice);
   if (inStockOnly) query = query.gt('AvailableQty', 0);
+  if (onSaleOnly) query = query.eq('is_on_sale', true);
 
   switch (sortBy) {
     case 'price_asc': query = query.order('Price', { ascending: true }); break;

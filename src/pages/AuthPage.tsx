@@ -1,10 +1,16 @@
-import React from 'react';
-import { useState } from 'react';
-import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { Eye, EyeOff, Mail, Lock, User } from 'lucide-react';
+import React, { useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../lib/AuthContext';
+import type { LegalKey } from '../lib/legalContent';
 import { supabase } from '../lib/supabase';
 import { useSEO } from '../lib/useSEO';
+import { LegalModal } from '../components/LegalModal';
+import { Button, PageShell, PasswordField, Tabs, TextField, panelStyles } from '../components/ui';
+
+const AUTH_TABS = [
+  { id: 'login', label: 'Sign in' },
+  { id: 'register', label: 'Create account' },
+];
 
 export function AuthPage() {
   useSEO({ title: 'Sign In', description: 'Sign in or create your SPET Online account.', noindex: true });
@@ -14,19 +20,23 @@ export function AuthPage() {
   const [password, setPassword] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
-  const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [legalDoc, setLegalDoc] = useState<LegalKey | null>(null);
   const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
-  // ✅ Where to go after login — default to /account, but honour ?redirect= param
+  // Where to go after login — default to /account, but honour ?redirect= param
   const params = new URLSearchParams(location.search);
   const redirectTo = params.get('redirect') || '/account';
 
-  const inputClass = 'w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-lago-800 border border-gray-200 dark:border-lago-700 text-gray-900 dark:text-white text-sm focus:outline-none focus:border-lago-500 transition-colors';
+  function changeMode(next: typeof mode) {
+    setMode(next);
+    setError('');
+    setSuccess('');
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -35,7 +45,7 @@ export function AuthPage() {
     if (mode === 'login') {
       const { error } = await signIn(email, password);
       if (error) { setError(error.message); setLoading(false); return; }
-      // ✅ Go back to where the user came from (e.g. /checkout)
+      // Go back to where the user came from (e.g. /checkout)
       navigate(redirectTo);
     } else if (mode === 'register') {
       const { error } = await signUp(email, password, firstName, lastName);
@@ -58,145 +68,99 @@ export function AuthPage() {
     setLoading(false);
   }
 
-  const titles: Record<typeof mode, string> = {
-    login: 'Sign In',
-    register: 'Create Account',
-    forgot: 'Reset Password',
-  };
+  const submitLabel = mode === 'forgot' ? 'Send reset link' : mode === 'login' ? 'Sign in' : 'Create account';
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#0a141d] pt-32 md:pt-36 flex items-center justify-center px-4 transition-colors duration-300">
-      <div className="w-full max-w-md">
-        <div className="bg-white dark:bg-lago-900 border border-gray-200 dark:border-lago-800 rounded-3xl shadow-xl overflow-hidden">
-          {/* Header */}
-          <div className="relative h-28 bg-gradient-to-r from-lago-800 to-lago-600 flex items-center justify-center">
-            <img src="/logo-main.png" alt="SPET Online" className="h-12 w-auto object-contain brightness-0 invert" />
-          </div>
+    <PageShell>
+      <div className="flex justify-center py-6">
+        <div className="w-full max-w-md">
+          <div className={`${panelStyles} p-6 md:p-8`}>
+            <h1 className="font-display text-[26px] font-semibold tracking-tight text-spet-ink">
+              {mode === 'forgot' ? 'Reset password' : mode === 'login' ? 'Sign in' : 'Create account'}
+            </h1>
 
-          <div className="p-8">
-            {/* ✅ Show a helpful message when redirected from checkout */}
+            {mode === 'forgot' && <p className="mt-1 text-[13px] text-spet-ink-2">Enter your email and we’ll send you a reset link.</p>}
+
             {mode !== 'forgot' && redirectTo.includes('checkout') && (
-              <div className="mb-6 p-4 rounded-xl bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 text-sm text-blue-700 dark:text-blue-300 font-medium text-center">
+              <p className="mt-3 rounded-xl border border-spet-tint-line bg-spet-tint p-3 text-[13px] font-medium text-spet-link">
                 Please sign in or create an account to complete your order.
-              </div>
+              </p>
             )}
 
-            {/* Tabs — hidden while resetting password */}
-            {mode !== 'forgot' ? (
-              <div className="flex rounded-xl bg-gray-100 dark:bg-lago-800 p-1 mb-8">
-                {(['login', 'register'] as const).map((m) => (
-                  <button
-                    key={m}
-                    onClick={() => { setMode(m); setError(''); setSuccess(''); }}
-                    className={`flex-1 py-2.5 rounded-lg text-sm font-bold capitalize transition-all ${
-                      mode === m ? 'bg-white dark:bg-lago-700 shadow-sm text-lago-600 dark:text-white' : 'text-gray-500 dark:text-lago-400 hover:text-gray-700 dark:hover:text-white'
-                    }`}
-                  >
-                    {m === 'login' ? 'Sign In' : 'Create Account'}
-                  </button>
-                ))}
-              </div>
-            ) : (
-              <div className="mb-8 text-center">
-                <h1 className="text-lg font-bold text-gray-900 dark:text-white">{titles[mode]}</h1>
-                <p className="text-sm text-gray-500 dark:text-lago-400 mt-1">Enter your email and we'll send you a reset link.</p>
-              </div>
+            {mode !== 'forgot' && (
+              <Tabs label="Account access" items={AUTH_TABS} value={mode} onChange={(id) => changeMode(id as typeof mode)} className="mt-4" />
             )}
 
             {error && (
-              <div className="mb-5 p-3 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-sm text-red-600 dark:text-red-400 font-medium">
+              <p role="alert" className="mt-4 rounded-xl border border-red-300 bg-red-50 p-3 text-[13px] font-medium text-red-700 dark:border-red-800 dark:bg-red-950/40 dark:text-red-300">
                 {error}
-              </div>
+              </p>
             )}
             {success && (
-              <div className="mb-5 p-3 rounded-xl bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-sm text-green-600 dark:text-green-400 font-medium">
+              <p role="status" className="mt-4 rounded-xl border border-spet-line bg-spet-surface-2 p-3 text-[13px] font-medium text-spet-stock">
                 {success}
-              </div>
+              </p>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="mt-5 space-y-4">
               {mode === 'register' && (
                 <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-bold text-gray-500 dark:text-lago-400 uppercase tracking-wide mb-1.5">First Name</label>
-                    <div className="relative">
-                      <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                      <input value={firstName} onChange={(e) => setFirstName(e.target.value)} required className={inputClass + ' pl-9'} placeholder="First" />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-gray-500 dark:text-lago-400 uppercase tracking-wide mb-1.5">Last Name</label>
-                    <input value={lastName} onChange={(e) => setLastName(e.target.value)} required className={inputClass} placeholder="Last" />
-                  </div>
+                  <TextField id="auth-first" label="First name" required autoComplete="given-name" value={firstName} onChange={(e) => setFirstName(e.target.value)} />
+                  <TextField id="auth-last" label="Last name" required autoComplete="family-name" value={lastName} onChange={(e) => setLastName(e.target.value)} />
                 </div>
               )}
 
-              <div>
-                <label className="block text-xs font-bold text-gray-500 dark:text-lago-400 uppercase tracking-wide mb-1.5">Email Address</label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                  <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className={inputClass + ' pl-9'} placeholder="you@email.com" autoComplete="email" />
-                </div>
-              </div>
+              <TextField id="auth-email" label="Email address" type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} />
 
               {mode !== 'forgot' && (
                 <div>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <label className="block text-xs font-bold text-gray-500 dark:text-lago-400 uppercase tracking-wide">Password</label>
-                    {mode === 'login' && (
-                      <button
-                        type="button"
-                        onClick={() => { setMode('forgot'); setError(''); setSuccess(''); }}
-                        className="text-xs font-semibold text-lago-600 dark:text-lago-400 hover:underline"
-                      >
-                        Forgot password?
-                      </button>
-                    )}
-                  </div>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <input type={showPw ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} className={inputClass + ' pl-9 pr-10'} placeholder="••••••••" autoComplete={mode === 'login' ? 'current-password' : 'new-password'} />
-                    <button type="button" onClick={() => setShowPw(!showPw)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-lago-200 transition-colors">
-                      {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  <PasswordField
+                    id="auth-password"
+                    label="Password"
+                    required
+                    minLength={6}
+                    autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
+                  {mode === 'login' && (
+                    <button type="button" onClick={() => changeMode('forgot')} className="min-h-11 text-[13px] font-semibold text-spet-link hover:underline">
+                      Forgot password?
                     </button>
-                  </div>
+                  )}
                 </div>
               )}
 
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full py-3.5 rounded-xl bg-lago-600 hover:bg-lago-700 text-white font-bold transition-colors disabled:opacity-60 shadow-lg shadow-lago-600/20 mt-2"
-              >
-                {loading ? 'Please wait...' : mode === 'forgot' ? 'Send Reset Link' : titles[mode]}
-              </button>
+              <Button type="submit" size="lg" className="w-full" loading={loading}>
+                {loading ? 'Please wait…' : submitLabel}
+              </Button>
 
               {mode === 'forgot' && (
-                <button
-                  type="button"
-                  onClick={() => { setMode('login'); setError(''); setSuccess(''); }}
-                  className="w-full text-center text-sm font-semibold text-lago-600 dark:text-lago-400 hover:underline mt-1"
-                >
-                  ← Back to Sign In
-                </button>
+                <Button type="button" variant="ghost" className="w-full" onClick={() => changeMode('login')}>
+                  Back to sign in
+                </Button>
               )}
             </form>
 
             {mode !== 'forgot' && (
-              <p className="text-center text-xs text-gray-500 dark:text-lago-400 mt-6 leading-relaxed">
+              <p className="mt-5 text-center text-[12px] leading-relaxed text-spet-muted">
                 By continuing you agree to our{' '}
-                <span className="text-lago-600 dark:text-lago-400 font-semibold cursor-pointer hover:underline">Terms & Conditions</span>
+                <button type="button" onClick={() => setLegalDoc('terms')} className="font-semibold text-spet-link underline">Terms &amp; Conditions</button>
                 {' '}and{' '}
-                <span className="text-lago-600 dark:text-lago-400 font-semibold cursor-pointer hover:underline">Privacy Policy</span>
+                <button type="button" onClick={() => setLegalDoc('privacy')} className="font-semibold text-spet-link underline">Privacy Policy</button>.
               </p>
             )}
           </div>
-        </div>
 
-        <p className="text-center text-sm text-gray-500 dark:text-lago-400 mt-6">
-          <Link to="/shop" className="hover:text-lago-600 dark:hover:text-white transition-colors">← Continue Shopping Without Account</Link>
-        </p>
+          <p className="mt-4 text-center text-[13px]">
+            <Link to="/shop" className="inline-flex min-h-11 items-center text-spet-ink-2 transition-colors hover:text-spet-blue">
+              Continue shopping without an account
+            </Link>
+          </p>
+        </div>
       </div>
-    </div>
+
+      <LegalModal docKey={legalDoc} onClose={() => setLegalDoc(null)} />
+    </PageShell>
   );
 }

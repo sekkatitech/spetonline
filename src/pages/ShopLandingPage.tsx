@@ -1,492 +1,226 @@
-// @ts-nocheck
+import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
-import { useProducts } from '../lib/api';
-import { ProductCard, ProductSkeleton } from '../components/ProductSections';
+import { ArrowRight, ChevronLeft, ChevronRight, Pause, Play } from 'lucide-react';
+import { useProducts, type Product } from '../lib/api';
+import type { ProductSupplier } from '../lib/productDisplay';
 import { supabase } from '../lib/supabase';
-import { useState, useEffect, useCallback } from 'react';
-import { SafeImage } from '../components/SafeImage';
-import { NavSpacer } from '../components/Layout';
+import { SUPPLIERS, type SupplierConfig } from '../lib/supplierCatalog';
 import { useSEO } from '../lib/useSEO';
+import { WishlistProvider } from '../components/WishlistProvider';
+import { ProductTile, ProductTileSkeleton } from '../components/product/ProductTile';
+import { PageShell, SectionHeader, panelStyles } from '../components/ui';
 
-// ── Rotating banner carousel ─────────────────────────────────────────────────
 const BANNERS = [
-  { src: '/images/acer-banner.jpg',    alt: 'Acer Nitro Gaming Laptops' },
-  { src: '/images/intel-banner.jpg',   alt: 'Intel Gaming' },
-  { src: '/images/ipad-banner.jpg',    alt: 'Apple iPad' },
+  { src: '/images/acer-banner.jpg', alt: 'Acer Nitro gaming laptops' },
+  { src: '/images/intel-banner.jpg', alt: 'Intel gaming' },
+  { src: '/images/ipad-banner.jpg', alt: 'Apple iPad' },
   { src: '/images/ipadpro-banner.jpg', alt: 'Apple iPad Pro' },
   { src: '/images/scooter-banner.jpg', alt: 'Xiaomi Electric Scooter 6 Ultra' },
 ];
+
+const ROTATE_MS = 4000;
+
 function BannerCarousel() {
   const [current, setCurrent] = useState(0);
+  const [hovered, setHovered] = useState(false);
+  const [focused, setFocused] = useState(false);
+  const [userPaused, setUserPaused] = useState(() =>
+    typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  );
 
-  const next = useCallback(() => setCurrent((c) => (c + 1) % BANNERS.length), []);
-  const prev = () => setCurrent((c) => (c - 1 + BANNERS.length) % BANNERS.length);
+  const next = useCallback(() => setCurrent((index) => (index + 1) % BANNERS.length), []);
+  const previous = () => setCurrent((index) => (index - 1 + BANNERS.length) % BANNERS.length);
+
+  const paused = hovered || focused || userPaused;
 
   useEffect(() => {
-    const timer = setInterval(next, 4000);
-    return () => clearInterval(timer);
-  }, [next]);
+    if (paused) return;
+    const timer = window.setInterval(next, ROTATE_MS);
+    return () => window.clearInterval(timer);
+  }, [next, paused]);
+
+  const control =
+    'absolute z-20 flex h-11 w-11 items-center justify-center rounded-lg bg-black/45 text-white transition-colors hover:bg-black/65';
 
   return (
-    <div className="container mx-auto px-4 md:px-6 pt-4">
-      <div className="relative w-full overflow-hidden bg-gray-900 rounded-2xl aspect-[25/7]">
-        {BANNERS.map((banner, i) => (
-          <div
-            key={i}
-            className={`absolute inset-0 transition-opacity duration-700 ${
-              i === current ? 'opacity-100 z-10' : 'opacity-0 z-0'
-            }`}
+    <section
+      aria-roledescription="carousel"
+      aria-label="Featured brands"
+      className="relative mb-8 aspect-[25/10] w-full overflow-hidden rounded-2xl bg-spet-navy sm:aspect-[25/7]"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      onFocus={() => setFocused(true)}
+      onBlur={() => setFocused(false)}
+    >
+      {BANNERS.map((banner, index) => (
+        <img
+          key={banner.src}
+          src={banner.src}
+          alt={index === current ? banner.alt : ''}
+          aria-hidden={index !== current}
+          className={`absolute inset-0 h-full w-full object-cover object-center transition-opacity duration-700 motion-reduce:transition-none ${
+            index === current ? 'z-10 opacity-100' : 'z-0 opacity-0'
+          }`}
+        />
+      ))}
+
+      <button type="button" onClick={previous} aria-label="Previous banner" className={`${control} left-2 top-1/2 -translate-y-1/2`}>
+        <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+      </button>
+      <button type="button" onClick={next} aria-label="Next banner" className={`${control} right-2 top-1/2 -translate-y-1/2`}>
+        <ChevronRight className="h-4 w-4" aria-hidden="true" />
+      </button>
+      <button
+        type="button"
+        onClick={() => setUserPaused((value) => !value)}
+        aria-label={userPaused ? 'Play banner rotation' : 'Pause banner rotation'}
+        className={`${control} bottom-0 right-2`}
+      >
+        {userPaused ? <Play className="h-4 w-4" aria-hidden="true" /> : <Pause className="h-4 w-4" aria-hidden="true" />}
+      </button>
+
+      <div className="absolute bottom-0 left-1/2 z-20 flex -translate-x-1/2">
+        {BANNERS.map((banner, index) => (
+          <button
+            key={banner.src}
+            type="button"
+            onClick={() => setCurrent(index)}
+            aria-label={`Show banner ${index + 1} of ${BANNERS.length}`}
+            aria-current={index === current ? 'true' : undefined}
+            className="flex h-11 w-7 items-center justify-center sm:w-11"
           >
-            <img src={banner.src} alt={banner.alt} className="w-full h-full object-cover object-center" />
-          </div>
+            <span className={`h-2 rounded-full transition-all ${index === current ? 'w-5 bg-white' : 'w-2 bg-white/60'}`} />
+          </button>
         ))}
-        <button onClick={prev} className="absolute left-3 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-black/40 hover:bg-black/60 text-white flex items-center justify-center transition-colors" aria-label="Previous banner">
-          <ChevronLeft className="w-4 h-4" />
-        </button>
-        <button onClick={next} className="absolute right-3 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-black/40 hover:bg-black/60 text-white flex items-center justify-center transition-colors" aria-label="Next banner">
-          <ChevronRight className="w-4 h-4" />
-        </button>
-        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 z-20 flex gap-1.5">
-          {BANNERS.map((_, i) => (
-            <button key={i} onClick={() => setCurrent(i)}
-              className={`rounded-full transition-all duration-300 ${i === current ? 'w-5 h-2 bg-white' : 'w-2 h-2 bg-white/50 hover:bg-white/80'}`}
-              aria-label={`Go to banner ${i + 1}`} />
-          ))}
-        </div>
       </div>
-    </div>
+    </section>
   );
 }
 
-// ── Syntech featured products ────────────────────────────────────────────────
-function useSyntechFeatured() {
-  const [products, setProducts] = useState<any[]>([]);
+function useSupplierFeatured(table: string) {
+  const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     supabase
-      .from('syntech_products')
+      .from(table)
       .select('*')
       .eq('is_active', true)
       .gt('stock_qty', 0)
       .order('last_synced_at', { ascending: false })
       .limit(8)
       .then(({ data }) => {
-        setProducts(data ?? []);
+        setProducts((data ?? []) as Product[]);
         setLoading(false);
       });
-  }, []);
+  }, [table]);
 
   return { products, loading };
 }
 
-// ── Syntech product card ─────────────────────────────────────────────────────
-function SyntechCard({ product }: { product: any }) {
-  const price   = product.price_display ?? 0;
-  const image   = product.thumbnail_url ?? (product.images?.[0] ?? null);
-  const brand   = product.brand ?? '';
-  const inStock = (product.stock_qty ?? 0) > 0;
+const SHOP_SECTIONS = [
+  {
+    to: '/shop/home',
+    label: 'Home & entertainment',
+    description: 'TVs, audio, laptops, phones and smart home.',
+    image: '/images/home-entertainment.jpg',
+  },
+  {
+    to: SUPPLIERS.syntech.route,
+    label: SUPPLIERS.syntech.label,
+    description: SUPPLIERS.syntech.description,
+    image: '/images/gaming-computing.jpg',
+  },
+  { to: SUPPLIERS.axiz.route, label: SUPPLIERS.axiz.label, description: SUPPLIERS.axiz.description },
+  { to: SUPPLIERS.pinnacle.route, label: SUPPLIERS.pinnacle.label, description: SUPPLIERS.pinnacle.description },
+];
+
+function FeaturedShelf({
+  title,
+  to,
+  supplier,
+  products,
+  loading,
+}: {
+  title: string;
+  to: string;
+  supplier: ProductSupplier;
+  products: Product[];
+  loading: boolean;
+}) {
+  if (!loading && products.length === 0) return null;
 
   return (
-    <Link
-      to={`/shop/tech/product/${product.id}`}
-      className="group bg-white dark:bg-lago-900 border border-gray-200 dark:border-lago-800 rounded-2xl overflow-hidden hover:border-lago-400 dark:hover:border-lago-600 hover:shadow-xl transition-all duration-300 flex flex-col"
-    >
-      <div className="relative bg-gray-50 dark:bg-lago-800/50 aspect-square overflow-hidden">
-        <SafeImage
-          src={image}
-          brand={brand}
-          alt={product.name}
-          className="w-full h-full object-contain p-4 group-hover:scale-105 transition-transform duration-500"
-          referrerPolicy="no-referrer"
-        />
-        {!inStock && (
-          <span className="absolute top-3 left-3 bg-gray-700 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">OUT OF STOCK</span>
-        )}
-        {product.is_clearance && inStock && (
-          <span className="absolute top-3 left-3 bg-lago-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">CLEARANCE</span>
-        )}
+    <section aria-label={title} className="mt-10">
+      <SectionHeader
+        title={title}
+        action={
+          <Link to={to} className="flex min-h-11 shrink-0 items-center gap-1 text-[13px] font-semibold text-spet-link hover:underline">
+            View all <ArrowRight className="h-4 w-4" aria-hidden="true" />
+          </Link>
+        }
+      />
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4">
+        {loading
+          ? Array.from({ length: 8 }).map((_, index) => <ProductTileSkeleton key={index} />)
+          : products.slice(0, 8).map((product) => <ProductTile key={product.id} product={product} supplier={supplier} />)}
       </div>
-      <div className="p-4 flex flex-col flex-1">
-        {brand && (
-          <p className="text-[10px] font-bold text-lago-500 dark:text-lago-400 uppercase tracking-widest mb-1">{brand}</p>
-        )}
-        <h3 className="text-sm font-semibold text-gray-900 dark:text-white leading-snug mb-3 line-clamp-2 group-hover:text-lago-600 dark:group-hover:text-lago-400 transition-colors">
-          {product.name}
-        </h3>
-        <div className="mt-auto">
-          <div className="flex items-baseline gap-2 mb-0.5">
-            <p className="text-lg font-bold text-gray-900 dark:text-white">
-              R {price.toLocaleString('en-ZA', { minimumFractionDigits: 2 })}
-            </p>
-            {product.price_rrp && product.price_rrp > price && (
-              <p className="text-xs text-gray-400 line-through">
-                R {product.price_rrp.toLocaleString('en-ZA', { minimumFractionDigits: 2 })}
-              </p>
-            )}
-          </div>
-          <p className="text-[10px] text-gray-400 mt-0.5">incl. VAT</p>
-        </div>
-      </div>
-    </Link>
+    </section>
   );
 }
 
-// ── Axiz featured products ───────────────────────────────────────────────────
-function useAxizFeatured() {
-  const [products, setProducts] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    supabase
-      .from('axiz_products')
-      .select('*')
-      .eq('is_active', true)
-      .gt('stock_qty', 0)
-      .order('last_synced_at', { ascending: false })
-      .limit(8)
-      .then(({ data }) => {
-        setProducts(data ?? []);
-        setLoading(false);
-      });
-  }, []);
-
-  return { products, loading };
+function SupplierShelf({ config }: { config: SupplierConfig }) {
+  const { products, loading } = useSupplierFeatured(config.table);
+  return <FeaturedShelf title={config.label} to={config.route} supplier={config.key} products={products} loading={loading} />;
 }
 
-// ── Axiz product card ────────────────────────────────────────────────────────
-function AxizCard({ product }: { product: any }) {
-  const price   = product.price_display ?? 0;
-  const image   = product.thumbnail_url ?? (product.images?.[0] ?? null);
-  const brand   = product.brand ?? '';
-  const inStock = (product.stock_qty ?? 0) > 0;
-
-  return (
-    <Link
-      to={`/shop/axiz/product/${product.id}`}
-      className="group bg-white dark:bg-lago-900 border border-gray-200 dark:border-lago-800 rounded-2xl overflow-hidden hover:border-lago-400 dark:hover:border-lago-600 hover:shadow-xl transition-all duration-300 flex flex-col"
-    >
-      <div className="relative bg-gray-50 dark:bg-lago-800/50 aspect-square overflow-hidden">
-        <SafeImage
-          src={image}
-          brand={brand}
-          alt={product.name}
-          className="w-full h-full object-contain p-4 group-hover:scale-105 transition-transform duration-500"
-          referrerPolicy="no-referrer"
-        />
-        {!inStock && (
-          <span className="absolute top-3 left-3 bg-gray-700 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">OUT OF STOCK</span>
-        )}
-      </div>
-      <div className="p-4 flex flex-col flex-1">
-        {brand && (
-          <p className="text-[10px] font-bold text-orange-500 dark:text-orange-400 uppercase tracking-widest mb-1">{brand}</p>
-        )}
-        <h3 className="text-sm font-semibold text-gray-900 dark:text-white leading-snug mb-3 line-clamp-2 group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors">
-          {product.name}
-        </h3>
-        <div className="mt-auto">
-          <div className="flex items-baseline gap-2">
-            <p className="text-lg font-bold text-gray-900 dark:text-white">
-              R {price.toLocaleString('en-ZA', { minimumFractionDigits: 2 })}
-            </p>
-            {product.price_rrp && product.price_rrp > price && (
-              <p className="text-xs text-gray-400 line-through">
-                R {product.price_rrp.toLocaleString('en-ZA', { minimumFractionDigits: 2 })}
-              </p>
-            )}
-          </div>
-          <p className="text-[10px] text-gray-400 mt-0.5">incl. VAT</p>
-        </div>
-      </div>
-    </Link>
-  );
-}
-
-// ── Pinnacle featured products ───────────────────────────────────────────────
-function usePinnacleFeatured() {
-  const [products, setProducts] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    supabase
-      .from('pinnacle_products')
-      .select('*')
-      .eq('is_active', true)
-      .gt('stock_qty', 0)
-      .order('last_synced_at', { ascending: false })
-      .limit(8)
-      .then(({ data }) => {
-        setProducts(data ?? []);
-        setLoading(false);
-      });
-  }, []);
-
-  return { products, loading };
-}
-
-// ── Pinnacle product card ────────────────────────────────────────────────────
-function PinnacleCard({ product }: { product: any }) {
-  const price   = product.price_display ?? 0;
-  const image   = product.thumbnail_url ?? (product.images?.[0] ?? null);
-  const brand   = product.brand ?? '';
-  const inStock = (product.stock_qty ?? 0) > 0;
-
-  return (
-    <Link
-      to={`/shop/pinnacle/product/${product.id}`}
-      className="group bg-white dark:bg-lago-900 border border-gray-200 dark:border-lago-800 rounded-2xl overflow-hidden hover:border-lago-400 dark:hover:border-lago-600 hover:shadow-xl transition-all duration-300 flex flex-col"
-    >
-      <div className="relative bg-gray-50 dark:bg-lago-800/50 aspect-square overflow-hidden">
-        <SafeImage
-          src={image}
-          brand={brand}
-          alt={product.name}
-          className="w-full h-full object-contain p-4 group-hover:scale-105 transition-transform duration-500"
-          referrerPolicy="no-referrer"
-        />
-        {!inStock && (
-          <span className="absolute top-3 left-3 bg-gray-700 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">OUT OF STOCK</span>
-        )}
-      </div>
-      <div className="p-4 flex flex-col flex-1">
-        {brand && (
-          <p className="text-[10px] font-bold text-teal-600 dark:text-teal-400 uppercase tracking-widest mb-1">{brand}</p>
-        )}
-        <h3 className="text-sm font-semibold text-gray-900 dark:text-white leading-snug mb-3 line-clamp-2 group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
-          {product.name}
-        </h3>
-        <div className="mt-auto">
-          <div className="flex items-baseline gap-2">
-            <p className="text-lg font-bold text-gray-900 dark:text-white">
-              R {price.toLocaleString('en-ZA', { minimumFractionDigits: 2 })}
-            </p>
-            {product.price_rrp && product.price_rrp > price && (
-              <p className="text-xs text-gray-400 line-through">
-                R {product.price_rrp.toLocaleString('en-ZA', { minimumFractionDigits: 2 })}
-              </p>
-            )}
-          </div>
-          <p className="text-[10px] text-gray-400 mt-0.5">incl. VAT</p>
-        </div>
-      </div>
-    </Link>
-  );
-}
-
-// ── Main shop landing page ────────────────────────────────────────────────────
 export function ShopLandingPage() {
   useSEO({
     title: 'Shop All Electronics',
-    description: 'Browse the full SPET Online catalogue — laptops, smartphones, TVs, gaming gear and more, all at competitive prices with fast delivery across South Africa.',
+    description:
+      'Browse the full SPET Online catalogue — laptops, smartphones, TVs, gaming gear and more, all at competitive prices with fast delivery across South Africa.',
   });
 
-  const { products: esquireProducts, loading: esquireLoading } = useProducts({
-    sortBy: 'featured',
-    perPage: 8,
-    inStockOnly: true,
-  });
-
-  const { products: syntechProducts, loading: syntechLoading } = useSyntechFeatured();
-  const { products: axizProducts, loading: axizLoading } = useAxizFeatured();
-  const { products: pinnacleProducts, loading: pinnacleLoading } = usePinnacleFeatured();
+  const { products, loading } = useProducts({ sortBy: 'featured', perPage: 8, inStockOnly: true });
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#0a141d]">
-      <NavSpacer />
+    <WishlistProvider>
+      <PageShell>
+        <div className="pt-4">
+          <BannerCarousel />
 
-      {/* ── Rotating banner carousel ── */}
-      <BannerCarousel />
+          <h1 className="font-display text-[28px] font-semibold leading-tight tracking-tight text-spet-ink md:text-[36px]">Shop</h1>
+          <p className="mt-2 max-w-3xl text-[14px] leading-relaxed text-spet-ink-2">
+            Choose a section or browse the products below. A valid TV licence is required to buy a TV in South Africa.
+          </p>
 
-      {/* ── Page heading ── */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        <h1 className="text-4xl md:text-5xl font-display font-black text-gray-900 dark:text-white mb-2">
-          Shop SPET Online
-        </h1>
-        <p className="text-gray-500 dark:text-lago-400 text-lg">
-          Choose your section or browse featured products below. A Valid TV License is required for purchasing a TV in the Republic of South Africa.
-        </p>
-      </div>
-
-      {/* ── Two section banners ── */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-          {/* Home & Entertainment */}
-          <Link
-            to="/shop/home"
-            className="group relative overflow-hidden rounded-3xl min-h-[320px] flex flex-col justify-end p-8 hover:shadow-2xl transition-all duration-500"
-            style={{
-              backgroundImage: 'url(/images/home-entertainment.jpg)',
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-            }}
-          >
-            {/* Subtle dark overlay at bottom only for button visibility */}
-            <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-black/60 to-transparent" />
-            <div className="relative z-10">
-              <div className="flex items-center gap-2 bg-white text-lago-700 font-bold text-sm px-5 py-2.5 rounded-full group-hover:bg-lago-100 transition-colors w-fit">
-                Shop Now
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </div>
-            </div>
-          </Link>
-
-          {/* Gaming & Computing */}
-          <Link
-            to="/shop/tech"
-            className="group relative overflow-hidden rounded-3xl min-h-[320px] flex flex-col justify-end p-8 hover:shadow-2xl hover:shadow-cyan-900/30 transition-all duration-500"
-            style={{
-              backgroundImage: 'url(/images/gaming-computing.jpg)',
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-            }}
-          >
-            {/* Subtle dark overlay at bottom only for button visibility */}
-            <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-black/60 to-transparent" />
-            <div className="relative z-10">
-              <div className="flex items-center gap-2 bg-cyan-500 text-white font-bold text-sm px-5 py-2.5 rounded-full group-hover:bg-cyan-400 transition-colors w-fit">
-                Shop Now
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </div>
-            </div>
-          </Link>
-
-        </div>
-      </div>
-
-      {/* ── Two more section banners (Axiz + placeholder) ── */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-          {/* Axiz Digital */}
-          <Link
-            to="/shop/axiz"
-            className="group relative overflow-hidden rounded-3xl min-h-[320px] flex flex-col justify-end p-8 hover:shadow-2xl hover:shadow-orange-900/30 transition-all duration-500 bg-gradient-to-br from-orange-800 via-orange-900 to-[#1a0e00]"
-          >
-            <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-black/60 to-transparent" />
-            <div className="relative z-10">
-              <p className="text-orange-200 text-xs font-bold uppercase tracking-widest mb-2">New Range</p>
-              <h3 className="text-2xl font-display font-black text-white mb-4">Axiz Digital</h3>
-              <div className="flex items-center gap-2 bg-white text-orange-700 font-bold text-sm px-5 py-2.5 rounded-full group-hover:bg-orange-100 transition-colors w-fit">
-                Shop Now
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </div>
-            </div>
-          </Link>
-
-          {/* Pinnacle */}
-          <Link
-            to="/shop/pinnacle"
-            className="group relative overflow-hidden rounded-3xl min-h-[320px] flex flex-col justify-end p-8 hover:shadow-2xl hover:shadow-teal-900/30 transition-all duration-500 bg-gradient-to-br from-teal-800 via-teal-900 to-[#00201a]"
-          >
-            <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-black/60 to-transparent" />
-            <div className="relative z-10">
-              <p className="text-teal-200 text-xs font-bold uppercase tracking-widest mb-2">New Range</p>
-              <h3 className="text-2xl font-display font-black text-white mb-4">Pinnacle</h3>
-              <div className="flex items-center gap-2 bg-white text-teal-700 font-bold text-sm px-5 py-2.5 rounded-full group-hover:bg-teal-100 transition-colors w-fit">
-                Shop Now
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </div>
-            </div>
-          </Link>
-
-        </div>
-      </div>
-
-      {/* ── Featured — Home & Entertainment ── */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h2 className="text-2xl font-display font-bold text-gray-900 dark:text-white">
-              Featured — Home & Entertainment
-            </h2>
-            <p className="text-sm text-gray-500 dark:text-lago-400 mt-0.5">
-              Top picks from our home and entertainment range
-            </p>
+          <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {SHOP_SECTIONS.map((section) => (
+              <Link
+                key={section.to}
+                to={section.to}
+                className={`${panelStyles} group flex flex-col overflow-hidden transition-colors hover:border-spet-blue`}
+              >
+                {section.image && (
+                  <img src={section.image} alt="" loading="lazy" decoding="async" className="aspect-[16/7] w-full object-cover" />
+                )}
+                <span className="flex flex-1 flex-col p-4">
+                  <span className="font-display text-[18px] font-semibold text-spet-ink group-hover:text-spet-blue">{section.label}</span>
+                  <span className="mt-1 text-[13px] leading-relaxed text-spet-ink-2">{section.description}</span>
+                  <span className="mt-auto flex items-center gap-1 pt-3 text-[13px] font-semibold text-spet-link">
+                    Shop now <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                  </span>
+                </span>
+              </Link>
+            ))}
           </div>
-          <Link to="/shop/home" className="flex items-center gap-1.5 text-sm font-semibold text-lago-600 dark:text-lago-400 hover:text-lago-700 dark:hover:text-lago-300 transition-colors">
-            View all <ArrowRight className="w-4 h-4" />
-          </Link>
-        </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {esquireLoading
-            ? Array.from({ length: 8 }).map((_, i) => <ProductSkeleton key={i} />)
-            : esquireProducts.slice(0, 8).map((p) => <ProductCard key={p.id} product={p} />)
-          }
-        </div>
-      </div>
 
-      {/* ── Featured — Gaming & Computing ── */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h2 className="text-2xl font-display font-bold text-gray-900 dark:text-white">
-              Featured — Gaming & Computing
-            </h2>
-            <p className="text-sm text-gray-500 dark:text-lago-400 mt-0.5">
-              Top picks from our gaming and computing range
-            </p>
-          </div>
-          <Link to="/shop/tech" className="flex items-center gap-1.5 text-sm font-semibold text-lago-600 dark:text-lago-400 hover:text-lago-700 dark:hover:text-lago-300 transition-colors">
-            View all <ArrowRight className="w-4 h-4" />
-          </Link>
+          <FeaturedShelf title="Home & entertainment" to="/shop/home" supplier="esquire" products={products} loading={loading} />
+          <SupplierShelf config={SUPPLIERS.syntech} />
+          <SupplierShelf config={SUPPLIERS.axiz} />
+          <SupplierShelf config={SUPPLIERS.pinnacle} />
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {syntechLoading
-            ? Array.from({ length: 8 }).map((_, i) => <ProductSkeleton key={i} />)
-            : syntechProducts.map((p) => <SyntechCard key={p.id} product={p} />)
-          }
-        </div>
-      </div>
-
-      {/* ── Featured — Axiz Digital ── */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h2 className="text-2xl font-display font-bold text-gray-900 dark:text-white">
-              Featured — Axiz Digital
-            </h2>
-            <p className="text-sm text-gray-500 dark:text-lago-400 mt-0.5">
-              Top picks from the Axiz Digital range
-            </p>
-          </div>
-          <Link to="/shop/axiz" className="flex items-center gap-1.5 text-sm font-semibold text-orange-600 dark:text-orange-400 hover:text-orange-700 dark:hover:text-orange-300 transition-colors">
-            View all <ArrowRight className="w-4 h-4" />
-          </Link>
-        </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {axizLoading
-            ? Array.from({ length: 8 }).map((_, i) => <ProductSkeleton key={i} />)
-            : axizProducts.map((p) => <AxizCard key={p.id} product={p} />)
-          }
-        </div>
-      </div>
-
-      {/* ── Featured — Pinnacle ── */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h2 className="text-2xl font-display font-bold text-gray-900 dark:text-white">
-              Featured — Pinnacle
-            </h2>
-            <p className="text-sm text-gray-500 dark:text-lago-400 mt-0.5">
-              Top picks from the Pinnacle range
-            </p>
-          </div>
-          <Link to="/shop/pinnacle" className="flex items-center gap-1.5 text-sm font-semibold text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 transition-colors">
-            View all <ArrowRight className="w-4 h-4" />
-          </Link>
-        </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {pinnacleLoading
-            ? Array.from({ length: 8 }).map((_, i) => <ProductSkeleton key={i} />)
-            : pinnacleProducts.map((p) => <PinnacleCard key={p.id} product={p} />)
-          }
-        </div>
-      </div>
-
-    </div>
+      </PageShell>
+    </WishlistProvider>
   );
 }

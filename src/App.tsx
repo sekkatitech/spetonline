@@ -1,7 +1,6 @@
 import { BrowserRouter, Routes, Route, useLocation, Link, useNavigationType } from 'react-router-dom';
-import { useEffect } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import { Navbar, Footer, WhatsAppButton } from './components/Layout';
-import { AIChatWidget } from './components/AIChatWidget';
 import { ContactPage } from './pages/ContactPage';
 import { AuthProvider } from './lib/AuthContext';
 import { trackPageView } from './lib/visitorTracker';
@@ -20,27 +19,31 @@ import { ProductPage }      from './pages/ProductPage';
 import { CartPage }         from './pages/CartPage';
 import { CheckoutPage }     from './pages/CheckoutPage';
 import { DealsPage }        from './pages/DealsPage';
-import { AdminPage }        from './pages/AdminPage';
 import { AccountPage }      from './pages/AccountPage';
 import { AuthPage }         from './pages/AuthPage';
 import { CategoriesPage }   from './pages/CategoriesPage';
 import { PaymentSuccess }   from './pages/PaymentSuccess';
 import { PaymentCancel }    from './pages/PaymentCancel';
+import { ResetPasswordPage } from './pages/ResetPasswordPage';
+import { NotFoundPage }     from './pages/NotFoundPage';
 import { SearchPage }       from './pages/SearchPage';
-import EnterprisePage       from './pages/EnterprisePage'
-import EnterpriseRegisterPage from './pages/EnterpriseRegisterPage'
-import EnterpriseLoginPage from './pages/EnterpriseLoginPage'
-import EnterpriseHomePage from './pages/EnterpriseHomePage'
-import EnterpriseDashboard from './pages/EnterpriseDashboard'
-import EnterpriseProductsPage from './pages/EnterpriseProductsPage' 
-import EnterpriseProductDetailPage from './pages/EnterpriseProductDetailPage'
-import EnterpriseQuotesPage from './pages/EnterpriseQuotesPage'
-import EnterpriseOrdersPage from './pages/EnterpriseOrdersPage'
-import EnterpriseProcurementListsPage from './pages/EnterpriseProcurementListsPage'
-import EnterpriseAccountPage from './pages/EnterpriseAccountPage'
-import EnterpriseApplePage from './pages/EnterpriseApplePage'
-import EnterpriseAppleDetailPage from './pages/EnterpriseAppleDetailPage'
 
+// Admin, enterprise and the chat widget carry heavy dependencies most shoppers never need.
+const AdminPage = lazy(() => import('./pages/AdminPage').then((module) => ({ default: module.AdminPage })));
+const AIChatWidget = lazy(() => import('./components/AIChatWidget').then((module) => ({ default: module.AIChatWidget })));
+const EnterprisePage = lazy(() => import('./pages/EnterprisePage'));
+const EnterpriseRegisterPage = lazy(() => import('./pages/EnterpriseRegisterPage'));
+const EnterpriseLoginPage = lazy(() => import('./pages/EnterpriseLoginPage'));
+const EnterpriseHomePage = lazy(() => import('./pages/EnterpriseHomePage'));
+const EnterpriseDashboard = lazy(() => import('./pages/EnterpriseDashboard'));
+const EnterpriseProductsPage = lazy(() => import('./pages/EnterpriseProductsPage'));
+const EnterpriseProductDetailPage = lazy(() => import('./pages/EnterpriseProductDetailPage'));
+const EnterpriseQuotesPage = lazy(() => import('./pages/EnterpriseQuotesPage'));
+const EnterpriseOrdersPage = lazy(() => import('./pages/EnterpriseOrdersPage'));
+const EnterpriseProcurementListsPage = lazy(() => import('./pages/EnterpriseProcurementListsPage'));
+const EnterpriseAccountPage = lazy(() => import('./pages/EnterpriseAccountPage'));
+const EnterpriseApplePage = lazy(() => import('./pages/EnterpriseApplePage'));
+const EnterpriseAppleDetailPage = lazy(() => import('./pages/EnterpriseAppleDetailPage'));
 
 // Scroll to top on forward navigation only — back/forward restores position
 function ScrollToTop() {
@@ -62,8 +65,15 @@ function AppShell() {
   return (
     <>
       <ScrollToTop />
+      <a
+        href="#main"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[300] focus:rounded-lg focus:bg-spet-blue focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-white"
+      >
+        Skip to content
+      </a>
       {!isEnterprise && <Navbar />}
-      <main>
+      <main id="main">
+        <Suspense fallback={<div className="min-h-screen bg-spet-canvas" aria-busy="true" />}>
         <Routes>
           <Route path="/"                element={<HomePage />} />
 
@@ -99,27 +109,32 @@ function AppShell() {
           <Route path="/checkout"        element={<CheckoutPage />} />
           <Route path="/account"         element={<AccountPage />} />
           <Route path="/auth"            element={<AuthPage />} />
+          <Route path="/reset-password"  element={<ResetPasswordPage />} />
           <Route path="/payment-success" element={<PaymentSuccess />} />
           <Route path="/payment-cancel"  element={<PaymentCancel />} />
           <Route path="/search"          element={<SearchPage />} />
           <Route path="/contact"         element={<ContactPage />} />
 
           {/* Catch-all 404 */}
-          <Route path="*" element={
-            <div className="min-h-screen bg-gray-50 dark:bg-[#0a141d] pt-40 flex flex-col items-center justify-center text-center px-4">
-              <p className="text-8xl font-black text-gray-200 dark:text-lago-800 mb-4">404</p>
-              <h1 className="text-3xl font-display font-bold text-gray-900 dark:text-white mb-4">Page not found</h1>
-              <p className="text-gray-500 dark:text-lago-400 mb-8">The page you're looking for doesn't exist.</p>
-              <a href="/" className="px-8 py-3 rounded-full bg-lago-600 text-white font-bold hover:bg-lago-700 transition-colors">
-                Go Home
-              </a>
-            </div>
-          } />
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
+        </Suspense>
       </main>
       {!isEnterprise && <Footer />}
       {!isEnterprise && <WhatsAppButton />}
-      {!isEnterprise && <AIChatWidget />}
+      {!isEnterprise && (
+        <Suspense fallback={null}>
+          <AIChatWidget />
+        </Suspense>
+      )}
+      {isEnterprise && (
+        <Link
+          to="/shop"
+          className="fixed bottom-4 right-4 z-40 inline-flex h-11 items-center rounded-lg bg-spet-navy px-4 text-[13px] font-semibold text-white shadow-lg transition-colors hover:bg-spet-blue"
+        >
+          ← Back to shop
+        </Link>
+      )}
     </>
   );
 }

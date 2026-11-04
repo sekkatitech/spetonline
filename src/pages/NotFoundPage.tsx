@@ -1,21 +1,36 @@
-import { Link } from 'react-router-dom';
-import { Home } from 'lucide-react';
+import { Home, ShoppingBag } from 'lucide-react';
+import { PageShell } from '../components/ui/PageShell';
+import { ButtonLink } from '../components/ui/Button';
+import { useSEO } from '../lib/useSEO';
 
 export function NotFoundPage() {
+  useSEO({
+    title: 'Page not found',
+    description: 'The page you are looking for does not exist or has moved.',
+    noindex: true,
+  });
+
   return (
-    <div className="min-h-screen pt-32 pb-24 container mx-auto px-4 md:px-6 flex flex-col items-center justify-center text-center">
-      <h1 className="text-8xl md:text-9xl font-display font-black text-lago-600 dark:text-lago-500 mb-6 tracking-tighter">404</h1>
-      <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">Page Not Found</h2>
-      <p className="text-gray-600 dark:text-lago-200 text-lg max-w-md mx-auto mb-10">
-        We couldn't find the page you're looking for. It might have been moved or doesn't exist anymore.
-      </p>
-      
-      <Link 
-        to="/" 
-        className="inline-flex items-center justify-center gap-2 h-14 px-8 rounded-full bg-lago-600 hover:bg-lago-700 text-white font-bold transition-colors shadow-[0_4px_14px_rgba(5,125,205,0.3)] hover:shadow-[0_6px_20px_rgba(5,125,205,0.4)]"
-      >
-        <Home className="w-5 h-5" /> Back to Home
-      </Link>
-    </div>
+    <PageShell contentClassName="pb-16">
+      <div className="flex min-h-[52vh] flex-col items-center justify-center text-center">
+        <p className="font-display text-[72px] font-semibold leading-none tracking-tight text-spet-blue/20 md:text-[96px]">
+          404
+        </p>
+        <h1 className="mt-3 font-display text-[26px] font-semibold text-spet-ink md:text-[32px]">Page not found</h1>
+        <p className="mt-2 max-w-md text-[14px] leading-relaxed text-spet-ink-2">
+          The page you are looking for does not exist or has moved.
+        </p>
+        <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+          <ButtonLink to="/">
+            <Home className="h-4 w-4" aria-hidden="true" />
+            Back to home
+          </ButtonLink>
+          <ButtonLink to="/shop" variant="secondary">
+            <ShoppingBag className="h-4 w-4" aria-hidden="true" />
+            Browse shop
+          </ButtonLink>
+        </div>
+      </div>
+    </PageShell>
   );
 }

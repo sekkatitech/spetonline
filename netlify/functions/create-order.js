@@ -78,7 +78,7 @@ exports.handler = async (event) => {
 
   try {
     const body = JSON.parse(event.body || '{}');
-    const { accessToken, items, shippingAddress, promoCode, promoId } = body;
+    const { accessToken, items, shippingAddress, promoCode, promoId, previousOrderId } = body;
 
     // ── 1. Verify user ────────────────────────────────────────────────────
     if (!accessToken) {
@@ -104,12 +104,15 @@ exports.handler = async (event) => {
     if (esquireIds.length > 0) {
       const { data: products, error } = await supabase
         .from('products')
-        .select('id, ProductName, ProductCode, Price, AvailableQty')
+        .select('id, ProductName, ProductCode, Price, sale_price, is_on_sale, AvailableQty')
         .in('id', esquireIds)
         .eq('is_active', true);
       if (error) throw new Error('Failed to fetch Esquire product prices');
       for (const p of products) {
-        priceMap[p.id] = { price: Number(p.Price), name: p.ProductName, sku: p.ProductCode, qty_available: p.AvailableQty };
+        // Must match toProductView in src/lib/productDisplay.ts: charge what the storefront shows.
+        const salePrice = p.is_on_sale ? Number(p.sale_price) : 0;
+        const price = salePrice > 0 ? salePrice : Number(p.Price);
+        priceMap[p.id] = { price, name: p.ProductName, sku: p.ProductCode, qty_available: p.AvailableQty };
       }
     }
 
@@ -267,6 +270,21 @@ exports.handler = async (event) => {
       console.error('Order items insert error:', itemsError);
       await supabase.from('orders').update({ status: 'error' }).eq('id', order.id);
       return { statusCode: 500, headers: CORS, body: JSON.stringify({ error: 'Failed to save order items. Please contact support.' }) };
+    }
+
+    // A new attempt replaces the shopper's last unpaid one. Non-fatal: a leftover
+    // unpaid order must not block this payment, and payfast-itn.js still records
+    // a late payment on a cancelled order.
+    if (previousOrderId) {
+      const { error: cancelError } = await supabase
+        .from('orders')
+        .update({ status: 'cancelled' })
+        .eq('id', previousOrderId)
+        .eq('user_id', user.id)
+        .eq('source', 'consumer')
+        .eq('status', 'pending')
+        .eq('payment_status', 'unpaid');
+      if (cancelError) console.error('Failed to cancel previous order:', cancelError);
     }
 
     // ── 10. Build PayFast payload ─────────────────────────────────────────

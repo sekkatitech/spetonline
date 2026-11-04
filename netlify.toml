@@ -29,6 +29,10 @@
 [functions."daily-visitor-report"]
   schedule = "0 4 * * *"
 
+# Cancels storefront orders left unpaid for 48 hours, at 07:00 SAST
+[functions."cancel-stale-orders"]
+  schedule = "0 5 * * *"
+
 # Security headers — applied to every response
 [[headers]]
   for = "/*"

@@ -1,41 +1,81 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import {
+  ArrowRight, Building2, ChevronDown, Clock, Heart, Instagram, Facebook,
+  Mail, MapPin, Menu, MessageCircle, Phone, Search, ShoppingCart, Truck, User, X,
+} from 'lucide-react';
 import { ThemeToggle } from './ThemeToggle';
 import { LegalModal } from './LegalModal';
 import { LegalKey } from '../lib/legalContent';
 import { useCartStore } from '../lib/cartStore';
-import { useAuth } from '../lib/AuthContext';
 import { supabase } from '../lib/supabase';
-import {
-  Phone, Mail, Truck, MapPin, Search, User, Heart,
-  ShoppingCart, X, Menu, Building2, ChevronDown,
-} from 'lucide-react';
+
+// ── Shared header/footer chrome ───────────────────────────────────────────────
+// Header: 36px utility bar + 64px main bar + 44px department nav (144px total).
+// Mobile: 56px main bar + 44px search row (100px total).
+const HEADER_HEIGHT_MOBILE = '100px';
+const HEADER_HEIGHT_DESKTOP = '144px';
+
+const DEPARTMENTS = [
+  { label: 'TVs & audio', href: '/shop/home?categoryHead=Televisions' },
+  { label: 'Laptops & computing', href: '/shop/home?categoryHead=Notebooks%20and%20Laptops' },
+  { label: 'Monitors', href: '/shop/home?categoryHead=Computer%20Monitors' },
+  { label: 'Gaming', href: '/shop/home?categoryHead=Console%20Gaming%20Units' },
+  { label: 'Audio & soundbars', href: '/shop/home?categoryHead=Speakers%20%26%20Audio' },
+  { label: 'Networking', href: '/shop/home?categoryHead=Wireless%20Network%20Products' },
+  { label: 'Storage', href: '/shop/home?categoryHead=Hard%20Drives%2FStorage' },
+  { label: 'Printing', href: '/shop/home?categoryHead=Printers' },
+  { label: 'Power backup', href: '/shop/home?categoryHead=Uninterruptible%20Power%20Supply' },
+];
+
+// ── Search (used in the header and the mobile bar) ----------------------------
+function SearchForm({ id, className = '' }: { id: string; className?: string }) {
+  const navigate = useNavigate();
+
+  return (
+    <form
+      role="search"
+      className={`flex items-stretch ${className}`}
+      onSubmit={(event) => {
+        event.preventDefault();
+        const query = new FormData(event.currentTarget).get('q');
+        if (query) navigate(`/search?q=${encodeURIComponent(String(query))}`);
+      }}
+    >
+      <label htmlFor={id} className="sr-only">
+        Search products
+      </label>
+      <div className="relative flex-1">
+        <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-spet-muted" aria-hidden="true" />
+        <input
+          id={id}
+          name="q"
+          type="search"
+          placeholder="Search TVs, laptops, printers"
+          className="h-10 w-full rounded-l-lg border border-r-0 border-spet-line bg-spet-surface pl-10 pr-3 text-sm text-spet-ink placeholder:text-spet-was focus:border-spet-blue focus:outline-hidden"
+        />
+      </div>
+      <button
+        type="submit"
+        className="h-10 shrink-0 rounded-r-lg bg-spet-blue px-4 text-sm font-semibold text-white transition-colors hover:bg-spet-blue-dark"
+      >
+        Search
+      </button>
+    </form>
+  );
+}
 
 // ── Nav link with active indicator ───────────────────────────────────────────
-function NavLink({
-  to, children, className = '', onClick, transparent,
-}: {
-  to: string; children: React.ReactNode; className?: string; onClick?: () => void; transparent?: boolean;
-}) {
+function NavLink({ to, children, className = '' }: { to: string; children: ReactNode; className?: string }) {
   const { pathname } = useLocation();
-
-  const isActive =
-    to === '/'
-      ? pathname === '/'
-      : pathname === to || pathname.startsWith(to + '/');
+  const isActive = to === '/' ? pathname === '/' : pathname === to || pathname.startsWith(to + '/');
 
   return (
     <Link
       to={to}
-      onClick={onClick}
-      className={`text-base font-semibold transition-colors pb-1 ${
-        isActive
-          ? transparent
-            ? 'text-white border-b-2 border-white/70'
-            : 'text-lago-600 dark:text-lago-400 border-b-2 border-lago-500'
-          : transparent
-            ? 'text-white/90 hover:text-white border-b-2 border-transparent'
-            : 'text-gray-700 dark:text-lago-100 hover:text-lago-600 dark:hover:text-white border-b-2 border-transparent'
+      aria-current={isActive ? 'page' : undefined}
+      className={`text-[14px] font-medium transition-colors ${
+        isActive ? 'font-semibold text-spet-blue' : 'text-spet-ink-2 hover:text-spet-blue'
       } ${className}`}
     >
       {children}
@@ -45,7 +85,12 @@ function NavLink({
 
 // ── NavSpacer ─────────────────────────────────────────────────────────────────
 export function NavSpacer() {
-  return <div className="h-[194px]" aria-hidden="true" />;
+  return (
+    <>
+      <div aria-hidden="true" style={{ height: HEADER_HEIGHT_MOBILE }} className="md:hidden" />
+      <div aria-hidden="true" style={{ height: HEADER_HEIGHT_DESKTOP }} className="hidden md:block" />
+    </>
+  );
 }
 
 // ── Floating WhatsApp chat button ────────────────────────────────────────────
@@ -60,104 +105,99 @@ export function WhatsAppButton() {
       rel="noreferrer"
       aria-label="Chat with us on WhatsApp"
       title="Chat with us on WhatsApp"
-      className="group fixed bottom-5 right-5 z-50 flex items-center justify-center w-14 h-14 rounded-full bg-[#25D366] shadow-lg shadow-black/20 hover:scale-105 transition-transform duration-200"
+      className="group fixed bottom-5 right-5 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-[#25D366] shadow-lg shadow-black/20 transition-transform duration-200 hover:scale-105"
     >
-      <span className="absolute inset-0 rounded-full bg-[#25D366] animate-ping opacity-75" style={{ animationDuration: '2.5s' }} />
-      <svg viewBox="0 0 24 24" className="relative w-7 h-7 fill-white">
-        <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38a9.9 9.9 0 004.74 1.21h.01c5.46 0 9.9-4.45 9.9-9.91C21.96 6.45 17.5 2 12.04 2zm0 18.13h-.01a8.2 8.2 0 01-4.19-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.19 8.19 0 01-1.26-4.37c0-4.54 3.7-8.24 8.26-8.24 2.2 0 4.27.86 5.83 2.42a8.18 8.18 0 012.42 5.83c0 4.55-3.7 8.24-8.26 8.24zm4.53-6.17c-.25-.12-1.47-.72-1.7-.81-.23-.08-.39-.12-.56.13-.17.25-.64.81-.78.97-.14.17-.29.19-.53.06-.25-.12-1.05-.39-2-1.23-.74-.66-1.24-1.47-1.39-1.72-.14-.25-.02-.38.11-.51.11-.11.25-.29.37-.43.12-.15.16-.25.25-.42.08-.17.04-.31-.02-.43-.06-.12-.56-1.35-.77-1.85-.2-.48-.41-.42-.56-.43-.14-.01-.31-.01-.48-.01-.17 0-.43.06-.66.31-.23.25-.86.85-.86 2.06 0 1.22.89 2.4 1.01 2.56.12.17 1.75 2.67 4.24 3.74.59.26 1.05.41 1.41.52.59.19 1.13.16 1.55.1.47-.07 1.47-.6 1.68-1.18.21-.58.21-1.08.14-1.18-.06-.11-.23-.17-.48-.29z"/>
+      <span className="absolute inset-0 animate-ping rounded-full bg-[#25D366] opacity-75" style={{ animationDuration: '2.5s' }} />
+      <svg viewBox="0 0 24 24" className="relative h-7 w-7 fill-white" aria-hidden="true">
+        <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38a9.9 9.9 0 004.74 1.21h.01c5.46 0 9.9-4.45 9.9-9.91C21.96 6.45 17.5 2 12.04 2zm0 18.13h-.01a8.2 8.2 0 01-4.19-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.19 8.19 0 01-1.26-4.37c0-4.54 3.7-8.24 8.26-8.24 2.2 0 4.27.86 5.83 2.42a8.18 8.18 0 012.42 5.83c0 4.55-3.7 8.24-8.26 8.24zm4.53-6.17c-.25-.12-1.47-.72-1.7-.81-.23-.08-.39-.12-.56.13-.17.25-.64.81-.78.97-.14.17-.29.19-.53.06-.25-.12-1.05-.39-2-1.23-.74-.66-1.24-1.47-1.39-1.72-.14-.25-.02-.38.11-.51.11-.11.25-.29.37-.43.12-.15.16-.25.25-.42.08-.17.04-.31-.02-.43-.06-.12-.56-1.35-.77-1.85-.2-.48-.41-.42-.56-.43-.14-.01-.31-.01-.48-.01-.17 0-.43.06-.66.31-.23.25-.86.85-.86 2.06 0 1.22.89 2.4 1.01 2.56.12.17 1.75 2.67 4.24 3.74.59.26 1.05.41 1.41.52.59.19 1.13.16 1.55.1.47-.07 1.47-.6 1.68-1.18.21-.58.21-1.08.14-1.18-.06-.11-.23-.17-.48-.29z" />
       </svg>
     </a>
   );
 }
 
-// ── Lightweight, lazily-loaded category preview for the Shop mega-menu ────────
-// Deliberately not the same hook CategoriesPage uses — that one fetches the
-// entire table to build an exhaustive, accurate list for a dedicated
-// category-browsing page. This only needs "a good top-N preview" for a nav
-// dropdown, and only loads once the user actually hovers Shop, so it doesn't
-// add a query to every single page load.
-function useMenuCategories(table: string, column: string) {
-  const [items, setItems] = useState<{ name: string; count: number }[]>([]);
-  const [loaded, setLoaded] = useState(false);
+// ── Department mega-menu ──────────────────────────────────────────────────────
+const MEGA_MENU_COLUMNS = [
+  {
+    label: 'TV & audio',
+    links: [
+      { label: 'Televisions', href: '/shop/home?categoryHead=Televisions' },
+      { label: 'TV accessories', href: '/shop/home?categoryHead=Televisions-%20Accessories' },
+      { label: 'Soundbars & audio', href: '/shop/home?categoryHead=Speakers%20%26%20Audio' },
+      { label: 'Projectors', href: '/shop/home?categoryHead=Projectors%20and%20Accessories' },
+    ],
+  },
+  {
+    label: 'Computing',
+    links: [
+      { label: 'Laptops & notebooks', href: '/shop/home?categoryHead=Notebooks%20and%20Laptops' },
+      { label: 'Monitors', href: '/shop/home?categoryHead=Computer%20Monitors' },
+      { label: 'Components', href: '/shop/home?categoryHead=Computer%20Processors' },
+      { label: 'Storage', href: '/shop/home?categoryHead=Hard%20Drives%2FStorage' },
+    ],
+  },
+  {
+    label: 'Home & office',
+    links: [
+      { label: 'Printers', href: '/shop/home?categoryHead=Printers' },
+      { label: 'Networking', href: '/shop/home?categoryHead=Wireless%20Network%20Products' },
+      { label: 'Power backup', href: '/shop/home?categoryHead=Uninterruptible%20Power%20Supply' },
+      { label: 'Security & CCTV', href: '/shop/home?categoryHead=CCTV%20and%20DVR%20Products' },
+    ],
+  },
+];
 
-  function load() {
-    if (loaded) return;
-    setLoaded(true);
-    supabase
-      .from(table)
-      .select(column)
-      .eq('is_active', true)
-      .not(column, 'is', null)
-      .limit(400)
-      .then(({ data }) => {
-        const counts: Record<string, number> = {};
-        (data ?? []).forEach((d: any) => {
-          const v = d[column];
-          if (v) counts[v] = (counts[v] || 0) + 1;
-        });
-        const sorted = Object.entries(counts)
-          .sort((a, b) => b[1] - a[1])
-          .map(([name, count]) => ({ name, count }));
-        setItems(sorted);
-      });
-  }
-
-  return { items, load };
-}
-
-// ── "Shop" mega-menu — hover dropdown with top categories per supplier ────────
-function ShopMegaMenu({ transparent }: { transparent?: boolean }) {
-  const esquire  = useMenuCategories('products', 'CategoryHead');
-  const syntech  = useMenuCategories('syntech_products', 'category');
-  const axiz     = useMenuCategories('axiz_products', 'category');
-  const pinnacle = useMenuCategories('pinnacle_products', 'category');
-
-  function loadAll() {
-    esquire.load(); syntech.load(); axiz.load(); pinnacle.load();
-  }
-
-  const columns = [
-    { label: 'Home & Entertainment', to: '/shop/home',     param: 'categoryHead', items: esquire.items },
-    { label: 'Gaming & Computing',   to: '/shop/tech',      param: 'category',     items: syntech.items },
-    { label: 'Axiz Digital',         to: '/shop/axiz',      param: 'category',     items: axiz.items },
-    { label: 'Pinnacle',             to: '/shop/pinnacle',  param: 'category',     items: pinnacle.items },
-  ];
-
+function ShopMegaMenu() {
   return (
-    <div className="relative group" onMouseEnter={loadAll}>
-      <NavLink to="/shop" transparent={transparent} className="flex items-center gap-1">
-        Shop <ChevronDown className="w-3.5 h-3.5 opacity-60" />
-      </NavLink>
-      <div className="invisible opacity-0 translate-y-1 group-hover:visible group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-150 absolute left-1/2 -translate-x-1/2 top-full pt-4 z-50">
-        <div className="w-[720px] max-w-[90vw] bg-white dark:bg-lago-900 border border-gray-200 dark:border-lago-800 rounded-2xl shadow-2xl p-6 grid grid-cols-4 gap-6">
-          {columns.map((col) => (
-            <div key={col.label}>
-              <Link to={col.to} className="block text-xs font-bold uppercase tracking-widest text-lago-600 dark:text-lago-400 mb-3 hover:underline">
-                {col.label}
-              </Link>
-              <ul className="space-y-2 min-h-[120px]">
-                {col.items.length === 0 ? (
-                  Array.from({ length: 5 }).map((_, i) => (
-                    <li key={i} className="h-3.5 w-4/5 rounded bg-gray-100 dark:bg-lago-800 animate-pulse" />
-                  ))
-                ) : (
-                  col.items.slice(0, 6).map((item) => (
-                    <li key={item.name}>
-                      <Link
-                        to={`${col.to}?${col.param}=${encodeURIComponent(item.name)}`}
-                        className="block text-sm text-gray-600 dark:text-lago-300 hover:text-lago-600 dark:hover:text-white transition-colors truncate"
-                      >
-                        {item.name}
-                      </Link>
-                    </li>
-                  ))
-                )}
+    <div
+      className="group relative"
+      onKeyDown={(event) => {
+        if (event.key === 'Escape') (document.activeElement as HTMLElement | null)?.blur();
+      }}
+    >
+      <Link
+        to="/shop"
+        className="flex items-center gap-1 text-[14px] font-medium text-spet-ink-2 transition-colors hover:text-spet-blue"
+      >
+        Shop
+        <ChevronDown className="h-3.5 w-3.5 opacity-60" aria-hidden="true" />
+      </Link>
+
+      <div className="invisible absolute left-1/2 top-full z-50 -translate-x-1/2 translate-y-1 pt-4 opacity-0 transition-all duration-150 group-hover:visible group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:opacity-100">
+        <div className="grid w-[720px] max-w-[90vw] grid-cols-4 gap-6 rounded-2xl border border-spet-line bg-spet-surface p-6 shadow-2xl">
+          {MEGA_MENU_COLUMNS.map((column) => (
+            <div key={column.label}>
+              <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.1em] text-spet-blue">{column.label}</p>
+              <ul className="space-y-2">
+                {column.links.map((link) => (
+                  <li key={link.label}>
+                    <Link to={link.href} className="block truncate text-[13px] text-spet-ink-2 transition-colors hover:text-spet-blue">
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
               </ul>
-              <Link to={col.to} className="inline-flex items-center gap-1 text-xs font-semibold text-lago-600 dark:text-lago-400 hover:underline mt-3">
-                View all <ChevronDown className="w-3 h-3 -rotate-90" />
-              </Link>
             </div>
           ))}
+
+          <div className="border-l border-spet-line-2 pl-6">
+            <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.1em] text-spet-muted">More</p>
+            <ul className="space-y-2.5 text-[13px]">
+              <li>
+                <Link to="/deals" className="font-semibold text-spet-orange hover:underline">Deals</Link>
+              </li>
+              <li>
+                <Link to="/categories" className="text-spet-ink-2 transition-colors hover:text-spet-blue">All categories</Link>
+              </li>
+              <li>
+                <Link to="/b2b" className="flex items-center gap-1.5 text-spet-ink-2 transition-colors hover:text-spet-blue">
+                  <Building2 className="h-3.5 w-3.5" aria-hidden="true" /> Business
+                </Link>
+              </li>
+              <li>
+                <Link to="/enterprise/apple" className="text-spet-ink-2 transition-colors hover:text-spet-blue">Apple portal</Link>
+              </li>
+            </ul>
+          </div>
         </div>
       </div>
     </div>
@@ -166,17 +206,54 @@ function ShopMegaMenu({ transparent }: { transparent?: boolean }) {
 
 // ── Navbar ────────────────────────────────────────────────────────────────────
 export function Navbar() {
-  const [isScrolled,     setIsScrolled]     = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const navigate   = useNavigate();
-  const totalItems = useCartStore((s) => s.totalItems());
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
+  const totalItems = useCartStore((state) => state.totalItems());
   const { pathname } = useLocation();
+  const pendingOrderId = useCartStore((state) => state.pendingOrder?.id);
 
-  // On the home page, start transparent and become solid on scroll
-  const isHeroPage    = pathname === '/';
-  const isTransparent = isHeroPage && !isScrolled;
+  // A shopper can pay and never reach the success page (closed tab, delayed EFT),
+  // so empty the cart on the next visit once the order shows as paid.
+  useEffect(() => {
+    if (!pendingOrderId) return;
+    let cancelled = false;
+    supabase
+      .from('orders')
+      .select('payment_status')
+      .eq('id', pendingOrderId)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (!cancelled && data?.payment_status === 'paid') useCartStore.getState().clearCart();
+      });
+    return () => { cancelled = true; };
+  }, [pendingOrderId]);
 
-  // Sitewide Organization/WebSite structured data — injected once, not per-page
+  useEffect(() => {
+    const handleScroll = () => setIsScrolled(window.scrollY > 8);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Close the mobile drawer whenever the route changes.
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+
+    function handleKeyDown(event: globalThis.KeyboardEvent) {
+      if (event.key === 'Escape') {
+        setMobileMenuOpen(false);
+        menuButtonRef.current?.focus();
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [mobileMenuOpen]);
+
   useEffect(() => {
     if (document.querySelector('script[data-seo-jsonld-site="true"]')) return;
     const el = document.createElement('script');
@@ -185,12 +262,7 @@ export function Navbar() {
     el.textContent = JSON.stringify({
       '@context': 'https://schema.org',
       '@graph': [
-        {
-          '@type': 'Organization',
-          name: 'SPET Online',
-          url: 'https://spetonline.co.za',
-          logo: 'https://spetonline.co.za/logo-main.png',
-        },
+        { '@type': 'Organization', name: 'SPET Online', url: 'https://spetonline.co.za', logo: 'https://spetonline.co.za/logo-main.png' },
         {
           '@type': 'WebSite',
           name: 'SPET Online',
@@ -206,195 +278,180 @@ export function Navbar() {
     document.head.appendChild(el);
   }, []);
 
-  useEffect(() => {
-    const handleScroll = () => setIsScrolled(window.scrollY > 20);
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 flex flex-col pointer-events-none">
+    <header className="fixed inset-x-0 top-0 z-50 flex flex-col bg-spet-surface">
+      {/* Utility bar */}
+      <div className="hidden h-9 bg-spet-navy text-[12px] text-white/65 md:block">
+        <div className="mx-auto flex h-full max-w-[1400px] items-center justify-between gap-6 px-6">
+          <div className="flex items-center gap-6">
+            <a href="tel:0870881483" className="flex items-center gap-2 transition-colors hover:text-white">
+              <Phone className="h-[13px] w-[13px]" aria-hidden="true" />
+              0870 881 483
+            </a>
+            <a href="mailto:sales@spetonline.co.za" className="flex items-center gap-2 transition-colors hover:text-white">
+              <Mail className="h-[13px] w-[13px]" aria-hidden="true" />
+              sales@spetonline.co.za
+            </a>
+          </div>
 
-      {/* ── Top utility bar ── */}
-      <div className={`pointer-events-auto transition-all duration-300 py-4 border-b hidden md:block select-none ${
-        isTransparent
-          ? 'bg-transparent border-white/10'
-          : 'bg-lago-900 dark:bg-lago-950 border-lago-800'
-      }`}>
-        <div className="container mx-auto px-4 md:px-6 grid grid-cols-3 items-center">
-          <div className="flex items-center gap-5 justify-start">
-            <span className="flex items-center gap-2">
-              <Phone className={`w-5 h-5 ${isTransparent ? 'text-white/60' : 'text-lago-400'}`} />
-              <a href="tel:0870881483" className="text-white hover:underline font-bold text-base">0870 881 483</a>
-            </span>
-            <span className={`text-lg ${isTransparent ? 'text-white/20' : 'text-lago-700'}`}>|</span>
-            <span className="flex items-center gap-2">
-              <Mail className={`w-5 h-5 ${isTransparent ? 'text-white/60' : 'text-lago-400'}`} />
-              <a href="mailto:sales@spetonline.co.za" className="text-white hover:underline text-base">sales@spetonline.co.za</a>
-            </span>
+          <div className="flex items-center gap-2 text-white/85">
+            <Truck className="h-[14px] w-[14px]" aria-hidden="true" />
+            Free delivery over R2 500
           </div>
-          <div className="flex items-center justify-center gap-3 text-white font-bold">
-            <div className={`flex items-center justify-center w-10 h-10 rounded-full border ${
-              isTransparent ? 'bg-white/10 border-white/20' : 'bg-lago-700 border-lago-600'
-            }`}>
-              <Truck className="w-5 h-5 text-white" />
-            </div>
-            <div className="flex flex-col leading-tight">
-              <span className="text-base font-extrabold uppercase tracking-wider text-white">Free Delivery</span>
-              <span className={`text-xs font-normal tracking-wide ${isTransparent ? 'text-white/60' : 'text-lago-300'}`}>
-                on orders over R2,500
-              </span>
-            </div>
-          </div>
-          <div className={`flex items-center gap-3 justify-end font-medium ${isTransparent ? 'text-white/70' : 'text-lago-300'}`}>
-            <MapPin className={`w-5 h-5 ${isTransparent ? 'text-white/50' : 'text-lago-400'}`} />
-            <span className="text-sm">Delivers Nationwide across South Africa</span>
+
+          <div className="flex items-center gap-2">
+            <MapPin className="h-[13px] w-[13px]" aria-hidden="true" />
+            Delivered nationwide from Pretoria
           </div>
         </div>
       </div>
 
-      {/* ── Main navbar ── */}
-      <div className={`pointer-events-auto transition-all duration-300 ${
-        isScrolled
-          ? 'bg-white/95 dark:bg-lago-900/95 backdrop-blur-md border-b border-gray-200 dark:border-lago-800 py-3 shadow-sm'
-          : isTransparent
-            ? 'bg-transparent py-4 md:py-5 border-b border-transparent'
-            : 'bg-white/90 dark:bg-transparent py-4 md:py-5 backdrop-blur-sm dark:backdrop-blur-none border-b border-gray-200/50 dark:border-transparent'
-      }`}>
-        <div className="container mx-auto px-4 md:px-6">
-          <div className="flex items-center justify-between pointer-events-auto">
+      {/* Main bar */}
+      <div className={`border-b border-spet-line bg-spet-surface transition-shadow duration-200 ${isScrolled ? 'shadow-sm' : ''}`}>
+        <div className="mx-auto flex h-14 max-w-[1400px] items-center gap-4 px-4 md:h-16 md:gap-8 md:px-6">
+          <button
+            ref={menuButtonRef}
+            type="button"
+            onClick={() => setMobileMenuOpen((open) => !open)}
+            aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
+            aria-expanded={mobileMenuOpen}
+            aria-controls="mobile-menu"
+            className="flex h-10 w-10 items-center justify-center text-spet-ink-2 transition-colors hover:text-spet-blue md:hidden"
+          >
+            {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          </button>
 
-            <button
-              className={`md:hidden ${isTransparent ? 'text-white' : 'text-gray-600 dark:text-lago-100 hover:text-gray-900 dark:hover:text-white'}`}
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              aria-label="Toggle menu"
+          <Link to="/" className="shrink-0" aria-label="SPET Online home">
+            <img
+              src="/logo-main.png"
+              alt="SPET Online"
+              className="h-10 w-auto object-contain md:h-11"
+              onError={(event) => {
+                (event.target as HTMLImageElement).style.display = 'none';
+              }}
+            />
+          </Link>
+
+          <SearchForm id="desktop-search" className="hidden max-w-[620px] flex-1 md:flex" />
+
+          <div className="ml-auto flex items-center gap-3 md:gap-5">
+            <ThemeToggle />
+
+            <Link
+              to="/account"
+              className="hidden items-center gap-2 text-[13px] text-spet-ink-2 transition-colors hover:text-spet-blue md:flex"
             >
-              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </button>
-
-            <Link to="/" className="flex-shrink-0">
-              <img
-                src="/logo-main.png"
-                alt="SPET Online"
-                className={`h-16 md:h-20 w-auto object-contain transition-all duration-300 ${isTransparent ? 'brightness-200' : ''}`}
-                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-              />
+              <User className="h-[19px] w-[19px]" aria-hidden="true" />
+              <span className="hidden lg:inline">Account</span>
             </Link>
 
-            <nav className="hidden md:flex items-center gap-8">
-              <NavLink to="/" transparent={isTransparent}>Home</NavLink>
-              <ShopMegaMenu transparent={isTransparent} />
-              <NavLink to="/categories" transparent={isTransparent}>Categories</NavLink>
-              <NavLink to="/b2b" transparent={isTransparent} className="flex items-center gap-1.5">
-                <Building2 className="w-4 h-4" />
-                B2B Enterprise
-              </NavLink>
-              <Link
-                to="/deals"
-                className={`text-base font-semibold transition-colors flex items-center gap-1.5 ${
-                  isTransparent
-                    ? 'text-orange-300 hover:text-white'
-                    : 'text-accent-orange hover:text-orange-700 dark:hover:text-white'
-                }`}
-              >
-                Deals
-                <span className="flex w-2 h-2 rounded-full bg-accent-orange animate-pulse" />
-              </Link>
-            </nav>
+            <Link
+              to="/account"
+              aria-label="Wishlist"
+              className="hidden items-center gap-2 text-[13px] text-spet-ink-2 transition-colors hover:text-spet-blue md:flex"
+            >
+              <Heart className="h-[19px] w-[19px]" aria-hidden="true" />
+              <span className="hidden lg:inline">Wishlist</span>
+            </Link>
 
-            <div className="flex items-center gap-3 md:gap-4">
-              <form
-                className="hidden md:flex relative items-center"
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  const q = new FormData(e.currentTarget).get('search');
-                  if (q) navigate(`/search?q=${encodeURIComponent(q as string)}`);
-                }}
-              >
-                <div className="absolute left-3 flex items-center pointer-events-none">
-                  <Search className={`w-4 h-4 ${isTransparent ? 'text-white/60' : 'text-gray-400 dark:text-lago-500'}`} />
-                </div>
-                <input
-                  name="search"
-                  type="text"
-                  placeholder="Search products..."
-                  className={`w-52 border rounded-full py-2 pl-9 pr-16 focus:outline-none focus:w-72 transition-all duration-300 text-sm ${
-                    isTransparent
-                      ? 'bg-white/15 border-white/30 text-white placeholder-white/50 focus:border-white/60 backdrop-blur-sm'
-                      : 'bg-white dark:bg-lago-900 border-gray-300 dark:border-lago-700 text-gray-900 dark:text-white focus:border-lago-500 shadow-sm dark:shadow-none'
-                  }`}
-                />
-                <button
-                  type="submit"
-                  className={`absolute right-1 top-1 bottom-1 text-white px-3 rounded-full font-semibold transition-colors text-xs ${
-                    isTransparent ? 'bg-white/20 hover:bg-white/30' : 'bg-lago-600 hover:bg-lago-700'
-                  }`}
-                >
-                  Go
-                </button>
-              </form>
-
-              <ThemeToggle />
-              <Link to="/account"
-                className={`hidden md:block transition-colors ${isTransparent ? 'text-white/80 hover:text-white' : 'text-gray-600 dark:text-lago-100 hover:text-lago-600 dark:hover:text-white'}`}
-                aria-label="Account">
-                <User className="w-5 h-5" />
-              </Link>
-              <Link to="/account"
-                className={`hidden md:block transition-colors ${isTransparent ? 'text-white/80 hover:text-white' : 'text-gray-600 dark:text-lago-100 hover:text-lago-600 dark:hover:text-white'}`}
-                aria-label="Wishlist">
-                <Heart className="w-5 h-5" />
-              </Link>
-              <Link to="/cart"
-                className={`transition-colors relative ${isTransparent ? 'text-white/80 hover:text-white' : 'text-gray-600 dark:text-lago-100 hover:text-lago-600 dark:hover:text-white'}`}
-                aria-label="Cart">
-                <ShoppingCart className="w-5 h-5" />
+            <Link
+              to="/cart"
+              aria-label={`Cart, ${totalItems} item${totalItems === 1 ? '' : 's'}`}
+              className="flex items-center gap-2 text-[13px] text-spet-ink-2 transition-colors hover:text-spet-blue"
+            >
+              <span className="relative">
+                <ShoppingCart className="h-[19px] w-[19px]" aria-hidden="true" />
                 {totalItems > 0 && (
-                  <span className="absolute -top-2 -right-2 w-5 h-5 bg-lago-600 text-[10px] font-bold flex items-center justify-center rounded-full text-white">
+                  <span className="absolute -right-2 -top-1.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-spet-orange px-1 text-[10px] font-bold text-white">
                     {totalItems > 99 ? '99+' : totalItems}
                   </span>
                 )}
-              </Link>
-            </div>
+              </span>
+              <span className="hidden sm:inline">Cart</span>
+            </Link>
           </div>
         </div>
       </div>
 
-      {/* ── Mobile menu ── */}
-      {mobileMenuOpen && (
-        <div className="pointer-events-auto absolute top-full left-0 right-0 bg-white dark:bg-lago-900 border-b border-gray-200 dark:border-lago-800 md:hidden pb-4 pt-2 shadow-2xl">
-          <div className="flex flex-col gap-4 px-6">
-            <Link to="/"           onClick={() => setMobileMenuOpen(false)} className="font-semibold text-lago-600 dark:text-lago-400 border-b border-gray-100 dark:border-lago-800 pb-3">Home</Link>
-            <div className="border-b border-gray-100 dark:border-lago-800 pb-3">
-              <Link to="/shop" onClick={() => setMobileMenuOpen(false)} className="font-medium text-gray-700 dark:text-lago-100 block mb-2">Shop</Link>
-              <div className="flex flex-col gap-2 pl-3">
-                <Link to="/shop/home"     onClick={() => setMobileMenuOpen(false)} className="text-sm text-gray-500 dark:text-lago-400">Home & Entertainment</Link>
-                <Link to="/shop/tech"     onClick={() => setMobileMenuOpen(false)} className="text-sm text-gray-500 dark:text-lago-400">Gaming & Computing</Link>
-                <Link to="/shop/axiz"     onClick={() => setMobileMenuOpen(false)} className="text-sm text-gray-500 dark:text-lago-400">Axiz Digital</Link>
-                <Link to="/shop/pinnacle" onClick={() => setMobileMenuOpen(false)} className="text-sm text-gray-500 dark:text-lago-400">Pinnacle</Link>
-              </div>
-            </div>
-            <Link to="/categories" onClick={() => setMobileMenuOpen(false)} className="font-medium text-gray-700 dark:text-lago-100 border-b border-gray-100 dark:border-lago-800 pb-3">Categories</Link>
-            <Link to="/b2b"        onClick={() => setMobileMenuOpen(false)} className="font-medium text-gray-700 dark:text-lago-100 border-b border-gray-100 dark:border-lago-800 pb-3 flex items-center gap-2">
-              <Building2 className="w-4 h-4" /> B2B Enterprise
+      {/* Mobile search row */}
+      <div className="border-b border-spet-line bg-spet-surface px-4 py-2 md:hidden">
+        <SearchForm id="mobile-search" />
+      </div>
+
+      {/* Department navigation */}
+      <div className="hidden border-b border-spet-line bg-spet-surface md:block">
+        <div className="mx-auto flex h-11 max-w-[1400px] items-center justify-between px-6">
+          <nav className="flex items-center gap-7" aria-label="Main navigation">
+            <ShopMegaMenu />
+            <NavLink to="/categories">Categories</NavLink>
+            <Link to="/deals" className="flex items-center gap-1.5 text-[14px] font-medium text-spet-orange transition-colors hover:text-[#c96607]">
+              Deals
+              <span className="h-1.5 w-1.5 rounded-full bg-spet-orange" aria-hidden="true" />
             </Link>
-            <Link to="/deals"      onClick={() => setMobileMenuOpen(false)} className="font-semibold text-accent-orange">Deals 🔥</Link>
-            <div className="flex gap-6 mt-1 pt-3 border-t border-gray-100 dark:border-lago-800">
-              <Link to="/account" onClick={() => setMobileMenuOpen(false)} className="flex flex-col items-center gap-1 text-xs text-gray-600 dark:text-lago-200">
-                <User className="w-5 h-5" /> Account
+            <NavLink to="/b2b">Business</NavLink>
+            <NavLink to="/enterprise/apple">Apple</NavLink>
+          </nav>
+
+          <Link
+            to="/enterprise"
+            className="flex items-center gap-1.5 text-[13px] font-semibold text-spet-blue transition-colors hover:text-spet-blue-dark"
+          >
+            Enterprise portal
+            <ArrowRight className="h-[14px] w-[14px]" aria-hidden="true" />
+          </Link>
+        </div>
+      </div>
+
+      {/* Mobile menu */}
+      {mobileMenuOpen && (
+        <div
+          id="mobile-menu"
+          className="absolute inset-x-0 top-full max-h-[calc(100vh-100px)] overflow-y-auto border-b border-spet-line bg-spet-surface px-4 pb-6 pt-3 shadow-2xl md:hidden"
+        >
+          <nav aria-label="Mobile navigation" className="flex flex-col">
+            <Link to="/shop" className="flex h-11 items-center border-b border-spet-line-2 font-semibold text-spet-blue">
+              Shop all
+            </Link>
+            {DEPARTMENTS.map((department) => (
+              <Link
+                key={department.label}
+                to={department.href}
+                className="flex h-10 items-center border-b border-spet-line-2 pl-3 text-[14px] text-spet-ink-2"
+              >
+                {department.label}
               </Link>
-              <Link to="/account" onClick={() => setMobileMenuOpen(false)} className="flex flex-col items-center gap-1 text-xs text-gray-600 dark:text-lago-200">
-                <Heart className="w-5 h-5" /> Wishlist
+            ))}
+            <Link to="/categories" className="flex h-11 items-center border-b border-spet-line-2 font-medium text-spet-ink">
+              Categories
+            </Link>
+            <Link to="/b2b" className="flex h-11 items-center gap-2 border-b border-spet-line-2 font-medium text-spet-ink">
+              <Building2 className="h-4 w-4" aria-hidden="true" /> B2B Enterprise
+            </Link>
+            <Link to="/deals" className="flex h-11 items-center border-b border-spet-line-2 font-semibold text-spet-orange">
+              Deals
+            </Link>
+            <Link to="/enterprise/apple" className="flex h-11 items-center border-b border-spet-line-2 font-medium text-spet-ink">
+              Apple portal
+            </Link>
+
+            <div className="mt-4 flex items-center justify-around">
+              <Link to="/account" className="flex flex-col items-center gap-1 text-[11px] text-spet-ink-2">
+                <User className="h-5 w-5" aria-hidden="true" /> Account
               </Link>
-              <Link to="/cart"    onClick={() => setMobileMenuOpen(false)} className="flex flex-col items-center gap-1 text-xs text-gray-600 dark:text-lago-200 relative">
-                <ShoppingCart className="w-5 h-5" />
+              <Link to="/account" className="flex flex-col items-center gap-1 text-[11px] text-spet-ink-2">
+                <Heart className="h-5 w-5" aria-hidden="true" /> Wishlist
+              </Link>
+              <Link to="/cart" className="relative flex flex-col items-center gap-1 text-[11px] text-spet-ink-2">
+                <ShoppingCart className="h-5 w-5" aria-hidden="true" />
                 {totalItems > 0 && (
-                  <span className="absolute -top-1 -right-2 w-4 h-4 bg-lago-600 text-[9px] font-bold flex items-center justify-center rounded-full text-white">{totalItems}</span>
+                  <span className="absolute -top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-spet-orange text-[9px] font-bold text-white">
+                    {totalItems}
+                  </span>
                 )}
                 Cart
               </Link>
             </div>
-          </div>
+          </nav>
         </div>
       )}
     </header>
@@ -402,199 +459,231 @@ export function Navbar() {
 }
 
 // ── Footer ────────────────────────────────────────────────────────────────────
+const PAYMENT_LOGOS = [
+  { src: '/payment-logos/Visa_Brandmark_Blue_RGB_2021.png', alt: 'Visa' },
+  { src: '/payment-logos/mastercard_logo.png', alt: 'Mastercard' },
+  { src: '/payment-logos/pay_shap.png', alt: 'PayShap' },
+  { src: '/payment-logos/Apple_Pay_Logo_new.png', alt: 'Apple Pay' },
+];
+
+const SHOP_LINKS = [
+  { label: 'TVs & audio', to: '/shop/home?categoryHead=Televisions' },
+  { label: 'Laptops & computing', to: '/shop/home?categoryHead=Notebooks%20and%20Laptops' },
+  { label: 'Monitors', to: '/shop/home?categoryHead=Computer%20Monitors' },
+  { label: 'Gaming', to: '/shop/home?categoryHead=Console%20Gaming%20Units' },
+  { label: 'Networking', to: '/shop/home?categoryHead=Wireless%20Network%20Products' },
+  { label: 'Power backup', to: '/shop/home?categoryHead=Uninterruptible%20Power%20Supply' },
+  { label: 'Deals', to: '/deals' },
+];
+
+const DELIVERY_FACTS = [
+  'Free delivery over R2 500',
+  'R90 flat rate under R2 500',
+  '3–7 business days',
+  '7-day returns',
+  'Prices include 15% VAT',
+];
+
 export function Footer() {
-  const [legalDoc,      setLegalDoc]      = useState<LegalKey | null>(null);
+  const [legalDoc, setLegalDoc] = useState<LegalKey | null>(null);
   const [showScrollTop, setShowScrollTop] = useState(false);
 
   useEffect(() => {
-    const handleScroll = () => setShowScrollTop(window.scrollY > 400);
+    const handleScroll = () => setShowScrollTop(window.scrollY > 600);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const paymentLogos = [
-    { src: '/payment-logos/Visa_Brandmark_Blue_RGB_2021.png',  alt: 'Visa' },
-    { src: '/payment-logos/mastercard_logo.png',               alt: 'Mastercard' },
-    { src: '/payment-logos/Bob_Pay_Instant_EFT_new.png',       alt: 'Bob Pay Instant EFT' },
-    { src: '/payment-logos/Bob_Pay_Manual_EFT_new.png',        alt: 'Bob Pay Manual EFT' },
-    { src: '/payment-logos/Capitec pay logo.png',              alt: 'Capitec Pay' },
-    { src: '/payment-logos/absa_pay.png',                      alt: 'ABSA Pay' },
-    { src: '/payment-logos/pay_shap.png',                      alt: 'PayShap' },
-    { src: '/payment-logos/Apple_Pay_Logo_new.png',            alt: 'Apple Pay' },
-    { src: '/payment-logos/Google Pay.png',                    alt: 'Google Pay' },
-    { src: '/payment-logos/amex.png',                          alt: 'American Express' },
-  ];
-
   const legalLinks: [LegalKey, string][] = [
-    ['privacy'  as LegalKey, 'Privacy Policy'],
-    ['terms'    as LegalKey, 'Terms & Conditions'],
-    ['returns'  as LegalKey, 'Returns Policy'],
-    ['warranty' as LegalKey, 'Warranty Policy'],
-    ['faq'      as LegalKey, 'FAQ'],
+    ['privacy' as LegalKey, 'Privacy'],
+    ['terms' as LegalKey, 'Terms'],
+    ['returns' as LegalKey, 'Returns'],
+    ['warranty' as LegalKey, 'Warranty'],
+    ['faq' as LegalKey, 'FAQ'],
   ];
 
   return (
     <>
       <LegalModal docKey={legalDoc} onClose={() => setLegalDoc(null)} />
 
-      <footer className="w-full mt-auto">
-
-        {/* Top: dark section */}
-        <div className="bg-[#111111] pt-12 pb-10 md:pt-16 md:pb-14 border-t-4 border-lago-600">
-          <div className="container mx-auto px-4 md:px-6">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-10 md:gap-8">
-
-              {/* Col 1: Logo + tagline */}
-              <div className="md:col-span-1">
+      <footer className="mt-12 w-full bg-spet-navy text-white">
+        <div className="mx-auto max-w-[1400px] px-4 pb-8 pt-10 md:px-6 md:pt-12">
+          <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1fr_1fr]">
+            {/* Brand */}
+            <div>
+              <div className="inline-flex rounded-lg bg-white p-2">
                 <img
                   src="/logo-main.png"
                   alt="SPET Online"
-                  className="h-14 w-auto object-contain mb-4 bg-white rounded-lg p-2"
-                  onError={(e) => {
-                    const el = e.target as HTMLImageElement;
-                    el.style.display = 'none';
-                    const fallback = document.createElement('div');
-                    fallback.className = 'text-white font-black text-2xl mb-4';
-                    fallback.textContent = 'SPET Online';
-                    el.parentNode?.insertBefore(fallback, el);
+                  className="h-8 w-auto object-contain"
+                  onError={(event) => {
+                    (event.target as HTMLImageElement).style.display = 'none';
                   }}
                 />
-                <p className="text-gray-400 text-sm leading-relaxed mb-4">
-                  South Africa's trusted online electronics retailer. Quality products, competitive prices, delivered nationwide.
-                </p>
-                <div className="flex gap-3">
-                  <a href="https://facebook.com" target="_blank" rel="noreferrer"
-                    className="w-8 h-8 bg-gray-800 hover:bg-lago-600 rounded-full flex items-center justify-center transition-colors text-gray-400 hover:text-white text-xs font-bold">f</a>
-                  <a href="https://instagram.com" target="_blank" rel="noreferrer"
-                    className="w-8 h-8 bg-gray-800 hover:bg-lago-600 rounded-full flex items-center justify-center transition-colors text-gray-400 hover:text-white text-xs font-bold">in</a>
-                  <a href={`https://wa.me/${WHATSAPP_NUMBER}`} target="_blank" rel="noreferrer"
-                    className="w-8 h-8 bg-gray-800 hover:bg-green-600 rounded-full flex items-center justify-center transition-colors text-gray-400 hover:text-white text-xs font-bold">W</a>
-                </div>
               </div>
-
-              {/* Col 2: Shop links */}
-              <div>
-                <h4 className="text-white font-bold text-sm uppercase tracking-wider mb-4">Shop</h4>
-                <ul className="space-y-2.5">
-                  {[
-                    { label: 'Home & Entertainment', to: '/shop/home' },
-                    { label: 'Gaming & Computing',   to: '/shop/tech' },
-                    { label: 'Axiz Digital',         to: '/shop/axiz' },
-                    { label: 'Pinnacle',             to: '/shop/pinnacle' },
-                    { label: 'Deals & Clearance',    to: '/deals' },
-                    { label: 'All Categories',       to: '/categories' },
-                    { label: 'B2B / Business',       to: '/b2b' },
-                  ].map(({ label, to }) => (
-                    <li key={to}>
-                      <Link to={to} className="text-gray-400 hover:text-white text-sm transition-colors">{label}</Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              {/* Col 3: Quick links */}
-              <div>
-                <h4 className="text-white font-bold text-sm uppercase tracking-wider mb-4">Quick Links</h4>
-                <ul className="space-y-2.5">
-                  {[
-                    { label: 'My Account',  to: '/account' },
-                    { label: 'Track Order', to: '/account' },
-                    { label: 'Cart',        to: '/cart' },
-                    { label: 'Contact Us',  to: '/contact' },
-                  ].map(({ label, to }) => (
-                    <li key={label}>
-                      {to.startsWith('mailto') ? (
-                        <a href={to} className="text-gray-400 hover:text-white text-sm transition-colors">{label}</a>
-                      ) : (
-                        <Link to={to} className="text-gray-400 hover:text-white text-sm transition-colors">{label}</Link>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              {/* Col 4: Contact + B2B */}
-              <div>
-                <h4 className="text-white font-bold text-sm uppercase tracking-wider mb-4">Contact</h4>
-                <ul className="space-y-2.5 mb-6">
-                  <li className="flex items-center gap-2 text-gray-400 text-sm">
-                    <Phone className="w-4 h-4 text-lago-400 flex-shrink-0" />
-                    <a href="tel:0870881483" className="hover:text-white transition-colors">0870 881 483</a>
-                  </li>
-                  <li className="flex items-center gap-2 text-gray-400 text-sm">
-                    <Mail className="w-4 h-4 text-lago-400 flex-shrink-0" />
-                    <a href="mailto:sales@spetonline.co.za" className="hover:text-white transition-colors">sales@spetonline.co.za</a>
-                  </li>
-                  <li className="flex items-start gap-2 text-gray-400 text-sm">
-                    <MapPin className="w-4 h-4 text-lago-400 flex-shrink-0 mt-0.5" />
-                    <span>Nationwide delivery across South Africa</span>
-                  </li>
-                </ul>
-                <Link to="/enterprise" className="block bg-gray-800/50 hover:bg-gray-800 border border-gray-700 hover:border-lago-500 rounded-xl p-4 transition-colors">
-                  <p className="text-white font-semibold text-sm mb-1 flex items-center gap-2">
-                    <Building2 className="w-4 h-4 text-lago-400" /> Business & Schools
-                  </p>
-                  <p className="text-gray-400 text-xs leading-relaxed mb-2">
-                    Dedicated pricing, formal quotes, and credit terms for schools and businesses.
-                  </p>
-                  <span className="text-lago-400 text-xs font-semibold">
-                    Visit Enterprise Portal →
-                  </span>
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Section 2: Navy — payment logos */}
-        <div className="bg-[#1e3a5f] py-5">
-          <div className="container mx-auto px-4 md:px-6">
-            <div className="flex flex-col md:flex-row items-center justify-center gap-4">
-              <span className="text-white text-xs font-bold uppercase tracking-widest mr-4">Secured By</span>
-              <div className="flex flex-wrap justify-center gap-2">
-                {paymentLogos.map((logo) => (
-                  <div key={logo.alt} className="h-9 bg-white rounded-lg px-3 flex items-center justify-center border border-gray-200 shadow-sm">
-                    <img src={logo.src} alt={logo.alt} className="h-5 w-auto object-contain"
-                      onError={(e) => { (e.target as HTMLImageElement).style.display='none'; }} />
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Section 3: White — legal links + copyright */}
-        <div className="bg-white py-5 border-t border-gray-200">
-          <div className="container mx-auto px-4 md:px-6">
-            <div className="flex flex-col md:flex-row items-center justify-between gap-3">
-              <p className="text-gray-500 text-xs text-center md:text-left">
-                © {new Date().getFullYear()} Sekkati Petroleum Energy and Technology (Pty) Ltd · Trading as SPET Online · All rights reserved
+              <p className="mt-4 max-w-[280px] text-[13px] leading-relaxed text-white/60">
+                Electronics retailer in Pretoria. Delivered nationwide.
               </p>
-              <div className="flex flex-wrap justify-center gap-4">
-                {legalLinks.map(([key, label]) => (
-                  <button
-                    key={key}
-                    onClick={() => setLegalDoc(key)}
-                    className="text-gray-500 hover:text-gray-800 text-xs transition-colors"
-                  >
-                    {label}
-                  </button>
-                ))}
+
+              <div className="mt-4 space-y-2 text-[13px] text-white/70">
+                <a href="tel:0870881483" className="flex items-center gap-2 transition-colors hover:text-white">
+                  <Phone className="h-[14px] w-[14px] text-white/40" aria-hidden="true" /> 0870 881 483
+                </a>
+                <a href="mailto:sales@spetonline.co.za" className="flex items-center gap-2 transition-colors hover:text-white">
+                  <Mail className="h-[14px] w-[14px] text-white/40" aria-hidden="true" /> sales@spetonline.co.za
+                </a>
+                <a href={`https://wa.me/${WHATSAPP_NUMBER}`} target="_blank" rel="noreferrer" className="flex items-center gap-2 transition-colors hover:text-white">
+                  <MessageCircle className="h-[14px] w-[14px] text-white/40" aria-hidden="true" /> WhatsApp +27 74 116 4295
+                </a>
+                <p className="flex items-center gap-2">
+                  <Clock className="h-[14px] w-[14px] text-white/40" aria-hidden="true" /> Mon–Fri 08:00–17:00
+                </p>
               </div>
+
+              <div className="mt-4 flex gap-2.5">
+                <a
+                  href="https://facebook.com"
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label="SPET Online on Facebook"
+                  className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-white/70 transition-colors hover:bg-spet-blue hover:text-white"
+                >
+                  <Facebook className="h-4 w-4" aria-hidden="true" />
+                </a>
+                <a
+                  href="https://instagram.com"
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label="SPET Online on Instagram"
+                  className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-white/70 transition-colors hover:bg-spet-blue hover:text-white"
+                >
+                  <Instagram className="h-4 w-4" aria-hidden="true" />
+                </a>
+                <a
+                  href={`https://wa.me/${WHATSAPP_NUMBER}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label="Chat with SPET Online on WhatsApp"
+                  className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-white/70 transition-colors hover:bg-green-600 hover:text-white"
+                >
+                  <MessageCircle className="h-4 w-4" aria-hidden="true" />
+                </a>
+              </div>
+            </div>
+
+            {/* Shop */}
+            <nav aria-label="Shop links">
+              <h3 className="text-[12px] font-semibold uppercase tracking-[0.1em] text-white/70">Shop</h3>
+              <ul className="mt-3 space-y-2 text-[13px] text-white/70">
+                {SHOP_LINKS.map((link) => (
+                  <li key={link.label}>
+                    <Link to={link.to} className="transition-colors hover:text-white">
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+
+            {/* Support */}
+            <nav aria-label="Support links">
+              <h3 className="text-[12px] font-semibold uppercase tracking-[0.1em] text-white/70">Support</h3>
+              <ul className="mt-3 space-y-2 text-[13px] text-white/70">
+                <li>
+                  <button type="button" onClick={() => setLegalDoc('faq' as LegalKey)} className="transition-colors hover:text-white">
+                    Delivery and FAQ
+                  </button>
+                </li>
+                <li>
+                  <button type="button" onClick={() => setLegalDoc('returns' as LegalKey)} className="transition-colors hover:text-white">
+                    Returns
+                  </button>
+                </li>
+                <li>
+                  <button type="button" onClick={() => setLegalDoc('warranty' as LegalKey)} className="transition-colors hover:text-white">
+                    Warranty
+                  </button>
+                </li>
+                <li>
+                  <Link to="/account" className="transition-colors hover:text-white">Track order</Link>
+                </li>
+                <li>
+                  <Link to="/contact" className="transition-colors hover:text-white">Contact us</Link>
+                </li>
+              </ul>
+            </nav>
+
+            {/* Company */}
+            <nav aria-label="Company links">
+              <h3 className="text-[12px] font-semibold uppercase tracking-[0.1em] text-white/70">Company</h3>
+              <ul className="mt-3 space-y-2 text-[13px] text-white/70">
+                <li><Link to="/contact" className="transition-colors hover:text-white">Contact</Link></li>
+                <li><Link to="/b2b" className="transition-colors hover:text-white">Business &amp; schools</Link></li>
+                <li><Link to="/enterprise/apple" className="transition-colors hover:text-white">Apple portal</Link></li>
+                <li><Link to="/account" className="transition-colors hover:text-white">Account</Link></li>
+              </ul>
+            </nav>
+
+            {/* Delivery */}
+            <div>
+              <h3 className="text-[12px] font-semibold uppercase tracking-[0.1em] text-white/70">Delivery</h3>
+              <ul className="mt-3 space-y-2 text-[13px] text-white/70">
+                {DELIVERY_FACTS.map((fact) => (
+                  <li key={fact}>{fact}</li>
+                ))}
+              </ul>
             </div>
           </div>
         </div>
 
+        {/* Payments + legal */}
+        <div className="border-t border-white/10">
+          <div className="mx-auto flex max-w-[1400px] flex-col gap-4 px-4 py-5 md:flex-row md:items-center md:justify-between md:px-6">
+            <div className="flex flex-wrap items-center gap-3">
+              <span className="text-[12px] text-white/70">Secure payments</span>
+              {PAYMENT_LOGOS.map((logo) => (
+                <span key={logo.alt} className="flex h-8 items-center justify-center rounded bg-white px-2.5">
+                  <img
+                    src={logo.src}
+                    alt={logo.alt}
+                    className="h-4 w-auto object-contain"
+                    loading="lazy"
+                    onError={(event) => {
+                      (event.target as HTMLImageElement).style.display = 'none';
+                    }}
+                  />
+                </span>
+              ))}
+            </div>
+
+            <p className="text-[12px] text-white/70">
+              © {new Date().getFullYear()} Sekkati Petroleum Energy and Technology (Pty) Ltd, trading as SPET Online.
+            </p>
+
+            <div className="flex flex-wrap gap-4">
+              {legalLinks.map(([key, label]) => (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setLegalDoc(key)}
+                  className="text-[12px] text-white/50 transition-colors hover:text-white"
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
       </footer>
 
-      {/* Scroll to top */}
       {showScrollTop && (
         <button
+          type="button"
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-          className="fixed bottom-6 right-6 z-50 w-10 h-10 bg-lago-600 hover:bg-lago-700 text-white rounded-full flex items-center justify-center shadow-lg transition-all"
+          className="fixed bottom-5 left-5 z-40 flex h-10 w-10 items-center justify-center rounded-full border border-spet-line bg-spet-surface text-spet-ink shadow-lg transition-colors hover:bg-spet-surface-2"
           aria-label="Scroll to top"
         >
-          ↑
+          <ArrowRight className="h-4 w-4 -rotate-90" aria-hidden="true" />
         </button>
       )}
     </>

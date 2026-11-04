@@ -81,7 +81,7 @@ export function AIChatWidget() {
       <button
         onClick={() => setIsOpen(true)}
         aria-label="Open shopping assistant"
-        className={`fixed bottom-24 right-5 w-14 h-14 bg-lago-600 text-white rounded-full shadow-[0_0_20px_rgba(5,125,205,0.4)] flex items-center justify-center hover:bg-lago-500 transition-transform hover:scale-105 z-40 ${isOpen ? 'hidden' : 'flex'}`}
+        className={`fixed bottom-24 right-5 w-14 h-14 bg-spet-blue text-white rounded-full shadow-[0_0_20px_rgba(5,125,205,0.4)] flex items-center justify-center hover:bg-spet-blue-dark transition-transform hover:scale-105 z-40 ${isOpen ? 'hidden' : 'flex'}`}
       >
         <Bot className="w-6 h-6" />
         <span className="absolute -top-1 -right-1 w-3 h-3 bg-accent-orange rounded-full border-2 border-[#0a141d]"></span>
@@ -93,24 +93,24 @@ export function AIChatWidget() {
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            className="fixed bottom-6 right-4 left-4 sm:left-auto sm:right-6 sm:w-[400px] h-[500px] max-h-[80vh] bg-lago-900 border border-lago-700 rounded-2xl shadow-2xl flex flex-col z-[60] overflow-hidden"
+            className="fixed bottom-6 right-4 left-4 sm:left-auto sm:right-6 sm:w-[400px] h-[500px] max-h-[80vh] bg-spet-navy border border-white/15 rounded-2xl shadow-2xl flex flex-col z-[60] overflow-hidden"
           >
             {/* Header */}
-            <div className="bg-[#0a141d] p-4 border-b border-lago-800 flex justify-between items-center relative overflow-hidden">
-               <div className="absolute inset-0 bg-gradient-to-r from-lago-600/10 to-transparent"></div>
+            <div className="bg-spet-navy p-4 border-b border-white/15 flex justify-between items-center relative overflow-hidden">
+               <div className="absolute inset-0 bg-linear-to-r from-spet-blue/10 to-transparent"></div>
                <div className="flex items-center gap-3 relative z-10">
-                 <div className="w-10 h-10 bg-lago-800 border border-lago-600 rounded-full flex items-center justify-center">
+                 <div className="w-10 h-10 bg-white/10 border border-white/25 rounded-full flex items-center justify-center">
                     <Sparkles className="w-5 h-5 text-accent-cyan" />
                  </div>
                  <div>
                    <h3 className="text-white font-bold text-sm">SPET Shopping Assistant</h3>
                    <div className="flex items-center gap-1.5 mt-0.5">
                      <span className="w-1.5 h-1.5 rounded-full bg-accent-cyan"></span>
-                     <span className="text-[10px] text-lago-300 uppercase tracking-wider font-bold">AI · Online</span>
+                     <span className="text-[10px] text-white/70 uppercase tracking-wider font-bold">AI assistant</span>
                    </div>
                  </div>
                </div>
-               <button onClick={() => setIsOpen(false)} aria-label="Close" className="text-lago-400 hover:text-white relative z-10">
+               <button onClick={() => setIsOpen(false)} aria-label="Close" className="text-white/70 hover:text-white relative z-10">
                  <X className="w-5 h-5" />
                </button>
             </div>
@@ -121,8 +121,8 @@ export function AIChatWidget() {
                  <div key={i} className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
                    <div className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed whitespace-pre-line ${
                      msg.role === 'user'
-                       ? 'bg-lago-600 text-white rounded-br-sm'
-                       : 'bg-lago-800 text-white border border-lago-700 rounded-bl-sm'
+                       ? 'bg-spet-blue text-white rounded-br-sm'
+                       : 'bg-white/10 text-white border border-white/15 rounded-bl-sm'
                    }`}>
                      {msg.text}
                    </div>
@@ -133,7 +133,7 @@ export function AIChatWidget() {
                            key={p.url}
                            to={p.url}
                            onClick={() => setIsOpen(false)}
-                           className="block rounded-xl border border-lago-700 bg-lago-900 px-3 py-2 hover:border-lago-500 transition-colors"
+                           className="block rounded-xl border border-white/15 bg-spet-navy px-3 py-2 hover:border-spet-blue transition-colors"
                          >
                            <span className="block text-xs font-semibold text-white line-clamp-2">{p.name}</span>
                            {typeof p.price === 'number' && (
@@ -147,10 +147,10 @@ export function AIChatWidget() {
                ))}
                {isTyping && (
                  <div className="flex justify-start">
-                   <div className="bg-lago-800 border border-lago-700 rounded-2xl rounded-bl-sm px-4 py-4 flex gap-1.5">
-                     <span className="w-2 h-2 rounded-full bg-lago-500 animate-bounce"></span>
-                     <span className="w-2 h-2 rounded-full bg-lago-500 animate-bounce" style={{ animationDelay: '150ms' }}></span>
-                     <span className="w-2 h-2 rounded-full bg-lago-500 animate-bounce" style={{ animationDelay: '300ms' }}></span>
+                   <div className="bg-white/10 border border-white/15 rounded-2xl rounded-bl-sm px-4 py-4 flex gap-1.5">
+                     <span className="w-2 h-2 rounded-full bg-white/60 animate-bounce"></span>
+                     <span className="w-2 h-2 rounded-full bg-white/60 animate-bounce" style={{ animationDelay: '150ms' }}></span>
+                     <span className="w-2 h-2 rounded-full bg-white/60 animate-bounce" style={{ animationDelay: '300ms' }}></span>
                    </div>
                  </div>
                )}
@@ -158,20 +158,20 @@ export function AIChatWidget() {
             </div>
 
             {/* Input Form */}
-            <form onSubmit={handleSubmit} className="p-4 bg-[#0a141d] border-t border-lago-800 flex gap-2">
+            <form onSubmit={handleSubmit} className="p-4 bg-spet-navy border-t border-white/15 flex gap-2">
                <input
                  type="text"
                  value={input}
                  onChange={(e) => setInput(e.target.value)}
                  maxLength={1000}
                  placeholder="Ask about a product..."
-                 className="flex-grow bg-lago-900 border border-lago-700 rounded-full px-4 text-sm text-white focus:outline-none focus:border-lago-500 placeholder:text-lago-500"
+                 className="flex-grow bg-spet-navy border border-white/15 rounded-full px-4 text-sm text-white focus:outline-hidden focus:border-spet-blue placeholder:text-white/50"
                />
                <button
                  type="submit"
                  disabled={!input.trim() || isTyping}
                  aria-label="Send"
-                 className="w-10 h-10 rounded-full bg-lago-600 flex items-center justify-center text-white flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-lago-500 transition-colors"
+                 className="w-10 h-10 rounded-full bg-spet-blue flex items-center justify-center text-white shrink-0 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-spet-blue-dark transition-colors"
                >
                  <Send className="w-4 h-4 ml-0.5" />
                </button>

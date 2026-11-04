@@ -1,16 +1,19 @@
-// @ts-nocheck
-import React from 'react';
-import { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { CheckCircle, Lock, ChevronDown, AlertTriangle, ArrowLeft, Mail } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { AlertTriangle, Lock, Mail } from 'lucide-react';
 import { useCartStore } from '../lib/cartStore';
 import { useAuth } from '../lib/AuthContext';
 import { useAddresses } from '../lib/api';
+import type { LegalKey } from '../lib/legalContent';
+import { formatMoney } from '../lib/productDisplay';
 import { supabase } from '../lib/supabase';
-import { SafeImage } from '../components/SafeImage';
 import { useSEO } from '../lib/useSEO';
+import { LegalModal } from '../components/LegalModal';
+import { SafeImage } from '../components/SafeImage';
+import { Button, ButtonLink, CheckboxField, PageShell, SelectField, Skeleton, TextField, panelStyles } from '../components/ui';
 
-const SA_PROVINCES = ['Eastern Cape','Free State','Gauteng','KwaZulu-Natal','Limpopo','Mpumalanga','Northern Cape','North West','Western Cape'];
+const SA_PROVINCES = ['Eastern Cape', 'Free State', 'Gauteng', 'KwaZulu-Natal', 'Limpopo', 'Mpumalanga', 'Northern Cape', 'North West', 'Western Cape'];
+const PROVINCE_OPTIONS = SA_PROVINCES.map((province) => ({ value: province, label: province }));
 
 const PAYMENT_LOGOS = [
   { src: '/payment-logos/Visa_Brandmark_Blue_RGB_2021.png', alt: 'Visa' },
@@ -31,7 +34,7 @@ export function CheckoutPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, profile, loading: authLoading, isEmailVerified } = useAuth();
-  const { items, subtotal, clearCart } = useCartStore();
+  const { items, subtotal, pendingOrder, setPendingOrder } = useCartStore();
   const { addresses, saveAddress } = useAddresses(user?.id ?? null);
 
   const promoDiscount = location.state?.promoDiscount ?? 0;
@@ -46,7 +49,7 @@ export function CheckoutPage() {
   const [shippingLoading, setShippingLoading] = useState(true);
   const total = sub - discount + shipping;
 
-  // ✅ AUTH GATE: redirect to login if not signed in
+  // AUTH GATE: redirect to login if not signed in
   useEffect(() => {
     if (!authLoading && !user) {
       navigate('/auth?redirect=/checkout', { replace: true });
@@ -66,6 +69,17 @@ export function CheckoutPage() {
   const [placing, setPlacing] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [orderError, setOrderError] = useState<string | null>(null);
+  const [legalDoc, setLegalDoc] = useState<LegalKey | null>(null);
+  const errorSummaryRef = useRef<HTMLDivElement>(null);
+  const [submitAttempt, setSubmitAttempt] = useState(0);
+
+  // The button stays locked during the PayFast redirect, so unlock it if the
+  // browser restores this page from its back/forward cache.
+  useEffect(() => {
+    const unlock = (event: PageTransitionEvent) => { if (event.persisted) setPlacing(false); };
+    window.addEventListener('pageshow', unlock);
+    return () => window.removeEventListener('pageshow', unlock);
+  }, []);
 
   const [form, setForm] = useState({
     first_name: profile?.first_name ?? '',
@@ -106,14 +120,18 @@ export function CheckoutPage() {
     return () => { cancelled = true; clearTimeout(timer); };
   }, [items, sub, discount, activePostalCode]);
 
+  useEffect(() => {
+    if (submitAttempt > 0 && Object.keys(errors).length > 0) errorSummaryRef.current?.focus();
+    // Only move focus when a submit fails, not while errors clear during typing.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [submitAttempt]);
+
   function field(key: keyof typeof form) {
     return (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
       setForm((f) => ({ ...f, [key]: e.target.type === 'checkbox' ? (e.target as HTMLInputElement).checked : e.target.value }));
       setErrors((prev) => { const next = { ...prev }; delete next[key]; return next; });
     };
   }
-
-  const inputClass = (fieldName?: string) => `w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-lago-800 border ${fieldName && errors[fieldName] ? 'border-red-500 dark:border-red-500' : 'border-gray-200 dark:border-lago-700'} text-gray-900 dark:text-white text-sm focus:outline-none focus:border-lago-500 transition-colors`;
 
   function validateForm(): Record<string, string> {
     const errs: Record<string, string> = {};
@@ -142,8 +160,7 @@ export function CheckoutPage() {
     const validationErrors = validateForm();
     setErrors(validationErrors);
     if (Object.keys(validationErrors).length > 0) {
-      const firstErrorField = document.querySelector('[data-error="true"]');
-      firstErrorField?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      setSubmitAttempt((attempt) => attempt + 1);
       return;
     }
 
@@ -188,13 +205,14 @@ export function CheckoutPage() {
           shippingAddress,
           promoCode,
           promoId,
+          previousOrderId: pendingOrder?.id ?? null,
         }),
       });
 
       const result = await response.json();
-      setPlacing(false);
 
       if (!response.ok || !result.success) {
+        setPlacing(false);
         setOrderError(result.error || 'Something went wrong. Please try again.');
         return;
       }
@@ -214,8 +232,8 @@ export function CheckoutPage() {
         pfForm.appendChild(input);
       }
 
-      // Clear cart before redirect so it doesn't persist on return
-      clearCart();
+      // The cart stays full until the payment succeeds, so a cancelled payment can be retried.
+      setPendingOrder({ id: result.orderId, promoDiscount: discount, promoCode, promoId });
 
       document.body.appendChild(pfForm);
       pfForm.submit();
@@ -226,257 +244,226 @@ export function CheckoutPage() {
     }
   }
 
-  // ✅ Show nothing while auth is loading
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-[#0a141d] pt-32 flex items-center justify-center">
-        <div className="text-gray-500 dark:text-lago-400">Loading...</div>
-      </div>
+      <PageShell title="Checkout">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3" aria-busy="true">
+          <Skeleton className="h-80 rounded-2xl lg:col-span-2" />
+          <Skeleton className="h-80 rounded-2xl" />
+        </div>
+      </PageShell>
     );
   }
 
   if (!user) return null;
 
-  // ✅ EMAIL VERIFICATION GATE
+  // EMAIL VERIFICATION GATE
   if (!isEmailVerified) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-[#0a141d] pt-32 md:pt-36 flex items-center justify-center px-4 transition-colors duration-300">
-        <div className="w-full max-w-md bg-white dark:bg-lago-900 border border-gray-200 dark:border-lago-800 rounded-3xl shadow-xl p-10 text-center">
-          <div className="w-16 h-16 bg-yellow-50 dark:bg-yellow-900/20 rounded-full flex items-center justify-center mx-auto mb-5">
-            <Mail className="w-8 h-8 text-yellow-500" />
-          </div>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">Verify Your Email</h2>
-          <p className="text-gray-500 dark:text-lago-400 text-sm mb-6 leading-relaxed">
-            Before you can checkout, please verify your email address. We sent a verification link to{' '}
-            <span className="font-semibold text-gray-800 dark:text-white">{user.email}</span>.
-          </p>
-          <p className="text-gray-400 dark:text-lago-500 text-xs mb-6">
-            Check your inbox (and spam folder). Once verified, refresh this page.
-          </p>
-          <div className="flex flex-col gap-3">
-            <button
-              onClick={() => window.location.reload()}
-              className="w-full py-3 rounded-xl bg-lago-600 hover:bg-lago-700 text-white font-bold transition-colors"
-            >
-              I've Verified — Continue
-            </button>
-            <button
-              onClick={() => navigate('/cart')}
-              className="w-full py-3 rounded-xl bg-gray-100 dark:bg-lago-800 hover:bg-gray-200 dark:hover:bg-lago-700 text-gray-700 dark:text-lago-200 font-semibold transition-colors text-sm"
-            >
-              ← Back to Cart
-            </button>
+      <PageShell>
+        <div className="flex min-h-[52vh] items-center justify-center py-6">
+          <div className={`${panelStyles} w-full max-w-md p-6 text-center md:p-10`}>
+            <Mail className="mx-auto h-10 w-10 text-spet-blue" aria-hidden="true" />
+            <h1 className="mt-4 font-display text-[26px] font-semibold tracking-tight text-spet-ink">Verify your email</h1>
+            <p className="mt-2 text-[14px] leading-relaxed text-spet-ink-2">
+              Before you can check out, please verify your email address. We sent a verification link to{' '}
+              <span className="font-semibold text-spet-ink">{user.email}</span>.
+            </p>
+            <p className="mt-3 text-[13px] text-spet-muted">Check your inbox and spam folder. Once verified, refresh this page.</p>
+            <div className="mt-6 flex flex-col gap-3">
+              <Button onClick={() => window.location.reload()}>I’ve verified, continue</Button>
+              <ButtonLink to="/cart" variant="secondary">Back to cart</ButtonLink>
+            </div>
           </div>
         </div>
-      </div>
+      </PageShell>
     );
   }
 
+  const errorEntries = Object.entries(errors);
+  const showNewAddress = !useExisting || addresses.length === 0;
+
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#0a141d] pt-32 md:pt-36 transition-colors duration-300">
-      <div className="container mx-auto px-4 md:px-6 py-8">
-        <button
-          onClick={() => navigate('/cart')}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white dark:bg-lago-900 border border-gray-200 dark:border-lago-700 text-sm font-semibold text-gray-600 dark:text-lago-200 hover:border-lago-500 hover:text-lago-600 dark:hover:text-white transition-all shadow-sm mb-4"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Back to Cart
-        </button>
-        <h1 className="text-3xl md:text-4xl font-display font-bold text-gray-900 dark:text-white mb-2">Checkout</h1>
-        <p className="text-gray-500 dark:text-lago-400 text-sm mb-8 flex items-center gap-1.5">
-          <Lock className="w-3.5 h-3.5" /> Secure, encrypted checkout
-        </p>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left: Shipping */}
-          <div className="lg:col-span-2 space-y-6">
-
-            {/* Existing addresses */}
-            {addresses.length > 0 && (
-              <div className="bg-white dark:bg-lago-900 border border-gray-200 dark:border-lago-800 rounded-2xl p-6 shadow-sm">
-                <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Saved Addresses</h2>
-                <div className="space-y-3 mb-4">
-                  {addresses.map((addr) => (
-                    <label key={addr.id} className={`flex items-start gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${selectedAddr === addr.id && useExisting ? 'border-lago-500 bg-lago-50 dark:bg-lago-800/50' : 'border-gray-200 dark:border-lago-800 hover:border-lago-300'}`}>
-                      <input type="radio" name="addr" checked={selectedAddr === addr.id && useExisting} onChange={() => { setSelectedAddr(addr.id); setUseExisting(true); }} className="mt-1 text-lago-600" />
-                      <div>
-                        <p className="font-semibold text-sm text-gray-900 dark:text-white">{addr.full_name} <span className="font-normal text-gray-500 dark:text-lago-400">({addr.label})</span></p>
-                        <p className="text-sm text-gray-600 dark:text-lago-200">{addr.address_line1}{addr.address_line2 ? `, ${addr.address_line2}` : ''}</p>
-                        <p className="text-sm text-gray-600 dark:text-lago-200">{addr.city}, {addr.province}, {addr.postal_code}</p>
-                      </div>
+    <PageShell
+      breadcrumbs={[{ label: 'Home', to: '/' }, { label: 'Cart', to: '/cart' }, { label: 'Checkout' }]}
+      title="Checkout"
+      description="Secure, encrypted checkout."
+    >
+      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-3">
+        <div className="space-y-6 lg:col-span-2">
+          {addresses.length > 0 && (
+            <fieldset className={`${panelStyles} p-5 md:p-6`}>
+              <legend className="float-left mb-4 w-full font-display text-[20px] font-semibold text-spet-ink">Saved addresses</legend>
+              <div className="clear-both space-y-3">
+                {addresses.map((addr) => {
+                  const checked = selectedAddr === addr.id && useExisting;
+                  return (
+                    <label
+                      key={addr.id}
+                      className={`flex cursor-pointer items-start gap-3 rounded-xl border p-4 transition-colors ${
+                        checked ? 'border-spet-blue bg-spet-tint' : 'border-spet-line hover:border-spet-blue'
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="addr"
+                        checked={checked}
+                        onChange={() => { setSelectedAddr(addr.id); setUseExisting(true); setErrors({}); }}
+                        className="mt-0.5 h-4 w-4 accent-spet-blue"
+                      />
+                      <span className="min-w-0 text-[13px] leading-relaxed text-spet-ink-2">
+                        <span className="block font-semibold text-spet-ink">
+                          {addr.full_name} {addr.label && <span className="font-normal text-spet-muted">({addr.label})</span>}
+                        </span>
+                        <span className="block">{addr.address_line1}{addr.address_line2 ? `, ${addr.address_line2}` : ''}</span>
+                        <span className="block">{addr.city}, {addr.province}, {addr.postal_code}</span>
+                      </span>
                     </label>
-                  ))}
-                  <label className={`flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${!useExisting ? 'border-lago-500 bg-lago-50 dark:bg-lago-800/50' : 'border-gray-200 dark:border-lago-800 hover:border-lago-300'}`}>
-                    <input type="radio" name="addr" checked={!useExisting} onChange={() => setUseExisting(false)} className="text-lago-600" />
-                    <span className="text-sm font-semibold text-gray-900 dark:text-white">+ Use a different address</span>
-                  </label>
-                </div>
+                  );
+                })}
+                <label
+                  className={`flex min-h-11 cursor-pointer items-center gap-3 rounded-xl border p-4 transition-colors ${
+                    !useExisting ? 'border-spet-blue bg-spet-tint' : 'border-spet-line hover:border-spet-blue'
+                  }`}
+                >
+                  <input type="radio" name="addr" checked={!useExisting} onChange={() => setUseExisting(false)} className="h-4 w-4 accent-spet-blue" />
+                  <span className="text-[13px] font-semibold text-spet-ink">Use a different address</span>
+                </label>
               </div>
-            )}
+            </fieldset>
+          )}
 
-            {/* New address form */}
-            {(!useExisting || addresses.length === 0) && (
-              <div className="bg-white dark:bg-lago-900 border border-gray-200 dark:border-lago-800 rounded-2xl p-6 shadow-sm">
-                <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-5">Shipping Address</h2>
+          {showNewAddress && (
+            <section aria-labelledby="shipping-title" className={`${panelStyles} p-5 md:p-6`}>
+              <h2 id="shipping-title" className="mb-4 font-display text-[20px] font-semibold text-spet-ink">Shipping address</h2>
 
-                {Object.keys(errors).length > 0 && (
-                  <div className="mb-5 p-4 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 flex items-start gap-3">
-                    <AlertTriangle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <p className="text-sm font-bold text-red-700 dark:text-red-400">Please fix the errors below</p>
-                      <p className="text-xs text-red-600 dark:text-red-400/80 mt-1">{Object.keys(errors).length} field{Object.keys(errors).length > 1 ? 's' : ''} need{Object.keys(errors).length === 1 ? 's' : ''} your attention</p>
-                    </div>
-                  </div>
-                )}
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-bold text-gray-500 dark:text-lago-400 uppercase tracking-wide mb-1.5">First Name *</label>
-                    <input value={form.first_name} onChange={field('first_name')} data-error={!!errors.first_name || undefined} className={inputClass('first_name')} placeholder="First name" />
-                    {errors.first_name && <p className="mt-1.5 text-xs font-semibold text-red-500 dark:text-red-400">{errors.first_name}</p>}
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-gray-500 dark:text-lago-400 uppercase tracking-wide mb-1.5">Last Name *</label>
-                    <input value={form.last_name} onChange={field('last_name')} data-error={!!errors.last_name || undefined} className={inputClass('last_name')} placeholder="Last name" />
-                    {errors.last_name && <p className="mt-1.5 text-xs font-semibold text-red-500 dark:text-red-400">{errors.last_name}</p>}
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-gray-500 dark:text-lago-400 uppercase tracking-wide mb-1.5">Phone Number *</label>
-                    <input value={form.phone} onChange={field('phone')} type="tel" data-error={!!errors.phone || undefined} className={inputClass('phone')} placeholder="e.g. 082 000 0000" />
-                    {errors.phone && <p className="mt-1.5 text-xs font-semibold text-red-500 dark:text-red-400">{errors.phone}</p>}
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-gray-500 dark:text-lago-400 uppercase tracking-wide mb-1.5">Province *</label>
-                    <div className="relative">
-                      <select value={form.province} onChange={field('province')} data-error={!!errors.province || undefined} className={inputClass('province') + ' appearance-none pr-9 cursor-pointer'}>
-                        {SA_PROVINCES.map((p) => <option key={p} value={p}>{p}</option>)}
-                      </select>
-                      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-                    </div>
-                    {errors.province && <p className="mt-1.5 text-xs font-semibold text-red-500 dark:text-red-400">{errors.province}</p>}
-                  </div>
-                  <div className="md:col-span-2">
-                    <label className="block text-xs font-bold text-gray-500 dark:text-lago-400 uppercase tracking-wide mb-1.5">Address Line 1 *</label>
-                    <input value={form.address_line1} onChange={field('address_line1')} data-error={!!errors.address_line1 || undefined} className={inputClass('address_line1')} placeholder="Street address, house/unit number" />
-                    {errors.address_line1 && <p className="mt-1.5 text-xs font-semibold text-red-500 dark:text-red-400">{errors.address_line1}</p>}
-                  </div>
-                  <div className="md:col-span-2">
-                    <label className="block text-xs font-bold text-gray-500 dark:text-lago-400 uppercase tracking-wide mb-1.5">Address Line 2</label>
-                    <input value={form.address_line2} onChange={field('address_line2')} className={inputClass()} placeholder="Apartment, complex, suburb (optional)" />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-gray-500 dark:text-lago-400 uppercase tracking-wide mb-1.5">City / Town *</label>
-                    <input value={form.city} onChange={field('city')} data-error={!!errors.city || undefined} className={inputClass('city')} placeholder="e.g. Johannesburg" />
-                    {errors.city && <p className="mt-1.5 text-xs font-semibold text-red-500 dark:text-red-400">{errors.city}</p>}
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-gray-500 dark:text-lago-400 uppercase tracking-wide mb-1.5">Postal Code *</label>
-                    <input value={form.postal_code} onChange={field('postal_code')} data-error={!!errors.postal_code || undefined} className={inputClass('postal_code')} placeholder="e.g. 2196" maxLength={4} />
-                    {errors.postal_code && <p className="mt-1.5 text-xs font-semibold text-red-500 dark:text-red-400">{errors.postal_code}</p>}
-                  </div>
-                  {user && (
-                    <div className="md:col-span-2">
-                      <label className="flex items-center gap-2.5 cursor-pointer">
-                        <input type="checkbox" checked={form.save_address} onChange={field('save_address')} className="w-4 h-4 rounded text-lago-600 border-gray-300" />
-                        <span className="text-sm text-gray-700 dark:text-lago-100 font-medium">Save this address for future orders</span>
-                      </label>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Payment method section */}
-            <div className="bg-white dark:bg-lago-900 border border-gray-200 dark:border-lago-800 rounded-2xl p-6 shadow-sm">
-              <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                <Lock className="w-4 h-4 text-green-500" /> Payment Method
-              </h2>
-              <p className="text-sm text-gray-600 dark:text-lago-200 mb-5">
-                Select your preferred payment method at the secure payment gateway. We support:
-              </p>
-              <div className="flex flex-wrap gap-2.5 mb-4">
-                {PAYMENT_LOGOS.map((logo) => (
-                  <div key={logo.alt} className="h-9 bg-gray-50 dark:bg-white rounded-lg px-3 flex items-center justify-center border border-gray-200 shadow-sm">
-                    <img src={logo.src} alt={logo.alt} className="h-5 w-auto object-contain"
-                      onError={(e) => { (e.target as HTMLImageElement).style.display='none'; }} />
-                  </div>
-                ))}
-              </div>
-              <p className="text-xs text-gray-500 dark:text-lago-400">
-                🔒 All transactions are processed securely via <strong>PayFast</strong>. SPET Online never stores your card details.
-              </p>
-            </div>
-          </div>
-
-          {/* Right: Order summary */}
-          <div>
-            <div className="bg-white dark:bg-lago-900 border border-gray-200 dark:border-lago-800 rounded-2xl p-6 shadow-sm sticky top-36">
-              <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-5">Order Summary</h2>
-
-              {/* Items */}
-              <div className="space-y-3 mb-5 max-h-60 overflow-y-auto">
-                {items.map((item) => (
-                  <div key={item.product_id} className="flex items-center gap-3 text-sm">
-                    <div className="w-12 h-12 bg-gray-50 dark:bg-lago-800 rounded-lg flex-shrink-0 border border-gray-200 dark:border-lago-700 overflow-hidden">
-                      <SafeImage src={item.image} brand={item.brand} alt={item.name} className="w-full h-full object-contain p-1" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-gray-900 dark:text-white line-clamp-1 text-xs">{item.name}</p>
-                      <p className="text-gray-400 dark:text-lago-400 text-xs">Qty: {item.qty}</p>
-                    </div>
-                    <p className="font-bold text-gray-900 dark:text-white text-xs flex-shrink-0">R {((Number(item.price) || 0) * (Number(item.qty) || 1)).toLocaleString('en-ZA', { minimumFractionDigits: 2 })}</p>
-                  </div>
-                ))}
-              </div>
-
-              {/* Totals */}
-              <div className="border-t border-gray-200 dark:border-lago-800 pt-4 space-y-2.5 text-sm">
-                <div className="flex justify-between text-gray-600 dark:text-lago-200">
-                  <span>Subtotal</span>
-                  <span>R {sub.toLocaleString('en-ZA', { minimumFractionDigits: 2 })}</span>
-                </div>
-                {discount > 0 && (
-                  <div className="flex justify-between text-green-600 dark:text-green-400">
-                    <span>Discount</span>
-                    <span>−R {discount.toLocaleString('en-ZA', { minimumFractionDigits: 2 })}</span>
-                  </div>
-                )}
-                <div className="flex justify-between text-gray-600 dark:text-lago-200">
-                  <span>Shipping</span>
-                  <span>
-                    {shippingLoading ? 'Calculating…' : shipping === 0 ? <span className="text-green-600 dark:text-green-400 font-semibold">FREE</span> : `R ${shipping.toFixed(2)}`}
-                  </span>
-                </div>
-                <p className="text-xs text-gray-400 dark:text-lago-500">VAT (15%) included in prices</p>
-                <div className="border-t border-gray-200 dark:border-lago-800 pt-3 flex justify-between font-black text-xl text-gray-900 dark:text-white">
-                  <span>Total</span>
-                  <span>R {total.toLocaleString('en-ZA', { minimumFractionDigits: 2 })}</span>
-                </div>
-              </div>
-
-              <button
-                onClick={placeOrder}
-                disabled={placing || items.length === 0}
-                className="mt-6 w-full py-4 rounded-xl bg-lago-600 hover:bg-lago-700 text-white font-bold transition-colors disabled:opacity-60 flex items-center justify-center gap-2 shadow-lg shadow-lago-600/20"
-              >
-                <Lock className="w-4 h-4" />
-                {placing ? 'Placing Order...' : `Place Order — R ${total.toLocaleString('en-ZA', { minimumFractionDigits: 2 })}`}
-              </button>
-
-              {orderError && (
-                <div className="mt-3 p-3 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 flex items-center gap-2">
-                  <AlertTriangle className="w-4 h-4 text-red-500 flex-shrink-0" />
-                  <p className="text-xs font-semibold text-red-600 dark:text-red-400">{orderError}</p>
+              {errorEntries.length > 0 && (
+                <div
+                  ref={errorSummaryRef}
+                  tabIndex={-1}
+                  role="alert"
+                  className="mb-5 rounded-xl border border-red-300 bg-red-50 p-4 dark:border-red-800 dark:bg-red-950/40"
+                >
+                  <p className="flex items-center gap-2 text-[14px] font-semibold text-red-700 dark:text-red-300">
+                    <AlertTriangle className="h-4 w-4 shrink-0" aria-hidden="true" />
+                    Please fix {errorEntries.length === 1 ? '1 field' : `${errorEntries.length} fields`}
+                  </p>
+                  <ul className="mt-2 space-y-1 pl-6 text-[13px]">
+                    {errorEntries.map(([key, message]) => (
+                      <li key={key}>
+                        <a href={`#checkout-${key}`} className="text-red-700 underline dark:text-red-300">{message}</a>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               )}
 
-              <p className="text-xs text-gray-400 dark:text-lago-500 text-center mt-3 leading-relaxed">
-                By placing your order you agree to our Terms & Conditions, Privacy Policy, and Return Policy.
-              </p>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <TextField id="checkout-first_name" label="First name" autoComplete="given-name" value={form.first_name} onChange={field('first_name')} error={errors.first_name} />
+                <TextField id="checkout-last_name" label="Last name" autoComplete="family-name" value={form.last_name} onChange={field('last_name')} error={errors.last_name} />
+                <TextField id="checkout-phone" label="Phone number" type="tel" autoComplete="tel" placeholder="082 000 0000" value={form.phone} onChange={field('phone')} error={errors.phone} />
+                <SelectField id="checkout-province" label="Province" options={PROVINCE_OPTIONS} value={form.province} onChange={field('province')} error={errors.province} />
+                <TextField id="checkout-address_line1" wrapperClassName="md:col-span-2" label="Address line 1" autoComplete="address-line1" placeholder="Street address, house or unit number" value={form.address_line1} onChange={field('address_line1')} error={errors.address_line1} />
+                <TextField id="checkout-address_line2" wrapperClassName="md:col-span-2" label="Address line 2 (optional)" autoComplete="address-line2" placeholder="Apartment, complex, suburb" value={form.address_line2} onChange={field('address_line2')} />
+                <TextField id="checkout-city" label="City or town" autoComplete="address-level2" value={form.city} onChange={field('city')} error={errors.city} />
+                <TextField id="checkout-postal_code" label="Postal code" autoComplete="postal-code" inputMode="numeric" maxLength={4} value={form.postal_code} onChange={field('postal_code')} error={errors.postal_code} />
+                <div className="md:col-span-2">
+                  <CheckboxField id="checkout-save_address" label="Save this address for future orders" checked={form.save_address} onChange={field('save_address')} />
+                </div>
+              </div>
+            </section>
+          )}
+
+          <section aria-labelledby="payment-title" className={`${panelStyles} p-5 md:p-6`}>
+            <h2 id="payment-title" className="flex items-center gap-2 font-display text-[20px] font-semibold text-spet-ink">
+              <Lock className="h-4 w-4 text-spet-stock" aria-hidden="true" /> Payment method
+            </h2>
+            <p className="mt-2 text-[14px] text-spet-ink-2">You choose how to pay at the secure payment gateway. We support:</p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              {PAYMENT_LOGOS.map((logo) => (
+                <div key={logo.alt} className="flex h-9 items-center justify-center rounded-lg border border-spet-line bg-white px-3">
+                  <img
+                    src={logo.src}
+                    alt={logo.alt}
+                    loading="lazy"
+                    className="h-5 w-auto object-contain"
+                    onError={(event) => { (event.target as HTMLImageElement).style.display = 'none'; }}
+                  />
+                </div>
+              ))}
             </div>
-          </div>
+            <p className="mt-4 text-[12px] text-spet-muted">
+              All transactions are processed securely via PayFast. SPET Online never stores your card details.
+            </p>
+          </section>
         </div>
+
+        <aside aria-label="Order summary" className={`${panelStyles} p-5 md:p-6 lg:sticky lg:top-[160px]`}>
+          <h2 className="font-display text-[20px] font-semibold text-spet-ink">Order summary</h2>
+
+          <ul className="mt-4 max-h-60 space-y-3 overflow-y-auto">
+            {items.map((item) => (
+              <li key={item.product_id} className="flex items-center gap-3">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-spet-line bg-white p-1">
+                  <SafeImage src={item.image} brand={item.brand} alt="" referrerPolicy="no-referrer" className="max-h-full max-w-full object-contain" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="line-clamp-1 text-[13px] font-medium text-spet-ink">{item.name}</p>
+                  <p className="text-[12px] text-spet-muted">Qty {item.qty}</p>
+                </div>
+                <p className="shrink-0 text-[13px] font-semibold tabular-nums text-spet-ink">
+                  {formatMoney((Number(item.price) || 0) * (Number(item.qty) || 1))}
+                </p>
+              </li>
+            ))}
+          </ul>
+
+          <dl className="mt-4 space-y-2.5 border-t border-spet-line-2 pt-4 text-[14px]">
+            <div className="flex justify-between gap-3 text-spet-ink-2">
+              <dt>Subtotal</dt>
+              <dd className="tabular-nums">{formatMoney(sub)}</dd>
+            </div>
+            {discount > 0 && (
+              <div className="flex justify-between gap-3 text-spet-stock">
+                <dt>Discount</dt>
+                <dd className="tabular-nums">−{formatMoney(discount)}</dd>
+              </div>
+            )}
+            <div className="flex justify-between gap-3 text-spet-ink-2">
+              <dt>Shipping</dt>
+              <dd className="tabular-nums">
+                {shippingLoading ? 'Calculating…' : shipping === 0 ? <span className="font-semibold text-spet-stock">Free</span> : formatMoney(shipping)}
+              </dd>
+            </div>
+            <p className="text-[12px] text-spet-muted">Prices include 15% VAT.</p>
+            <div className="flex justify-between gap-3 border-t border-spet-line-2 pt-3 text-[18px] font-semibold text-spet-ink">
+              <dt>Total</dt>
+              <dd className="tabular-nums">{formatMoney(total)}</dd>
+            </div>
+          </dl>
+
+          <Button size="lg" className="mt-5 w-full" onClick={placeOrder} loading={placing} disabled={items.length === 0}>
+            {!placing && <Lock className="h-4 w-4" aria-hidden="true" />}
+            {placing ? 'Placing order…' : `Place order: ${formatMoney(total)}`}
+          </Button>
+
+          {orderError && (
+            <p role="alert" className="mt-3 flex items-start gap-2 rounded-xl border border-red-300 bg-red-50 p-3 text-[13px] font-medium text-red-700 dark:border-red-800 dark:bg-red-950/40 dark:text-red-300">
+              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+              {orderError}
+            </p>
+          )}
+
+          <p className="mt-3 text-center text-[12px] leading-relaxed text-spet-muted">
+            By placing your order you agree to our{' '}
+            <button type="button" onClick={() => setLegalDoc('terms')} className="underline hover:text-spet-blue">Terms &amp; Conditions</button>,{' '}
+            <button type="button" onClick={() => setLegalDoc('privacy')} className="underline hover:text-spet-blue">Privacy Policy</button> and{' '}
+            <button type="button" onClick={() => setLegalDoc('returns')} className="underline hover:text-spet-blue">Return Policy</button>.
+          </p>
+        </aside>
       </div>
-    </div>
+
+      <LegalModal docKey={legalDoc} onClose={() => setLegalDoc(null)} />
+    </PageShell>
   );
 }

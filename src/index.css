@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Inter:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 @custom-variant dark (&:is(.dark *));
 
@@ -6,7 +6,7 @@
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Outfit", ui-sans-serif, system-ui, sans-serif;
 
-  /* Brand palette */
+  /* Brand palette (kept for existing storefront pages) */
   --color-lago-50:  #e8eef1;
   --color-lago-100: #bfdff1;
   --color-lago-200: #abd7f1;
@@ -21,35 +21,77 @@
   --color-accent-cyan:   #00ffff;
   --color-accent-orange: #ff5e00;
 
-  /* Border radius */
-  --border-radius-sm:  8px;
-  --border-radius-md:  12px;
-  --border-radius-lg:  16px;
-  --border-radius-xl:  24px;
-  --border-radius-2xl: 32px;
+  /* ── Storefront surface system ─────────────────────────────────────────────
+     Utilities built from these tokens (bg-spet-surface, text-spet-ink, …)
+     follow the .dark overrides below without repeating dark: classes. */
+  --color-spet-canvas:      #f6f5f1;
+  --color-spet-surface:     #ffffff;
+  --color-spet-surface-2:   #fafaf8;
+  --color-spet-ink:         #101820;
+  --color-spet-ink-2:       #33424e;
+  --color-spet-muted:       #6b7783;
+  --color-spet-line:        #e4e2dc;
+  --color-spet-line-2:      #efeee9;
+  --color-spet-blue:        #057dcd;
+  --color-spet-blue-dark:   #0a5c99;
+  --color-spet-link:        #0a5c99;
+  --color-spet-orange:      #f5820b;
+  --color-spet-navy:        #0e1c26;
+  --color-spet-tint:        #eaf2f8;
+  --color-spet-tint-line:   #d8e6f1;
+  --color-spet-stock:       #2f7a4f;
+  --color-spet-was:         #8a949c;
+}
+
+.dark {
+  --color-spet-canvas:    #0a141d;
+  --color-spet-surface:   #112332;
+  --color-spet-surface-2: #0f1e29;
+  --color-spet-ink:       #ffffff;
+  --color-spet-ink-2:     #c7d6e1;
+  --color-spet-muted:     #8fa3b2;
+  --color-spet-line:      #1e3d58;
+  --color-spet-line-2:    #17303f;
+  --color-spet-tint:      #11283a;
+  --color-spet-tint-line: #1e4a68;
+  --color-spet-link:      #7cc6f5;
+  --color-spet-stock:     #6fd39b;
+  --color-spet-was:       #8fa3b2;
 }
 
 /* ─── Base ──────────────────────────────────────────────────────────────────── */
-html { scroll-behavior: smooth; }
+@layer base {
+  html { scroll-behavior: smooth; }
 
-body {
-  @apply bg-gray-50 dark:bg-[#0a141d] text-gray-900 dark:text-white font-sans antialiased
-         selection:bg-lago-500 selection:text-white transition-colors duration-300;
-}
+  body {
+    @apply bg-spet-canvas text-spet-ink font-sans antialiased
+           selection:bg-spet-blue selection:text-white transition-colors duration-300;
+  }
 
-h1, h2, h3, h4, h5, h6 {
-  @apply font-display tracking-tight transition-colors duration-300;
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display tracking-tight transition-colors duration-300;
+  }
+
+  *:focus-visible {
+    @apply outline-hidden ring-2 ring-spet-blue ring-offset-2 ring-offset-spet-surface;
+  }
+
+  img { @apply transition-opacity duration-300; }
 }
 
 /* ─── Custom Scrollbar ───────────────────────────────────────────────────────── */
 ::-webkit-scrollbar       { width: 8px; }
-::-webkit-scrollbar-track { @apply bg-gray-100 dark:bg-lago-900; }
-::-webkit-scrollbar-thumb { @apply bg-gray-300 dark:bg-lago-700 rounded-full border-2 border-gray-100 dark:border-lago-900; }
-::-webkit-scrollbar-thumb:hover { @apply bg-gray-400 dark:bg-lago-500; }
+::-webkit-scrollbar-track { @apply bg-spet-surface-2; }
+::-webkit-scrollbar-thumb { @apply bg-spet-line rounded-full border-2 border-spet-surface-2; }
+::-webkit-scrollbar-thumb:hover { @apply bg-spet-muted; }
 
-/* ─── Navbar spacer – all pages need this top padding ───────────────────────── */
-/* Navbar (56px) + searchbar (48px) ≈ 108px total fixed header */
-.page-top { padding-top: 116px; }
+/* ─── Navbar spacer – every page that renders the fixed header needs this ───── */
+/* Header is 100px on mobile (main bar + search) and 144px from md up
+   (utility bar + main bar + navigation row). */
+.page-top { padding-top: 100px; }
+@media (min-width: 768px) {
+  .page-top { padding-top: 144px; }
+}
 
 /* ─── Animations ─────────────────────────────────────────────────────────────── */
 @keyframes fadeInUp {
@@ -69,14 +111,6 @@ h1, h2, h3, h4, h5, h6 {
 .line-clamp-2 { overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
 .line-clamp-3 { overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; }
 
-/* ─── Focus ring ─────────────────────────────────────────────────────────────── */
-*:focus-visible {
-  @apply outline-none ring-2 ring-lago-500 ring-offset-2 ring-offset-white dark:ring-offset-lago-900;
-}
-
-/* ─── Image loading ──────────────────────────────────────────────────────────── */
-img { @apply transition-opacity duration-300; }
-
 /* ─── Responsive container ───────────────────────────────────────────────────── */
 .container {
   width: 100%;
@@ -84,3 +118,21 @@ img { @apply transition-opacity duration-300; }
   margin-left: auto;
   margin-right: auto;
 }
+
+/* ─── Supplier-feed product descriptions ─────────────────────────────────────── */
+.product-description { font-size: 14px; line-height: 1.65; color: var(--color-spet-ink-2); overflow-wrap: anywhere; }
+.product-description > * + * { margin-top: 0.85em; }
+.product-description h1,
+.product-description h2,
+.product-description h3,
+.product-description h4 { font-size: 16px; font-weight: 600; color: var(--color-spet-ink); }
+.product-description ul,
+.product-description ol { padding-left: 1.25rem; }
+.product-description ul { list-style: disc; }
+.product-description ol { list-style: decimal; }
+.product-description li + li { margin-top: 0.25em; }
+.product-description a { color: var(--color-spet-link); text-decoration: underline; }
+.product-description img { max-width: 100%; height: auto; border-radius: 12px; background: #fff; }
+.product-description table { display: block; max-width: 100%; overflow-x: auto; border-collapse: collapse; }
+.product-description th,
+.product-description td { border: 1px solid var(--color-spet-line-2); padding: 6px 10px; text-align: left; }

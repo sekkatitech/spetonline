@@ -5,7 +5,6 @@ export function ThemeToggle() {
   const [isDark, setIsDark] = useState(true);
 
   useEffect(() => {
-    // Initial check
     const isDarkTheme = document.documentElement.classList.contains('dark');
     setIsDark(isDarkTheme);
   }, []);
@@ -23,13 +22,13 @@ export function ThemeToggle() {
   };
 
   return (
-    <button 
+    <button
       onClick={toggleTheme}
-      className="flex items-center justify-center p-2 rounded-full bg-gray-200 dark:bg-lago-800 text-gray-700 dark:text-lago-300 hover:bg-gray-300 dark:hover:bg-lago-700 transition-[background,color] hover:scale-105 active:scale-95 shadow-sm"
+      className="flex h-8 w-8 items-center justify-center rounded-lg border border-spet-line bg-spet-surface text-spet-ink-2 transition-colors hover:border-spet-blue hover:text-spet-blue active:scale-95"
       aria-label="Toggle Theme"
       title="Toggle Theme"
     >
-      {isDark ? <Sun className="w-4 h-4 sm:w-5 sm:h-5" /> : <Moon className="w-4 h-4 sm:w-5 sm:h-5" />}
+      {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
     </button>
   );
 }
