@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ClipboardList, Package, Search } from 'lucide-react'
 import { supabase } from '../lib/supabase'
+import { canUseEnterprise } from '../lib/appleAccess'
 
 // ── Design tokens ──
 const E = {
@@ -302,6 +303,12 @@ export default function EnterpriseProductsPage() {
     try{
       const {data:{session}}=await supabase.auth.getSession()
       if(!session){navigate('/enterprise/login');return}
+      const {data:access}=await supabase.from('profiles').select('role, enterprise_status').eq('id',session.user.id).maybeSingle()
+      if(!canUseEnterprise(access)){
+        if(access?.enterprise_status==='pending')showToast('Your business account is still under review.')
+        else navigate('/enterprise/register')
+        return
+      }
       const {data:member}=await supabase.from('enterprise_account_members').select('account_id').eq('profile_id',session.user.id).single()
       const subtotal=cart.reduce((s,i)=>s+i.product.price*i.qty,0)
       const {data:quote,error:qErr}=await supabase.from('quote_requests').insert({user_id:session.user.id,enterprise_account_id:member?.account_id??null,source:'enterprise',org_name:'Enterprise Quote',org_type:'business',status:'pending',items:cart.map(i=>({id:i.product.id,name:i.product.name,qty:i.qty,price:i.product.price})),final_amount:subtotal}).select('id').single()

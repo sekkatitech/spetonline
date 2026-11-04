@@ -172,7 +172,7 @@ exports.handler = async (event) => {
 
     const { error: lineError } = await supabase.from('enterprise_quote_items').insert(lines.map((l) => ({
       quote_id: quote.id,
-      product_source: 'core',
+      product_source: 'enterprise',
       product_name: l.name,
       sku: l.sku,
       brand: 'Apple',

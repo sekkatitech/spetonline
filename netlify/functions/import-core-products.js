@@ -67,10 +67,16 @@ function parseSpecs(name) {
   for (const c of colours) {
     if (name.includes(c)) { specs.colour = c.charAt(0) + c.slice(1).toLowerCase(); break; }
   }
-  const storage = name.match(/(\d+(?:\.\d+)?(?:GB|TB)) SSD/);
-  if (storage) specs.storage = storage[1];
-  const ram = name.match(/(\d+)GB(?:,|\s)/);
-  if (ram) specs.ram = ram[1] + 'GB';
+  // Macs list memory then storage ("24GB, 1TB SSD"). Phones and tablets list storage alone,
+  // so a single size is never memory.
+  const memoryAndStorage = name.match(/(\d+)GB,\s*(\d+(?:\.\d+)?(?:GB|TB))/);
+  const storageOnly = name.match(/\b(\d+(?:\.\d+)?(?:GB|TB))\b/);
+  if (memoryAndStorage) {
+    specs.ram = memoryAndStorage[1] + 'GB';
+    specs.storage = memoryAndStorage[2];
+  } else if (storageOnly) {
+    specs.storage = storageOnly[1];
+  }
   const chip = name.match(/APPLE ([A-Z]\d+(?:\s+(?:PRO|MAX|ULTRA|NEO))?)/);
   if (chip) specs.chip = 'Apple ' + chip[1].charAt(0) + chip[1].slice(1).toLowerCase();
   const size = name.match(/(\d+(?:\.\d+)?)[- ]INCH/);

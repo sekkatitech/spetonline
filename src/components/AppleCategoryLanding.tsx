@@ -2,9 +2,10 @@ import { useState } from 'react'
 
 // ═══════════════════════════════════════════════════════════════════════════
 // EDIT THIS CONFIG to change the landing page content — no code knowledge
-// needed. Each tile's `sub` must EXACTLY match a category_sub value in the
-// core_products table. `image` can be a web link (paste an image address)
-// or a file in your public folder (starting with /enterprice-images/...).
+// needed. Each tile's `sub` must match a category_sub value in the
+// core_products table (capitals don't matter). `image` can be a web link (paste
+// an image address), a file in your public folder (starting with
+// /enterprice-images/...), or empty to show the tile without a picture.
 // ═══════════════════════════════════════════════════════════════════════════
 
 export interface LandingTile {
@@ -36,7 +37,11 @@ const MAC_STUDIO_IMAGE = '/images/apple-imagies/Mac_Studio.jpeg'
 const STUDIO_DISPLAY_IMAGE = '/images/apple-imagies/Studio_Display.webp'
 const MACBOOK_NEO_IMAGE = '/images/apple-imagies/MacBook_neo.webp'
 
-const IPHONE_17_PRO_MAX_IMAGE = '/images/apple-imagies/iPhone/iPhone_17_Pro_Max.jpg'
+const IPHONE_18_PRO_MAX_IMAGE = '/images/apple-products/iphone-18-pro/iphone-18-pro-max-silver-1.jpg'
+const IPHONE_18_PRO_IMAGE = '/images/apple-products/iphone-18-pro/iphone-18-pro-silver-1.jpg'
+const IPHONE_DUO_IMAGE = '/images/apple-home/iphone-duo.jpg'
+const MACBOOK_PRO_XDR_IMAGE = '/images/apple-home/macbook-pro.jpg'
+const IPHONE_17_PRO_MAX_IMAGE ='/images/apple-imagies/iPhone/iPhone_17_Pro_Max.jpg'
 const IPHONE_17_PRO_IMAGE = '/images/apple-imagies/iPhone/iPhone_17_pro.jpg'
 const IPHONE_17_IMAGE = '/images/apple-imagies/iPhone/iPhone_17.jpg'
 const IPHONE_17E_IMAGE = '/images/apple-imagies/iPhone/iPhone_17.webp'
@@ -53,7 +58,6 @@ const WATCH_ULTRA_3_IMAGE = '/images/apple-imagies/apple-watch/Apple_Watch_Ultra
 const AIRPODS_PRO_3_IMAGE = '/images/apple-imagies/AirPods/AirPods_Pro_3.webp'
 const AIRPODS_MAX_2_IMAGE = '/images/apple-imagies/AirPods/AirPods_Max_2.webp'
 const AIRPODS_4_IMAGE = '/images/apple-imagies/AirPods/AirPods_4.webp'
-const AIRPODS_IMAGE = '/images/apple-imagies/AirPods/AirPods.webp'
 
 const IPAD_LANDING: CategoryLandingConfig = {
   heroVideo: 'https://core.co.za/cdn/shop/videos/c/vp/84926a051b284f16aa7400878fef7c00/84926a051b284f16aa7400878fef7c00.HD-1080p-7.2Mbps-81752485.mp4?v=0',
@@ -66,6 +70,7 @@ const IPAD_LANDING: CategoryLandingConfig = {
     { sub: 'Ipad air m4',      title: 'iPad Air | M4',          tagline: 'Take your office anywhere.',           image: IPAD_HERO_IMAGE },
     { sub: 'Ipad air m2',      title: 'iPad Air | M2',          tagline: 'Serious performance. Superb value.',   image: IPAD_HERO_IMAGE },
     { sub: 'Ipad (11th gen)',  title: 'iPad | 11th Gen',        tagline: 'Meet the magical, colourful iPad.',    image: IPAD_HERO_IMAGE },
+    { sub: 'Ipad mini a20',    title: 'iPad mini | A20',        tagline: 'The full iPad experience, in hand.',   image: IPAD_HERO_IMAGE },
     { sub: 'Ipad mini 7',      title: 'iPad mini | 7',          tagline: 'The full iPad experience, in hand.',   image: IPAD_HERO_IMAGE },
   ],
 }
@@ -76,6 +81,9 @@ const IPHONE_LANDING: CategoryLandingConfig = {
   headline: 'iPhone',
   subheadline: 'Built for Apple Intelligence.',
   tiles: [
+    { sub: 'Iphone 18 pro max', title: 'iPhone 18 Pro Max', tagline: 'Pro further.',                         image: IPHONE_18_PRO_MAX_IMAGE },
+    { sub: 'Iphone 18 pro',     title: 'iPhone 18 Pro',     tagline: 'Pro further.',                         image: IPHONE_18_PRO_IMAGE },
+    { sub: 'Iphone duo',        title: 'iPhone Duo',        tagline: 'Hello, hello.',                        image: IPHONE_DUO_IMAGE },
     { sub: 'Iphone 17 pro max', title: 'iPhone 17 Pro Max', tagline: 'The ultimate iPhone.',                image: IPHONE_17_PRO_MAX_IMAGE },
     { sub: 'Iphone 17 pro',     title: 'iPhone 17 Pro',     tagline: 'Titanium. Pro cameras. Pro power.',    image: IPHONE_17_PRO_IMAGE },
     { sub: 'Iphone 17',         title: 'iPhone 17',         tagline: 'A total powerhouse.',                  image: IPHONE_17_IMAGE },
@@ -94,6 +102,7 @@ const MAC_LANDING: CategoryLandingConfig = {
   headline: 'Mac',
   subheadline: "Supercharged for what's next.",
   tiles: [
+    { sub: 'Macbook pro with proled xdr display', title: 'MacBook Pro | PROLED XDR', tagline: "The world's best laptop display.", image: MACBOOK_PRO_XDR_IMAGE },
     { sub: 'Macbook air m5',   title: 'MacBook Air | M5',   tagline: 'Strikingly thin. Remarkably capable.', image: MACBOOK_AIR_IMAGE },
     { sub: 'Macbook pro 14"',  title: 'MacBook Pro 14″', tagline: 'Mind-blowing. Head-turning.',        image: MACBOOK_PRO_14_IMAGE },
     { sub: 'Macbook pro 16"',  title: 'MacBook Pro 16″', tagline: 'A beast of a laptop.',                image: MACBOOK_PRO_16_IMAGE },
@@ -111,6 +120,8 @@ const WATCH_LANDING: CategoryLandingConfig = {
   headline: 'Apple Watch',
   subheadline: 'The ultimate device for a healthier life.',
   tiles: [
+    { sub: 'Watch ultra 4',   title: 'Apple Watch Ultra 4',   tagline: 'Adventure at every altitude.',      image: '' },
+    { sub: 'Watch series 12', title: 'Apple Watch Series 12', tagline: 'The latest Apple Watch.',           image: '' },
     { sub: 'Watch ultra 3',   title: 'Apple Watch Ultra 3',   tagline: 'Adventure at every altitude.',      image: WATCH_ULTRA_3_IMAGE },
     { sub: 'Watch series 11', title: 'Apple Watch Series 11', tagline: 'Smarter. Brighter. Mightier.',      image: WATCH_SERIES_11_IMAGE },
     { sub: 'Watch se 3',      title: 'Apple Watch SE 3',      tagline: 'A big step up. A great value.',     image: WATCH_SE_3_IMAGE },
@@ -123,10 +134,9 @@ const AIRPODS_LANDING: CategoryLandingConfig = {
   headline: 'AirPods',
   subheadline: 'Wireless audio. Perfected.',
   tiles: [
-    { sub: 'AirPods Pro 3',  title: 'AirPods Pro 3',  tagline: 'Adaptive Audio. Now even smarter.',   image: AIRPODS_PRO_3_IMAGE },
-    { sub: 'AirPods 4',      title: 'AirPods 4',      tagline: 'The ultimate wireless earbuds.',       image: AIRPODS_4_IMAGE },
-    { sub: 'AirPods Max 2',  title: 'AirPods Max 2',  tagline: 'Computational audio. Reimagined.',     image: AIRPODS_MAX_2_IMAGE },
-    { sub: 'AirPods',        title: 'AirPods',        tagline: 'Effortless. Magical. AirPods.',        image: AIRPODS_IMAGE },
+    { sub: 'Airpods pro',    title: 'AirPods Pro',    tagline: 'Adaptive Audio. Now even smarter.',   image: AIRPODS_PRO_3_IMAGE },
+    { sub: 'Airpods',        title: 'AirPods',        tagline: 'Effortless. Magical. AirPods.',        image: AIRPODS_4_IMAGE },
+    { sub: 'Airpods max 2',  title: 'AirPods Max 2',  tagline: 'Computational audio. Reimagined.',     image: AIRPODS_MAX_2_IMAGE },
   ],
 }
 
@@ -224,12 +234,14 @@ export default function AppleCategoryLanding({ config, onShop, onBrowseAll }: {
             }}
           >
             <div style={{ height: 150, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 22 }}>
-              <img
-                src={tile.image}
-                alt={tile.title}
-                loading="lazy"
-                style={{ maxHeight: '100%', maxWidth: '100%', objectFit: 'contain' }}
-              />
+              {tile.image && (
+                <img
+                  src={tile.image}
+                  alt={tile.title}
+                  loading="lazy"
+                  style={{ maxHeight: '100%', maxWidth: '100%', objectFit: 'contain' }}
+                />
+              )}
             </div>
             <div style={{ fontSize: 21, fontWeight: 600, color: L.black, letterSpacing: '-0.01em', marginBottom: 6 }}>
               {tile.title}

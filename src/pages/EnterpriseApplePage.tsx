@@ -7,6 +7,7 @@ import { APPLE_DELIVERY_NOTE, APPLE_QUOTE_TERMS, fetchAppleCounts, fetchApplePro
 import { useAppleBuying } from '../lib/useAppleBuying'
 import { MAX_QUOTE_QTY, useAppleQuoteStore, type AppleQuoteItem } from '../lib/appleQuoteStore'
 import AppleCategoryLanding, { LANDING_CONFIGS } from '../components/AppleCategoryLanding'
+import AppleHome from '../components/AppleHome'
 
 // ── Types ──────────────────────────────────────────────────────────────────
 const APPLE_LOGO = '/enterprice-images/apple.com-logo.png'
@@ -118,6 +119,7 @@ const CATEGORIES = [
 const RESPONSIVE_CSS = `
 .ent-tabbar::-webkit-scrollbar { display: none; }
 @media (max-width: 480px) {
+  .ent-portal-label { display: none; }
   .ent-product-grid { grid-template-columns: repeat(2, minmax(0,1fr)) !important; gap: 12px !important; }
 }
 @media (max-width: 640px) {
@@ -626,7 +628,7 @@ export default function EnterpriseApplePage() {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const activeCategory = searchParams.get('cat') || 'Mac'
-  const setActiveCategory = (cat: string) => setSearchParams(cat === 'Mac' ? {} : { cat })
+  const setActiveCategory = (cat: string) => setSearchParams({ cat })
   const activeSub = searchParams.get('sub') || ''
   const setActiveSub = (sub: string) => {
     const next: Record<string, string> = { view: 'shop' }
@@ -635,6 +637,8 @@ export default function EnterpriseApplePage() {
     setSearchParams(next)
   }
   const view = searchParams.get('view') || ''
+  // No category chosen yet: show the Apple home page, not a shop.
+  const showHome = !searchParams.get('cat') && !activeSub && !view
   const landingConfig = LANDING_CONFIGS[activeCategory]
   const showLanding = !!landingConfig && !activeSub && view !== 'shop'
   const [products, setProducts] = useState<AppleProduct[]>([])
@@ -657,8 +661,8 @@ export default function EnterpriseApplePage() {
 
   // Load products for active category
   useEffect(() => {
-    loadProducts()
-  }, [activeCategory])
+    if (!showHome) loadProducts()
+  }, [activeCategory, showHome])
 
   // Load category counts on mount
   useEffect(() => {
@@ -685,7 +689,7 @@ export default function EnterpriseApplePage() {
 
   const filteredProducts = products.filter(p => {
     if (filters.search && !p.name.toLowerCase().includes(filters.search.toLowerCase()) && !p.sku.toLowerCase().includes(filters.search.toLowerCase())) return false
-    if (activeSub && p.category_sub !== activeSub) return false
+    if (activeSub && p.category_sub?.toLowerCase() !== activeSub.toLowerCase()) return false
     if (filters.colour && p.specs?.colour !== filters.colour) return false
     if (filters.storage && p.specs?.storage !== filters.storage) return false
     if (filters.status && p.status !== filters.status) return false
@@ -795,7 +799,7 @@ export default function EnterpriseApplePage() {
               <div style={{ width: 1, height: 18, background: A.grey100 }} />
               <img src="/enterprice-images/Apple Reseller Program Logo.png" alt="Apple Reseller" style={{ height: 28 }}
                 onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
-              <span style={{ fontSize: 13, color: A.grey300, fontWeight: 400 }}>Enterprise</span>
+              <span className="ent-portal-label" style={{ fontSize: 13, color: A.grey300, fontWeight: 400 }}>Enterprise</span>
             </div>
             <button
               className="ent-quote-btn"
@@ -825,6 +829,21 @@ export default function EnterpriseApplePage() {
 
           {/* Category tabs */}
           <div className="ent-tabbar" style={{ display: 'flex', gap: 0, overflowX: 'auto', scrollbarWidth: 'none' }}>
+            <button
+              className="ent-tab-btn"
+              onClick={() => setSearchParams({})}
+              style={{
+                padding: '12px 16px',
+                background: 'none', border: 'none',
+                fontSize: 13, fontWeight: showHome ? 600 : 400,
+                color: showHome ? A.black : A.grey300,
+                cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap',
+                borderBottom: showHome ? `2px solid ${A.black}` : '2px solid transparent',
+                transition: 'color 0.15s, border-color 0.15s',
+              }}
+            >
+              Apple Home
+            </button>
             {CATEGORIES.map(cat => (
               <button
                 key={cat.key}
@@ -833,10 +852,10 @@ export default function EnterpriseApplePage() {
                 style={{
                   padding: '12px 16px',
                   background: 'none', border: 'none',
-                  fontSize: 13, fontWeight: activeCategory === cat.key ? 600 : 400,
-                  color: activeCategory === cat.key ? A.black : A.grey300,
+                  fontSize: 13, fontWeight: !showHome && activeCategory === cat.key ? 600 : 400,
+                  color: !showHome && activeCategory === cat.key ? A.black : A.grey300,
                   cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap',
-                  borderBottom: activeCategory === cat.key ? `2px solid ${A.black}` : '2px solid transparent',
+                  borderBottom: !showHome && activeCategory === cat.key ? `2px solid ${A.black}` : '2px solid transparent',
                   transition: 'color 0.15s, border-color 0.15s',
                 }}
               >
@@ -853,11 +872,13 @@ export default function EnterpriseApplePage() {
       </div>
 
       {/* Page content */}
-      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '48px 24px 80px' }}>
+      <div style={{ maxWidth: 1200, margin: '0 auto', padding: showHome ? '12px 12px 80px' : '48px 24px 80px' }}>
 
         {/* Category hero */}
         
-        {showLanding ? (
+        {showHome ? (
+          <AppleHome onShop={setActiveCategory} />
+        ) : showLanding ? (
           <AppleCategoryLanding
             config={landingConfig!}
             onShop={sub => setSearchParams({ cat: activeCategory, sub })}

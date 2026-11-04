@@ -170,8 +170,18 @@ exports.handler = async (event) => {
       // Non-fatal, same reasoning as the email above — a Zoho hiccup must never
       // block PayFast's payment confirmation.
       try {
+        let business = null;
+        if (order.enterprise_account_id) {
+          const { data } = await supabase
+            .from('enterprise_accounts')
+            .select('company_name, registration_number, vat_number, physical_address, city, province, postal_code')
+            .eq('id', order.enterprise_account_id)
+            .maybeSingle();
+          business = data;
+        }
         const invoice = await createInvoiceFromOrder({
           ...order,
+          business,
           items: order.order_items,
           payment_status: 'paid',
         });

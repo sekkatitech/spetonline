@@ -101,6 +101,7 @@ exports.handler = async (event) => {
     const pinnacleIds = items.filter(i => i.supplier === 'pinnacle').map(i => i.product_id);
     const appleIds    = items.filter(i => i.supplier === 'apple').map(i => i.product_id);
     const priceMap = {};
+    let enterpriseAccountId = null;
 
     if (esquireIds.length > 0) {
       const { data: products, error } = await supabase
@@ -163,6 +164,14 @@ exports.handler = async (event) => {
       if (!['admin', 'super_admin'].includes(access?.role) && !['approved', 'pending'].includes(access?.enterprise_status)) {
         return { statusCode: 403, headers: CORS, body: JSON.stringify({ error: 'Please register your business to buy Apple products.' }) };
       }
+
+      // Links the order to the business, so its details can reach the invoice.
+      const { data: member } = await supabase
+        .from('enterprise_account_members')
+        .select('account_id')
+        .eq('profile_id', user.id)
+        .maybeSingle();
+      enterpriseAccountId = member?.account_id ?? null;
 
       const { data: products, error } = await supabase
         .from('core_products')
@@ -270,6 +279,7 @@ exports.handler = async (event) => {
         vat_amount:              0,
         total,
         promotion_id:            validatedPromoId,
+        enterprise_account_id:   enterpriseAccountId,
       })
       .select()
       .single();

@@ -431,7 +431,7 @@ export default function EnterpriseOrdersPage() {
           internal_notes, created_at, updated_at
         `)
         .eq('user_id', session.user.id)
-        .eq('source', 'enterprise')
+        .or('source.eq.enterprise,enterprise_account_id.not.is.null')
         .order('created_at', { ascending: false })
 
       if (error) throw error

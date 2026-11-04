@@ -99,8 +99,16 @@ async function createInvoiceFromOrder(order) {
   const contactId = await findOrCreateContact(
     order.client_email,
     order.client_name,
-    order.org_name
+    order.business?.company_name || order.org_name
   );
+
+  const business = order.business;
+  const businessNote = business ? [
+    `Business: ${business.company_name}`,
+    business.registration_number && `Reg: ${business.registration_number}`,
+    business.vat_number && `VAT: ${business.vat_number}`,
+    [business.physical_address, business.city, business.province, business.postal_code].filter(Boolean).join(', '),
+  ].filter(Boolean).join('\n') : '';
 
   // Build line items from order items. order_items rows use `unit_price`,
   // not `price` — using the wrong field silently invoiced everything at R0.
@@ -131,7 +139,7 @@ async function createInvoiceFromOrder(order) {
     due_date:         order.due_date || new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0],
     payment_terms:    order.credit_terms || 0,
     line_items:       lineItems,
-    notes:            `SPET Order: ${order.id}${order.source === 'enterprise' ? ' (Enterprise)' : ''}`,
+    notes:            `SPET Order: ${order.id}${order.source === 'enterprise' || business ? ' (Enterprise)' : ''}${businessNote ? `\n${businessNote}` : ''}`,
   };
 
   const result = await zohoAPI('POST', '/invoices', invoiceData);

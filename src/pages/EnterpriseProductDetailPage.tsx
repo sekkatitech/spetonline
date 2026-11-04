@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Package } from 'lucide-react'
 import { supabase } from '../lib/supabase'
+import { canUseEnterprise } from '../lib/appleAccess'
 
 // ── Design tokens ──
 const E = {
@@ -270,6 +271,14 @@ export default function EnterpriseProductDetailPage() {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) { navigate('/enterprise/login'); return }
 
+      const { data: access } = await supabase
+        .from('profiles').select('role, enterprise_status').eq('id', session.user.id).maybeSingle()
+      if (!canUseEnterprise(access)) {
+        if (access?.enterprise_status === 'pending') showToast('Your business account is still under review.')
+        else navigate('/enterprise/register')
+        return
+      }
+
       const { data: member } = await supabase
         .from('enterprise_account_members')
         .select('account_id')
@@ -284,6 +293,7 @@ export default function EnterpriseProductDetailPage() {
           enterprise_account_id: member?.account_id ?? null,
           source:                'enterprise',
           org_name:              'Enterprise Quote',
+          org_type:              'business',
           status:                'pending',
           items:                 [{ id: product.id, name: product.name, qty, price: product.price }],
           final_amount:          subtotal,
