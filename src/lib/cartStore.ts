@@ -10,7 +10,7 @@ export interface CartItem {
   image: string;
   sku: string;
   qty: number;
-  supplier: 'esquire' | 'syntech' | 'axiz' | 'pinnacle';  // ← tells server which table to verify price in
+  supplier: 'esquire' | 'syntech' | 'axiz' | 'pinnacle' | 'apple';  // ← tells server which table to verify price in
 }
 
 /** The order last sent to PayFast, kept until it is paid so a retry can reuse its promo. */

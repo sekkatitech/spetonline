@@ -99,6 +99,7 @@ exports.handler = async (event) => {
     const syntechIds = items.filter(i => i.supplier === 'syntech').map(i => i.product_id);
     const axizIds     = items.filter(i => i.supplier === 'axiz').map(i => i.product_id);
     const pinnacleIds = items.filter(i => i.supplier === 'pinnacle').map(i => i.product_id);
+    const appleIds    = items.filter(i => i.supplier === 'apple').map(i => i.product_id);
     const priceMap = {};
 
     if (esquireIds.length > 0) {
@@ -149,6 +150,20 @@ exports.handler = async (event) => {
       if (error) throw new Error('Failed to fetch Pinnacle product prices');
       for (const p of products) {
         priceMap[p.id] = { price: Number(p.price_display), name: p.name, sku: p.sku, qty_available: p.stock_qty };
+      }
+    }
+
+    if (appleIds.length > 0) {
+      const { data: products, error } = await supabase
+        .from('core_products')
+        .select('id, name, sku, price_display')
+        .in('id', appleIds)
+        .eq('is_active', true)
+        .eq('is_enterprise_only', true);
+      if (error) throw new Error('Failed to fetch Apple product prices');
+      for (const p of products) {
+        // Apple sells as available: staff confirm stock after the order is placed.
+        priceMap[p.id] = { price: Number(p.price_display), name: p.name, sku: p.sku, qty_available: null };
       }
     }
 

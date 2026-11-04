@@ -304,7 +304,7 @@ export default function EnterpriseProductsPage() {
       if(!session){navigate('/enterprise/login');return}
       const {data:member}=await supabase.from('enterprise_account_members').select('account_id').eq('profile_id',session.user.id).single()
       const subtotal=cart.reduce((s,i)=>s+i.product.price*i.qty,0)
-      const {data:quote,error:qErr}=await supabase.from('quote_requests').insert({user_id:session.user.id,enterprise_account_id:member?.account_id??null,source:'enterprise',org_name:'Enterprise Quote',status:'pending',items:cart.map(i=>({id:i.product.id,name:i.product.name,qty:i.qty,price:i.product.price})),final_amount:subtotal}).select('id').single()
+      const {data:quote,error:qErr}=await supabase.from('quote_requests').insert({user_id:session.user.id,enterprise_account_id:member?.account_id??null,source:'enterprise',org_name:'Enterprise Quote',org_type:'business',status:'pending',items:cart.map(i=>({id:i.product.id,name:i.product.name,qty:i.qty,price:i.product.price})),final_amount:subtotal}).select('id').single()
       if(qErr)throw qErr
       if(quote){
         await supabase.from('enterprise_quote_items').insert(cart.map(i=>({quote_id:quote.id,product_id:i.product.id,product_source:i.product.source,product_name:i.product.name,sku:i.product.sku,brand:i.product.brand,quantity:i.qty,unit_price:i.product.price})))

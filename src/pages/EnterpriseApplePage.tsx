@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { Search, X, Laptop, Smartphone, Tablet, Watch, Package, Apple as AppleIcon } from 'lucide-react'
-import { supabase } from '../lib/supabase'
-import { fetchAppleCounts, fetchAppleProducts } from '../lib/appleCatalogue'
+import { Search, X, Package, Apple as AppleIcon } from 'lucide-react'
+import { useAuth } from '../lib/AuthContext'
+import { APPLE_DELIVERY_NOTE, APPLE_QUOTE_TERMS, fetchAppleCounts, fetchAppleProducts, submitAppleQuote } from '../lib/appleCatalogue'
+import { useAppleBuying } from '../lib/useAppleBuying'
+import { MAX_QUOTE_QTY, useAppleQuoteStore, type AppleQuoteItem } from '../lib/appleQuoteStore'
 import AppleCategoryLanding, { LANDING_CONFIGS } from '../components/AppleCategoryLanding'
 
 // ── Types ──────────────────────────────────────────────────────────────────
@@ -197,8 +199,9 @@ function AppleProductImage({ imageUrl, name }: { imageUrl: string | null; name: 
 }
 
 // ── Product card — Apple style ─────────────────────────────────────────────
-function AppleProductCard({ product, onAddToQuote }: {
+function AppleProductCard({ product, onBuy, onAddToQuote }: {
   product: AppleProduct
+  onBuy: (p: AppleProduct) => void
   onAddToQuote: (p: AppleProduct) => void
 }) {
   const [hovered, setHovered] = useState(false)
@@ -261,22 +264,34 @@ function AppleProductCard({ product, onAddToQuote }: {
         </div>
       </div>
 
-      {/* Add to quote button */}
-      <button
-        onClick={(e) => { e.stopPropagation(); onAddToQuote(product) }}
-        style={{
-          width: '100%', padding: '10px 0',
-          background: hovered ? A.blue : A.offwhite,
-          color: hovered ? A.white : A.blue,
-          border: 'none', borderRadius: 980,
-          fontSize: 13, fontWeight: 600,
-          cursor: 'pointer', fontFamily: 'inherit',
-          transition: 'background 0.2s, color 0.2s',
-          letterSpacing: '-0.01em',
-        }}
-      >
-        {hovered ? 'Add to Quote →' : 'Add to Quote'}
-      </button>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <button
+          onClick={(e) => { e.stopPropagation(); onBuy(product) }}
+          style={{
+            width: '100%', padding: '10px 0',
+            background: A.blue, color: A.white,
+            border: 'none', borderRadius: 980,
+            fontSize: 13, fontWeight: 600,
+            cursor: 'pointer', fontFamily: 'inherit',
+            letterSpacing: '-0.01em',
+          }}
+        >
+          Buy
+        </button>
+        <button
+          onClick={(e) => { e.stopPropagation(); onAddToQuote(product) }}
+          style={{
+            width: '100%', padding: '10px 0',
+            background: A.offwhite, color: A.blue,
+            border: 'none', borderRadius: 980,
+            fontSize: 13, fontWeight: 600,
+            cursor: 'pointer', fontFamily: 'inherit',
+            letterSpacing: '-0.01em',
+          }}
+        >
+          Add to Quote
+        </button>
+      </div>
     </div>
   )
 }
@@ -447,15 +462,67 @@ function FilterBar({
 }
 
 // ── Quote sidebar ──────────────────────────────────────────────────────────
+interface QuoteContact {
+  name: string
+  phone: string
+  organisation: string
+  notes: string
+}
+
+const quoteField: React.CSSProperties = {
+  width: '100%', padding: '10px 12px', marginBottom: 8, boxSizing: 'border-box',
+  border: `1px solid ${A.grey100}`, borderRadius: 10,
+  fontSize: 14, fontFamily: 'inherit', color: A.black, background: A.white,
+}
+
+const quoteQtyBtn: React.CSSProperties = {
+  width: 28, height: 28, border: 'none', borderRadius: 8,
+  background: A.offwhite, color: A.black,
+  fontSize: 15, cursor: 'pointer', fontFamily: 'inherit',
+}
+
 function QuoteSidebar({
-  items, onRemove, onSubmit, onClose,
+  items, reference, submitting, error, contact, onContactChange, onQtyChange, onRemove, onSubmit, onClose,
 }: {
-  items: Array<{ product: AppleProduct; qty: number }>
+  items: AppleQuoteItem[]
+  reference: string | null
+  submitting: boolean
+  error: string
+  contact: QuoteContact
+  onContactChange: (contact: QuoteContact) => void
+  onQtyChange: (id: string, qty: number) => void
   onRemove: (id: string) => void
   onSubmit: () => void
   onClose: () => void
 }) {
-  const total = items.reduce((s, i) => s + i.product.price_display * i.qty, 0)
+  const total = items.reduce((s, i) => s + i.price * i.qty, 0)
+  const canSubmit = items.length > 0 && !submitting && !!contact.name.trim() && !!contact.phone.trim()
+
+  if (reference) {
+    return (
+      <div className="ent-quote-sidebar" style={{
+        position: 'fixed', top: 0, right: 0, bottom: 0, width: 380,
+        background: A.white, boxShadow: '-4px 0 32px rgba(0,0,0,0.12)',
+        zIndex: 1000, display: 'flex', flexDirection: 'column', justifyContent: 'center',
+        padding: 32, boxSizing: 'border-box',
+        fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif",
+      }}>
+        <div style={{ fontSize: 22, fontWeight: 600, color: A.black, marginBottom: 12 }}>Quote request received</div>
+        <p style={{ fontSize: 14, color: A.grey300, lineHeight: 1.6, margin: '0 0 8px' }}>
+          Your reference is <strong style={{ color: A.black }}>{reference}</strong>. We've emailed you a copy.
+        </p>
+        <p style={{ fontSize: 14, color: A.grey300, lineHeight: 1.6, margin: '0 0 24px' }}>
+          We'll check availability and let you know if any item is unavailable or on order.
+        </p>
+        <button onClick={onClose} style={{
+          width: '100%', padding: '14px 0', borderRadius: 980, background: A.blue, color: A.white,
+          border: 'none', fontSize: 15, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
+        }}>
+          Done
+        </button>
+      </div>
+    )
+  }
 
   return (
     <div className="ent-quote-sidebar" style={{
@@ -477,27 +544,46 @@ function QuoteSidebar({
             No products added yet
           </div>
         ) : (
-          items.map(({ product, qty }) => (
-            <div key={product.id} style={{
-              display: 'flex', gap: 12, paddingBottom: 16, marginBottom: 16,
-              borderBottom: `1px solid ${A.grey100}`,
-            }}>
-              <div style={{ width: 56, height: 56, background: A.offwhite, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: A.grey300 }}>
-                {product.category_main === 'Mac' ? <Laptop size={24} /> : product.category_main === 'iPhone' ? <Smartphone size={24} /> : product.category_main === 'iPad' ? <Tablet size={24} /> : product.category_main === 'Watch' ? <Watch size={24} /> : <Package size={24} />}
-              </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 13, fontWeight: 600, color: A.black, marginBottom: 2, lineHeight: 1.3 }}>
-                  {cleanName(product.name)}
+          <>
+            {items.map((item) => (
+              <div key={item.id} style={{
+                display: 'flex', gap: 12, paddingBottom: 16, marginBottom: 16,
+                borderBottom: `1px solid ${A.grey100}`,
+              }}>
+                <div style={{ width: 56, height: 56, background: A.offwhite, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: A.grey300, overflow: 'hidden' }}>
+                  {item.image
+                    ? <img src={item.image} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                    : <Package size={24} />}
                 </div>
-                <div style={{ fontSize: 11, color: A.grey300, marginBottom: 4 }}>{product.sku}</div>
-                <div style={{ fontSize: 14, fontWeight: 600, color: A.black }}>{fmt(product.price_display)}</div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: A.black, marginBottom: 2, lineHeight: 1.3 }}>
+                    {cleanName(item.name)}
+                  </div>
+                  <div style={{ fontSize: 11, color: A.grey300, marginBottom: 4 }}>{item.sku}</div>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: A.black, marginBottom: 8 }}>{fmt(item.price)}</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <button aria-label={`Reduce quantity of ${cleanName(item.name)}`} onClick={() => onQtyChange(item.id, item.qty - 1)} style={quoteQtyBtn}>−</button>
+                    <span style={{ fontSize: 13, fontWeight: 600, minWidth: 20, textAlign: 'center' }}>{item.qty}</span>
+                    <button aria-label={`Increase quantity of ${cleanName(item.name)}`} disabled={item.qty >= MAX_QUOTE_QTY} onClick={() => onQtyChange(item.id, item.qty + 1)} style={quoteQtyBtn}>+</button>
+                  </div>
+                </div>
+                <button aria-label={`Remove ${cleanName(item.name)}`} onClick={() => onRemove(item.id)}
+                  style={{ background: 'none', border: 'none', color: A.grey300, cursor: 'pointer', padding: '0 4px', alignSelf: 'flex-start', display: 'flex' }}>
+                  <X size={16} />
+                </button>
               </div>
-              <button onClick={() => onRemove(product.id)}
-                style={{ background: 'none', border: 'none', color: A.grey300, cursor: 'pointer', padding: '0 4px', alignSelf: 'flex-start', display: 'flex' }}>
-                <X size={16} />
-              </button>
-            </div>
-          ))
+            ))}
+
+            <div style={{ fontSize: 13, fontWeight: 600, color: A.black, marginBottom: 8 }}>Your details</div>
+            <input aria-label="Your name" placeholder="Your name" autoComplete="name" value={contact.name}
+              onChange={e => onContactChange({ ...contact, name: e.target.value })} style={quoteField} />
+            <input aria-label="Phone number" placeholder="Phone number" type="tel" autoComplete="tel" value={contact.phone}
+              onChange={e => onContactChange({ ...contact, phone: e.target.value })} style={quoteField} />
+            <input aria-label="Organisation (optional)" placeholder="Organisation (optional)" autoComplete="organization" value={contact.organisation}
+              onChange={e => onContactChange({ ...contact, organisation: e.target.value })} style={quoteField} />
+            <textarea aria-label="Notes (optional)" placeholder="Notes (optional)" rows={3} value={contact.notes}
+              onChange={e => onContactChange({ ...contact, notes: e.target.value })} style={{ ...quoteField, resize: 'vertical' }} />
+          </>
         )}
       </div>
 
@@ -508,21 +594,24 @@ function QuoteSidebar({
           <span style={{ fontSize: 18, fontWeight: 700, color: A.black }}>{fmt(total)}</span>
         </div>
         <p style={{ fontSize: 12, color: A.grey300, marginBottom: 16, lineHeight: 1.5 }}>
-          Final pricing subject to formal quote. All prices include VAT. Net 30 credit terms available for approved accounts.
+          All prices include VAT. {APPLE_DELIVERY_NOTE} {APPLE_QUOTE_TERMS}
         </p>
+        {error && (
+          <p role="alert" style={{ fontSize: 13, color: A.red, marginBottom: 12, lineHeight: 1.4 }}>{error}</p>
+        )}
         <button
           onClick={onSubmit}
-          disabled={items.length === 0}
+          disabled={!canSubmit}
           style={{
             width: '100%', padding: '14px 0', borderRadius: 980,
-            background: items.length > 0 ? A.blue : A.grey100,
-            color: items.length > 0 ? A.white : A.grey300,
+            background: canSubmit ? A.blue : A.grey100,
+            color: canSubmit ? A.white : A.grey300,
             border: 'none', fontSize: 15, fontWeight: 600,
-            cursor: items.length > 0 ? 'pointer' : 'not-allowed',
+            cursor: canSubmit ? 'pointer' : 'not-allowed',
             fontFamily: 'inherit', letterSpacing: '-0.01em',
           }}
         >
-          Submit Quote Request
+          {submitting ? 'Sending…' : 'Submit Quote Request'}
         </button>
       </div>
     </div>
@@ -548,8 +637,17 @@ export default function EnterpriseApplePage() {
   const [products, setProducts] = useState<AppleProduct[]>([])
   const [loading, setLoading] = useState(true)
   const [filters, setFilters] = useState({ search: '', colour: '', storage: '', status: '' })
-  const [quoteItems, setQuoteItems] = useState<Array<{ product: AppleProduct; qty: number }>>([])
-  const [showQuote, setShowQuote] = useState(false)
+  const quoteItems = useAppleQuoteStore(s => s.items)
+  const setQuoteQty = useAppleQuoteStore(s => s.setQty)
+  const removeQuoteItem = useAppleQuoteStore(s => s.removeItem)
+  const clearQuote = useAppleQuoteStore(s => s.clear)
+  const { user, session, profile } = useAuth()
+  const { buy, addToQuote: addProductToQuote } = useAppleBuying()
+  const [showQuote, setShowQuote] = useState(searchParams.get('quote') === 'open')
+  const [contact, setContact] = useState<QuoteContact>({ name: '', phone: '', organisation: '', notes: '' })
+  const [quoteReference, setQuoteReference] = useState<string | null>(null)
+  const [submittingQuote, setSubmittingQuote] = useState(false)
+  const [quoteError, setQuoteError] = useState('')
   const [toast, setToast] = useState('')
   const [counts, setCounts] = useState<Record<string, number>>({})
 
@@ -591,12 +689,27 @@ export default function EnterpriseApplePage() {
   })
 
   const addToQuote = (product: AppleProduct) => {
-    setQuoteItems(prev => {
-      if (prev.find(i => i.product.id === product.id)) return prev
-      return [...prev, { product, qty: 1 }]
-    })
+    if (!addProductToQuote(product)) return
     showToast(`${cleanName(product.name)} added to quote`)
+    setQuoteReference(null)
     setShowQuote(true)
+  }
+
+  // Fill in what we already know, without overwriting anything the customer typed.
+  useEffect(() => {
+    if (!profile) return
+    setContact(c => ({
+      ...c,
+      name: c.name || profile.full_name || [profile.first_name, profile.last_name].filter(Boolean).join(' '),
+      phone: c.phone || profile.phone || '',
+      organisation: c.organisation || profile.org_name || '',
+    }))
+  }, [profile])
+
+  const closeQuote = () => {
+    setShowQuote(false)
+    setQuoteReference(null)
+    setQuoteError('')
   }
 
   const showToast = (msg: string) => {
@@ -605,31 +718,29 @@ export default function EnterpriseApplePage() {
   }
 
   const handleSubmitQuote = async () => {
+    if (!user || !session) {
+      const here = `/enterprise/apple?${new URLSearchParams({ cat: activeCategory, view: 'shop', quote: 'open' })}`
+      navigate(`/auth?redirect=${encodeURIComponent(here)}`)
+      return
+    }
+    setSubmittingQuote(true)
+    setQuoteError('')
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) { navigate('/enterprise/login'); return }
-
-      const { error } = await supabase.from('quote_requests').insert({
-        user_id: user.id,
-        source: 'enterprise',
-        status: 'pending',
-        items: quoteItems.map(i => ({
-          product_id: i.product.id,
-          sku: i.product.sku,
-          name: i.product.name,
-          qty: i.qty,
-          unit_price: i.product.price_display,
-        })),
-        total_amount: quoteItems.reduce((s, i) => s + i.product.price_display * i.qty, 0),
-        notes: 'Apple products quote from enterprise portal',
+      const reference = await submitAppleQuote({
+        accessToken: session.access_token,
+        items: quoteItems.map(i => ({ product_id: i.id, qty: i.qty })),
+        contactName: contact.name,
+        contactPhone: contact.phone,
+        organisation: contact.organisation,
+        notes: contact.notes,
       })
-
-      if (error) throw error
-      setQuoteItems([])
-      setShowQuote(false)
-      showToast('Quote submitted! We will respond within 24 hours.')
-    } catch (err: any) {
-      showToast(`Error: ${err.message}`)
+      clearQuote()
+      setContact(c => ({ ...c, notes: '' }))
+      setQuoteReference(reference)
+    } catch (err) {
+      setQuoteError(err instanceof Error ? err.message : 'We couldn\'t save your quote. Please try again.')
+    } finally {
+      setSubmittingQuote(false)
     }
   }
 
@@ -789,6 +900,7 @@ export default function EnterpriseApplePage() {
                 <AppleProductCard
                   key={product.id}
                   product={product}
+                  onBuy={buy}
                   onAddToQuote={addToQuote}
                 />
               ))}
@@ -803,14 +915,20 @@ export default function EnterpriseApplePage() {
       {showQuote && (
         <>
           <div
-            onClick={() => setShowQuote(false)}
+            onClick={closeQuote}
             style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)', zIndex: 999 }}
           />
           <QuoteSidebar
             items={quoteItems}
-            onRemove={id => setQuoteItems(prev => prev.filter(i => i.product.id !== id))}
+            reference={quoteReference}
+            submitting={submittingQuote}
+            error={quoteError}
+            contact={contact}
+            onContactChange={setContact}
+            onQtyChange={setQuoteQty}
+            onRemove={removeQuoteItem}
             onSubmit={handleSubmitQuote}
-            onClose={() => setShowQuote(false)}
+            onClose={closeQuote}
           />
         </>
       )}

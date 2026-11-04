@@ -3,6 +3,32 @@
 
 const ENDPOINT = '/.netlify/functions/apple-catalogue'
 
+export const APPLE_DELIVERY_NOTE = 'Delivery in 3 to 14 days, pending stock availability. If an item isn\'t available, we\'ll email you and you can cancel for a 100% refund.'
+// Core's price list requires this qualification on quotes to customers.
+export const APPLE_QUOTE_TERMS = 'Prices remain subject to change up to delivery, and the price payable is the list price on the date of delivery. E&OE.'
+
+export interface AppleQuoteRequest {
+  accessToken: string
+  items: Array<{ product_id: string; qty: number }>
+  contactName: string
+  contactPhone: string
+  organisation: string
+  notes: string
+}
+
+export async function submitAppleQuote(request: AppleQuoteRequest): Promise<string> {
+  const response = await fetch('/.netlify/functions/apple-quote', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(request),
+  })
+  const result = await response.json().catch(() => null)
+  if (!response.ok || !result?.reference) {
+    throw new Error(result?.error || 'We couldn\'t save your quote. Please try again.')
+  }
+  return result.reference
+}
+
 async function request<T>(query: string): Promise<T> {
   const response = await fetch(`${ENDPOINT}?${query}`)
   if (!response.ok) throw new Error(`Apple catalogue request failed: ${response.status}`)

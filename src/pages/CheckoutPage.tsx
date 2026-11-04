@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { AlertTriangle, Lock, Mail } from 'lucide-react';
+import { APPLE_DELIVERY_NOTE } from '../lib/appleCatalogue';
 import { useCartStore } from '../lib/cartStore';
 import { useAuth } from '../lib/AuthContext';
 import { useAddresses } from '../lib/api';
@@ -441,6 +442,12 @@ export function CheckoutPage() {
               <dd className="tabular-nums">{formatMoney(total)}</dd>
             </div>
           </dl>
+
+          {items.some((i) => i.supplier === 'apple') && (
+            <p className="mt-4 rounded-xl border border-spet-line-2 p-3 text-[13px] leading-snug text-spet-ink-2">
+              <strong className="font-semibold text-spet-ink">Apple products:</strong> {APPLE_DELIVERY_NOTE}
+            </p>
+          )}
 
           <Button size="lg" className="mt-5 w-full" onClick={placeOrder} loading={placing} disabled={items.length === 0}>
             {!placing && <Lock className="h-4 w-4" aria-hidden="true" />}

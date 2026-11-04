@@ -8,6 +8,7 @@ const supabase = createClient(
 const BREVO_API_KEY = process.env.BREVO_API_KEY;
 const SENDER_EMAIL = process.env.SENDER_EMAIL || 'sales@spetonline.co.za';
 const SENDER_NAME = process.env.SENDER_NAME || 'SPET Online';
+const APPLE_ALERT_EMAIL = process.env.QUOTE_ALERT_EMAIL || 'info@sekkatitech.co.za';
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -29,7 +30,18 @@ function buildOrderItemsHtml(items) {
   `).join('');
 }
 
-function buildCustomerEmailHtml(order, items) {
+async function hasAppleItems(items) {
+  const skus = items.map((i) => i.sku).filter(Boolean);
+  if (skus.length === 0) return false;
+  const { data, error } = await supabase.from('core_products').select('sku').in('sku', skus).limit(1);
+  if (error) {
+    console.error('send-order-email: Apple check failed:', error.message);
+    return false;
+  }
+  return data.length > 0;
+}
+
+function buildCustomerEmailHtml(order, items, isApple) {
   return `
   <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff;">
     <div style="background: #0a141d; padding: 24px; text-align: center;">
@@ -73,6 +85,10 @@ function buildCustomerEmailHtml(order, items) {
           ${order.shipping_city || ''}, ${order.shipping_province || ''}, ${order.shipping_postal_code || ''}
         </p>
       </div>
+
+      ${isApple ? `<p style="color: #6b7280; font-size: 13px; margin-top: 24px; line-height: 1.6;">
+        <strong>Apple products:</strong> delivery is 3 to 14 days, pending stock availability. If an item isn't available, we'll email you straight away and you can cancel for a 100% refund.
+      </p>` : ''}
 
       <p style="color: #6b7280; font-size: 13px; margin-top: 24px;">
         We'll notify you when your order ships. Questions? Reply to this email or call us on 0870 881 483.
@@ -159,13 +175,14 @@ exports.handler = async (event) => {
     }
 
     const items = order.order_items || [];
+    const isApple = await hasAppleItems(items);
 
     // ── Send customer confirmation email ─────────────────────────────────────
     await sendEmail({
       to: order.client_email,
       toName: order.client_name,
       subject: `Order Confirmed — ${order.id} | SPET Online`,
-      htmlContent: buildCustomerEmailHtml(order, items),
+      htmlContent: buildCustomerEmailHtml(order, items, isApple),
     });
 
     // ── Send admin notification email ────────────────────────────────────────
@@ -175,6 +192,16 @@ exports.handler = async (event) => {
       subject: `🎉 New Order Paid — ${order.id}`,
       htmlContent: buildAdminEmailHtml(order, items),
     });
+
+    // ── Apple stock is checked after payment, so alert the team that does it ─
+    if (isApple) {
+      await sendEmail({
+        to: APPLE_ALERT_EMAIL,
+        toName: 'SPET Online Apple Orders',
+        subject: `Apple order paid: check stock — ${order.id}`,
+        htmlContent: buildAdminEmailHtml(order, items),
+      });
+    }
 
     return {
       statusCode: 200,

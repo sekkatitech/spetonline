@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { X } from 'lucide-react'
-import { supabase } from '../lib/supabase'
-import { fetchAppleProduct } from '../lib/appleCatalogue'
+import { APPLE_DELIVERY_NOTE, fetchAppleProduct } from '../lib/appleCatalogue'
+import { useAppleBuying } from '../lib/useAppleBuying'
 
 // ── Apple tokens (matches EnterpriseProductsPage) ──
 const A = {
@@ -52,10 +52,13 @@ export default function EnterpriseAppleDetailPage() {
   const [showFullDesc, setShowFullDesc] = useState(false)
   const [heroError, setHeroError] = useState(false)
   const [zoomSrc, setZoomSrc] = useState<string | null>(null)
+  const [addedToQuote, setAddedToQuote] = useState(false)
+  const { buy, addToQuote } = useAppleBuying()
 
   useEffect(() => {
     if (!id) return
     setLoading(true)
+    setAddedToQuote(false)
     setShowFullDesc(false)
     setHeroError(false)
     setQty(1)
@@ -79,39 +82,18 @@ export default function EnterpriseAppleDetailPage() {
 
   const hero = gallery[0] ?? null
 
-  const addToQuote = async () => {
-    if (!product) return
-    const { data: { session } } = await supabase.auth.getSession()
-    if (!session) { navigate('/enterprise/login'); return }
-    let accountId: string | null = null
-    const { data: member } = await supabase
-      .from('enterprise_members').select('account_id').eq('user_id', session.user.id).maybeSingle()
-    accountId = member?.account_id ?? null
-    await supabase.from('quote_requests').insert({
-      user_id: session.user.id,
-      enterprise_account_id: accountId,
-      source: 'enterprise',
-      org_name: 'Enterprise Quote',
-      status: 'pending',
-      items: [{ id: product.id, sku: product.sku, name: product.name, qty, price: product.price_display }],
-      final_amount: product.price_display * qty,
-    })
-    navigate('/enterprise/products')
-  }
-
   if (loading) return <CenterMsg text="Loading…" />
   if (!product) {
     return (
       <div style={{ background: A.off, minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, fontFamily: FONT }}>
         <div style={{ fontSize: 18, color: A.dark }}>Product not found</div>
-        <button onClick={() => navigate('/enterprise/products')} style={pillBtn(true)}>Back to products</button>
+        <button onClick={() => navigate('/enterprise/apple')} style={pillBtn(true)}>Back to products</button>
       </div>
     )
   }
 
   const specs = product.specs || {}
   const subtitle = [specs.chip, specs.ram, specs.storage].filter(Boolean).join(' · ')
-  const outOfStock = product.status === 'out_of_stock'
 
   return (
     <div style={{ background: A.off, minHeight: '100vh', fontFamily: FONT }}>
@@ -176,8 +158,6 @@ export default function EnterpriseAppleDetailPage() {
             </div>
             <div style={{ fontSize: 12, color: A.grey, fontStyle: 'italic', marginBottom: 20 }}>All prices include VAT.</div>
 
-            {outOfStock && <div style={{ fontSize: 15, fontWeight: 700, color: '#ff3b30', marginBottom: 16 }}>OUT OF STOCK</div>}
-
             {product.short_description && (
               <div style={{ fontSize: 15, color: A.dark, lineHeight: 1.6, marginBottom: 8 }}>
                 {product.short_description}
@@ -195,9 +175,26 @@ export default function EnterpriseAppleDetailPage() {
               <button onClick={() => setQty(q => q + 1)} style={qtyBtn('r')}>+</button>
             </div>
 
-            <button onClick={addToQuote} style={{ ...pillBtn(true), width: '100%', maxWidth: 440, padding: '14px 0', fontSize: 15 }}>
-              Add to Quote
-            </button>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxWidth: 440 }}>
+              <button onClick={() => buy(product, qty)} style={{ ...pillBtn(true), width: '100%', padding: '14px 0', fontSize: 15 }}>
+                Buy
+              </button>
+              <button
+                onClick={() => { if (addToQuote(product, qty)) setAddedToQuote(true) }}
+                style={{ ...pillBtn(false), width: '100%', padding: '14px 0', fontSize: 15 }}
+              >
+                Add to Quote
+              </button>
+              {addedToQuote && (
+                <button
+                  onClick={() => navigate(`/enterprise/apple?cat=${encodeURIComponent(product.category_main)}&view=shop&quote=open`)}
+                  style={{ background: 'none', border: 'none', color: A.blue, fontSize: 14, cursor: 'pointer', padding: 0, fontFamily: 'inherit' }}
+                >
+                  Added to your quote. View quote →
+                </button>
+              )}
+            </div>
+            <p style={{ fontSize: 13, color: A.grey, lineHeight: 1.5, maxWidth: 440, margin: '14px 0 0' }}>{APPLE_DELIVERY_NOTE}</p>
 
             {Object.keys(specs).length > 0 && (
               <div style={{ borderTop: `1px solid ${A.line}`, paddingTop: 20, marginTop: 28 }}>

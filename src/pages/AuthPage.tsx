@@ -56,6 +56,10 @@ export function AuthPage() {
         body: { type: 'welcome', payload: { email, first_name: firstName } }
       }).catch(err => console.error("Failed to trigger welcome email:", err));
 
+      // No email confirmation pending means the customer is already signed in.
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) { navigate(redirectTo); return; }
+
       setSuccess('Account created! Please check your email to verify your account, then log in.');
       setMode('login');
     } else if (mode === 'forgot') {

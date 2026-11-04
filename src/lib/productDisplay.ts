@@ -2,6 +2,8 @@ import type { Product } from './api';
 import type { CartItem } from './cartStore';
 
 export type ProductSupplier = 'esquire' | 'syntech' | 'axiz' | 'pinnacle';
+/** Apple has its own pages, so it only appears in the cart and its product links. */
+export type CartSupplier = ProductSupplier | 'apple';
 
 /**
  * Normalised, display-ready view of a catalogue product.
@@ -28,13 +30,14 @@ export interface ProductView {
   note: 'Unboxed' | 'Clearance' | null;
 }
 
-const SUPPLIER_DETAIL_PATH: Record<Exclude<ProductSupplier, 'esquire'>, string> = {
+const SUPPLIER_DETAIL_PATH: Record<Exclude<CartSupplier, 'esquire'>, string> = {
   syntech: '/shop/tech/product',
   axiz: '/shop/axiz/product',
   pinnacle: '/shop/pinnacle/product',
+  apple: '/enterprise/apple',
 };
 
-export function productHref(supplier: ProductSupplier, id: string, slug?: string | null): string {
+export function productHref(supplier: CartSupplier, id: string, slug?: string | null): string {
   return supplier === 'esquire' ? `/product/${slug || id}` : `${SUPPLIER_DETAIL_PATH[supplier]}/${id}`;
 }
 
