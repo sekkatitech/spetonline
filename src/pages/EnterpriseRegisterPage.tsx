@@ -1,7 +1,8 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { Check, Truck, CreditCard } from 'lucide-react'
 import { supabase } from '../lib/supabase'
+import { appleReturnPath, withAppleReturn } from '../lib/appleAccess'
 
 // ── Design tokens (same as EnterprisePage) ──
 const E = {
@@ -105,7 +106,7 @@ const errorText: React.CSSProperties = {
 }
 
 // ── Header ──
-function RegisterHeader() {
+function RegisterHeader({ returnPath }: { returnPath: string | null }) {
   const navigate = useNavigate()
   return (
     <header style={{
@@ -123,7 +124,7 @@ function RegisterHeader() {
           <span style={{ fontSize: 14, fontWeight: 300, color: E.secondary }}>Enterprise</span>
         </a>
         <button
-          onClick={() => navigate('/enterprise/login')}
+          onClick={() => navigate(withAppleReturn('/enterprise/login', returnPath))}
           style={{
             fontSize: 13, fontWeight: 600, color: E.primary,
             background: 'none', border: `1px solid ${E.outlineVariant}`,
@@ -599,7 +600,7 @@ function Step3({
 }
 
 // ── Success screen ──
-function SuccessScreen({ email }: { email: string }) {
+function SuccessScreen({ email, forApple }: { email: string; forApple: boolean }) {
   return (
     <div style={{ textAlign: 'center', padding: '48px 24px' }}>
       <div style={{
@@ -618,9 +619,18 @@ function SuccessScreen({ email }: { email: string }) {
       </p>
       <p style={{ fontSize: 15, fontWeight: 600, color: E.primary, marginBottom: 24 }}>{email}</p>
       <p style={{ fontSize: 13, color: E.onSurfaceVariant, lineHeight: 1.65, maxWidth: 400, margin: '0 auto 32px' }}>
-        Click the link to confirm your email and activate your login. Our team will separately verify your
-        business details and approve your account within <strong>1 business day</strong> — you'll be able to
-        sign in with the password you just created once both steps are complete.
+        {forApple ? (
+          <>
+            Click the link to confirm your email, then sign in with the password you just created to continue
+            with your Apple products. Our team will verify your business details within <strong>1 business day</strong>.
+          </>
+        ) : (
+          <>
+            Click the link to confirm your email and activate your login. Our team will separately verify your
+            business details and approve your account within <strong>1 business day</strong> — you'll be able to
+            sign in with the password you just created once both steps are complete.
+          </>
+        )}
       </p>
       <a
         href="/enterprise"
@@ -671,6 +681,8 @@ function validate(step: number, data: FormData): Partial<Record<keyof FormData, 
 // ── Main Component ──
 export default function EnterpriseRegisterPage() {
   const navigate  = useNavigate()
+  const location  = useLocation()
+  const returnPath = appleReturnPath(location.search)
   const [step, setStep]       = useState(0)
   const [data, setData]       = useState<FormData>(INITIAL)
   const [errors, setErrors]   = useState<Partial<Record<keyof FormData, string>>>({})
@@ -707,9 +719,9 @@ export default function EnterpriseRegisterPage() {
       const response = await fetch('/.netlify/functions/create-enterprise-account', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
+        body: JSON.stringify({ ...data, redirect: returnPath }),
       })
-      
+
       const result = await response.json()
       
       if (!response.ok || !result.success) {
@@ -732,11 +744,11 @@ export default function EnterpriseRegisterPage() {
       minHeight: '100vh',
       WebkitFontSmoothing: 'antialiased',
     }}>
-      <RegisterHeader />
+      <RegisterHeader returnPath={returnPath} />
 
       <div style={{ maxWidth: 1100, margin: '0 auto', padding: '48px 24px' }}>
         {done ? (
-          <SuccessScreen email={data.contact_email} />
+          <SuccessScreen email={data.contact_email} forApple={!!returnPath} />
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: 40, alignItems: 'start' }}>
 
@@ -745,6 +757,11 @@ export default function EnterpriseRegisterPage() {
               <h1 style={{ fontSize: 28, fontWeight: 700, color: E.primary, letterSpacing: '-0.02em', marginBottom: 12 }}>
                 Register Your Business
               </h1>
+              {returnPath && (
+                <p style={{ fontSize: 14, fontWeight: 600, color: E.primary, lineHeight: 1.6, marginBottom: 12 }}>
+                  We supply Apple products to businesses. Register your business to buy or request a quote.
+                </p>
+              )}
               <p style={{ fontSize: 14, color: E.onSurfaceVariant, lineHeight: 1.65, marginBottom: 28 }}>
                 Join the SPET Enterprise ecosystem. Streamline your B2B procurement with tiered pricing, priority logistics, and a dedicated account manager.
               </p>

@@ -95,6 +95,16 @@ exports.handler = async (event) => {
     const { data: { user }, error: authError } = await supabase.auth.getUser(clean(body.accessToken, 4000));
     if (authError || !user) return respond(401, { error: 'Please sign in to request a quote.' });
 
+    // Apple is sold to businesses: must match canUseApple in src/lib/appleAccess.ts.
+    const { data: access } = await supabase
+      .from('profiles')
+      .select('role, enterprise_status')
+      .eq('id', user.id)
+      .maybeSingle();
+    if (!['admin', 'super_admin'].includes(access?.role) && !['approved', 'pending'].includes(access?.enterprise_status)) {
+      return respond(403, { error: 'Please register your business to request a quote.' });
+    }
+
     const name = clean(body.contactName, 120);
     const phone = clean(body.contactPhone, 40);
     const organisation = clean(body.organisation, 160);

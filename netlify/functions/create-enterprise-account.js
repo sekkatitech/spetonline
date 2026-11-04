@@ -6,7 +6,7 @@ const supabase = createClient(
 );
 
 const BREVO_API_KEY = process.env.BREVO_API_KEY;
-const SENDER_EMAIL = process.env.SENDER_EMAIL || 'sales@spetonline.co.za';
+const SENDER_EMAIL = 'admin@spetonline.co.za';
 const SENDER_NAME = process.env.SENDER_NAME || 'SPET Online';
 const SITE_URL = process.env.SITE_URL || 'https://spetonline.co.za';
 
@@ -16,7 +16,7 @@ const CORS = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
-function buildConfirmationEmailHtml(firstName, companyName, actionLink) {
+function buildConfirmationEmailHtml(firstName, companyName, actionLink, forApple) {
   return `
   <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff;">
     <div style="background: #0a141d; padding: 24px; text-align: center;">
@@ -34,8 +34,10 @@ function buildConfirmationEmailHtml(firstName, companyName, actionLink) {
         </a>
       </div>
       <p style="color: #6b7280; font-size: 13px; line-height: 1.6;">
-        Once confirmed, our team will still need to review and approve your business account — this usually takes
-        one business day. You'll be able to log in once both steps are complete.
+        ${forApple
+          ? `Once confirmed, sign in to continue with your Apple products. Our team will review your business details, which usually takes one business day.`
+          : `Once confirmed, our team will still need to review and approve your business account — this usually takes
+        one business day. You'll be able to log in once both steps are complete.`}
       </p>
     </div>
     <div style="background: #f9fafb; padding: 16px 24px; text-align: center; border-top: 1px solid #e5e7eb;">
@@ -85,8 +87,12 @@ exports.handler = async (event) => {
       company_name, registration_number, vat_number, industry, company_size, website,
       id_document_url, company_registration_document_url, proof_of_address_document_url,
       contact_first_name, contact_last_name, contact_email, contact_phone, contact_role,
-      physical_address, city, province, postal_code, password
+      physical_address, city, province, postal_code, password, redirect
     } = data;
+
+    // Only Apple pages are accepted, so a crafted request can't redirect elsewhere.
+    const appleReturn = typeof redirect === 'string' && /^\/enterprise\/apple(\/|\?|$)/.test(redirect) ? redirect : null;
+    const loginPath = appleReturn ? `/enterprise/login?redirect=${encodeURIComponent(appleReturn)}` : '/enterprise/login';
 
     // 1. Create the user (unconfirmed) and get a real confirmation link in one call.
     // Previously used admin.createUser({ email_confirm: true }), which auto-confirmed
@@ -102,7 +108,7 @@ exports.handler = async (event) => {
           full_name: `${contact_first_name} ${contact_last_name}`,
           role: 'enterprise',
         },
-        redirectTo: `${SITE_URL}/enterprise/login`,
+        redirectTo: `${SITE_URL}${loginPath}`,
       },
     });
 
@@ -185,7 +191,7 @@ exports.handler = async (event) => {
         to: contact_email,
         toName: `${contact_first_name} ${contact_last_name}`,
         subject: 'Confirm your email — SPET Online Enterprise',
-        htmlContent: buildConfirmationEmailHtml(contact_first_name, company_name, confirmationLink),
+        htmlContent: buildConfirmationEmailHtml(contact_first_name, company_name, confirmationLink, !!appleReturn),
       });
     } catch (emailErr) {
       console.error('Failed to send enterprise confirmation email:', emailErr);

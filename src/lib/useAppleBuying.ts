@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import { canUseApple, withAppleReturn } from './appleAccess';
 import { useAuth } from './AuthContext';
 import { useCartStore } from './cartStore';
 import { useAppleQuoteStore } from './appleQuoteStore';
@@ -15,14 +16,18 @@ export interface AppleBuyable {
 const productImage = (p: AppleBuyable) => p.thumbnail_url || p.image_urls?.[0] || null;
 const productName = (p: AppleBuyable) => p.name.replace(/\s+/g, ' ').trim();
 
-/** Buy and Quote ask for login first, then return the customer to the product. */
+/** Buy and Quote send anyone without an enterprise account to the business form, then back to the product. */
 export function useAppleBuying() {
   const navigate = useNavigate();
-  const { user, loading } = useAuth();
+  const { user, profile, loading } = useAuth();
 
   const signedIn = (productId: string) => {
-    if (user) return true;
-    if (!loading) navigate(`/auth?redirect=${encodeURIComponent(`/enterprise/apple/${productId}`)}`);
+    if (loading || (user && !profile)) return false;
+    if (canUseApple(profile)) return true;
+    const returnPath = `/enterprise/apple/${productId}`;
+    // A suspended account already has a login, and the login page explains the suspension.
+    const page = profile?.enterprise_status === 'suspended' ? '/enterprise/login' : '/enterprise/register';
+    navigate(withAppleReturn(page, returnPath));
     return false;
   };
 

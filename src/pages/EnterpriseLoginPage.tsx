@@ -1,7 +1,8 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { Check } from 'lucide-react'
 import { supabase } from '../lib/supabase'
+import { appleReturnPath, withAppleReturn } from '../lib/appleAccess'
 
 // ── Design tokens ──
 const E = {
@@ -36,6 +37,8 @@ const inputStyle = (hasError?: boolean): React.CSSProperties => ({
 
 export default function EnterpriseLoginPage() {
   const navigate = useNavigate()
+  const location = useLocation()
+  const returnPath = appleReturnPath(location.search)
 
   const [email,    setEmail]    = useState('')
   const [password, setPassword] = useState('')
@@ -68,6 +71,12 @@ export default function EnterpriseLoginPage() {
 
       if (!profile) throw new Error('Account not found. Please contact support.')
 
+      // New businesses can use Apple during review; the rest of Enterprise waits for approval.
+      if (profile.enterprise_status === 'pending' && returnPath) {
+        navigate(returnPath)
+        return
+      }
+
       if (profile.enterprise_status === 'pending') {
         setError('Your application is still under review. We will contact you within 1 business day once approved.')
         await supabase.auth.signOut()
@@ -86,8 +95,8 @@ export default function EnterpriseLoginPage() {
         return
       }
 
-      // 3. Approved — go to the enterprise home/showcase page
-      navigate('/enterprise/home')
+      // 3. Approved — back to the Apple product, or the enterprise home/showcase page
+      navigate(returnPath ?? '/enterprise/home')
 
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Login failed. Please try again.'
@@ -335,7 +344,7 @@ export default function EnterpriseLoginPage() {
               Don't have an account?{' '}
             </span>
             <a
-              href="/enterprise/register"
+              href={withAppleReturn('/enterprise/register', returnPath)}
               style={{ fontSize: 13, fontWeight: 600, color: E.primary, textDecoration: 'none' }}
             >
               Register your business →

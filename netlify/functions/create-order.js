@@ -154,6 +154,16 @@ exports.handler = async (event) => {
     }
 
     if (appleIds.length > 0) {
+      // Apple is sold to businesses: must match canUseApple in src/lib/appleAccess.ts.
+      const { data: access } = await supabase
+        .from('profiles')
+        .select('role, enterprise_status')
+        .eq('id', user.id)
+        .maybeSingle();
+      if (!['admin', 'super_admin'].includes(access?.role) && !['approved', 'pending'].includes(access?.enterprise_status)) {
+        return { statusCode: 403, headers: CORS, body: JSON.stringify({ error: 'Please register your business to buy Apple products.' }) };
+      }
+
       const { data: products, error } = await supabase
         .from('core_products')
         .select('id, name, sku, price_display')

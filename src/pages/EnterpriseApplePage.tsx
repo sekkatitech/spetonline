@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Search, X, Package, Apple as AppleIcon } from 'lucide-react'
 import { useAuth } from '../lib/AuthContext'
+import { canUseApple, withAppleReturn } from '../lib/appleAccess'
 import { APPLE_DELIVERY_NOTE, APPLE_QUOTE_TERMS, fetchAppleCounts, fetchAppleProducts, submitAppleQuote } from '../lib/appleCatalogue'
 import { useAppleBuying } from '../lib/useAppleBuying'
 import { MAX_QUOTE_QTY, useAppleQuoteStore, type AppleQuoteItem } from '../lib/appleQuoteStore'
@@ -721,9 +722,9 @@ export default function EnterpriseApplePage() {
   }
 
   const handleSubmitQuote = async () => {
-    if (!user || !session) {
+    if (!user || !session || !canUseApple(profile)) {
       const here = `/enterprise/apple?${new URLSearchParams({ cat: activeCategory, view: 'shop', quote: 'open' })}`
-      navigate(`/auth?redirect=${encodeURIComponent(here)}`)
+      navigate(withAppleReturn('/enterprise/register', here))
       return
     }
     setSubmittingQuote(true)
