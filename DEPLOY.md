@@ -7,7 +7,7 @@
 3. Open `.env` in the project root and fill in:
 
 ```
-VITE_SUPABASE_URL=https://hxxaxyruliquidvkocei.supabase.co
+VITE_SUPABASE_URL=https://YOUR-PROJECT.supabase.co
 VITE_SUPABASE_ANON_KEY=paste-your-anon-key-here
 ```
 
@@ -98,5 +98,5 @@ To wire up live payments, contact Bob Pay for your merchant credentials and add 
 
 | Variable | Value |
 |---|---|
-| `VITE_SUPABASE_URL` | `https://hxxaxyruliquidvkocei.supabase.co` |
+| `VITE_SUPABASE_URL` | `https://YOUR-PROJECT.supabase.co` |
 | `VITE_SUPABASE_ANON_KEY` | From Supabase dashboard → Settings → API |

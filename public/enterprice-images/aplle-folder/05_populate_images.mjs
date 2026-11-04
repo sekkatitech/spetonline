@@ -16,10 +16,10 @@
  *   1. npm install @supabase/supabase-js
  *   2. Set env vars (do NOT hard-code the key in the file):
  *        Git Bash / macOS / Linux:
- *          export SUPABASE_URL="https://hxxaxyruliquidvkocei.supabase.co"
+ *          export SUPABASE_URL="https://YOUR-PROJECT.supabase.co"
  *          export SUPABASE_SERVICE_KEY="your-service-role-key"
  *        PowerShell:
- *          $env:SUPABASE_URL="https://hxxaxyruliquidvkocei.supabase.co"
+ *          $env:SUPABASE_URL="https://YOUR-PROJECT.supabase.co"
  *          $env:SUPABASE_SERVICE_KEY="your-service-role-key"
  *   3. node 05_populate_images.mjs            (preview only, changes nothing)
  *      node 05_populate_images.mjs --apply    (writes to the database)

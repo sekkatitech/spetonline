@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 
-const SUPABASE_URL = 'https://hxxaxyruliquidvkocei.supabase.co';
+const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh4eGF4eXJ1bGlxdWlkdmtvY2VpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwMDQxMDQsImV4cCI6MjA5NDU4MDEwNH0.4xsWN9s8b-yJwy3WOm6das5zZGTxbHsRs3SQM2IkuL4';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
