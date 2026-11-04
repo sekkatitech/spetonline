@@ -219,10 +219,25 @@ Decided by the owner (2026-11-04):
    orders left unpaid for 48 hours, for orders created from 2026-11-04. Enterprise orders are
    excluded because they stay unpaid on credit terms.
 
+   The 11 older unpaid storefront orders (R41 182.60, June to October 2026) were cancelled
+   once, with the owner's approval, on 2026-11-04.
+
+Deployment notes (2026-11-04):
+
+- **Live since 2026-11-04.** Every production build from 2026-10-28 failed, so the site had stayed
+  on the 2026-08-13 deploy. This release also published the Claude chat, contact form and daily
+  visitor report for the first time.
+- **Secret scan.** Netlify treats the `SUPABASE_URL` value as a secret. Any tracked file holding
+  that literal URL fails the build with a generic "exit code 2", even though the build itself
+  passes. Keep it out of tracked files.
+- **Check the live site after deploying.** The security headers in `netlify.toml` do not apply
+  on the local dev server, so anything they block only shows up in production.
+
 Still open:
 
-- **Older unpaid orders.** Storefront orders from before 2026-11-04 are not covered by the job
-  and need a one-off cleanup, which the owner has yet to confirm.
+- **Real payment test.** Run a PayFast payment and a cancelled payment on the live setup.
+- **Apple page video.** The security headers block the `core.co.za` video on `/enterprise/apple`
+  because there is no `media-src`. Fix it with the Apple redesign.
 
 Technical:
 
