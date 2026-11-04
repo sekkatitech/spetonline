@@ -104,7 +104,7 @@ project is separate — DO NOT edit admin code here; only the function in THIS r
 
 Current problem: the function authenticates with a shared header 'x-spet-secret' whose
 value is exposed in the admin's public JS bundle (VITE_ env var) with a hardcoded
-fallback 'spet-zoho-2026'. Rewrite the function to:
+fallback value. Rewrite the function to:
 - Require an Authorization: Bearer <supabase access token> header.
 - Verify the token by calling supabase.auth.getUser(token) using a server-side client
   created with SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY from Netlify env (never VITE_).

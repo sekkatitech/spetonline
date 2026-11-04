@@ -40,12 +40,24 @@ async function requireAdmin(event) {
   return user;
 }
 
+// Exact-case on purpose: sub-headings such as 'APPLE TV' and 'AIRPODS' differ only by case.
 const MAIN_MAP = {
   '1 - CPU': 'Mac', '2 - iPad': 'iPad', '3 - iPhone': 'iPhone',
   '4 - Watch': 'Watch', '5 - Apple TV': 'Apple TV', '6 - Airpods': 'AirPods',
   '9 - Homepod': 'HomePod', '10 - Accessories': 'Accessories',
   '10 - Watch Accessories': 'Watch Accessories',
+  'CPU': 'Mac', 'iPad': 'iPad', 'iPhone': 'iPhone', 'Watch': 'Watch',
+  'Apple HomeView': 'HomeView', 'Apple TV': 'Apple TV', 'Airpods': 'AirPods',
+  'Homepod': 'HomePod', 'Accessories': 'Accessories',
 };
+
+// A blank status is a product Core has listed without a label yet, so it sells like NEW.
+const STATUS_MAP = {
+  'ACTIVE': 'active', 'NEW': 'active', '': 'active',
+  'WHILE STOCKS LAST': 'while_stocks_last',
+};
+
+const PAGE_SIZE = 1000;
 
 function parseSpecs(name) {
   const specs = {};
@@ -66,6 +78,67 @@ function parseSpecs(name) {
   return Object.keys(specs).length > 0 ? specs : null;
 }
 
+function parsePriceList(rows) {
+  let currentMain = '';
+  let currentSub = '';
+  const products = [];
+  const skipped = [];
+
+  for (const row of rows) {
+    const [sku, name, status, wholesale, rrp] = row;
+    if (!sku) continue;
+    const skuStr = String(sku).trim();
+
+    if (MAIN_MAP[skuStr]) { currentMain = MAIN_MAP[skuStr]; currentSub = skuStr; continue; }
+    if (!name) { currentSub = skuStr; continue; }
+
+    const nameStr = String(name).trim();
+    const statusKey = String(status || '').trim().toUpperCase();
+    const wholesaleNum = parseFloat(wholesale);
+    const rrpNum = parseFloat(rrp);
+
+    if (!(statusKey in STATUS_MAP) || !(wholesaleNum > 0) || !(rrpNum > 0)) {
+      skipped.push({ sku: skuStr, name: nameStr, status: statusKey });
+      continue;
+    }
+
+    products.push({
+      sku: skuStr,
+      name: nameStr,
+      category_main: currentMain,
+      category_sub: currentSub.charAt(0).toUpperCase() + currentSub.slice(1).toLowerCase(),
+      brand: 'Apple',
+      supplier: 'core',
+      status: STATUS_MAP[statusKey],
+      wholesale_ex_vat: wholesaleNum,
+      rrp_inc_vat: rrpNum,
+      price_display: rrpNum,
+      markup_percent: Math.round(((rrpNum / 1.15 - wholesaleNum) / wholesaleNum) * 10000) / 100,
+      is_active: true,
+      is_enterprise_only: true,
+      specs: parseSpecs(nameStr.toUpperCase()),
+    });
+  }
+
+  return { products, skipped };
+}
+
+async function loadExisting() {
+  const existing = new Map();
+  for (let from = 0; ; from += PAGE_SIZE) {
+    const { data, error } = await supabase
+      .from('core_products')
+      .select('sku, specs, price_display, is_active')
+      .order('sku')
+      .range(from, from + PAGE_SIZE - 1);
+    if (error) throw new Error(`Could not read current products: ${error.message}`);
+    for (const row of data) existing.set(row.sku, row);
+    if (data.length < PAGE_SIZE) return existing;
+  }
+}
+
+exports.parsePriceList = parsePriceList;
+
 exports.handler = async (event) => {
   if (event.httpMethod === 'OPTIONS') return { statusCode: 200, headers: CORS, body: '' };
   if (event.httpMethod !== 'POST') return { statusCode: 405, headers: CORS, body: 'Method not allowed' };
@@ -78,7 +151,7 @@ exports.handler = async (event) => {
 
   try {
     const body = JSON.parse(event.body || '{}');
-    const { fileBase64, fileName } = body;
+    const { fileBase64, dryRun } = body;
 
     if (!fileBase64) {
       return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: 'No file provided' }) };
@@ -90,47 +163,45 @@ exports.handler = async (event) => {
     const ws = wb.Sheets[wb.SheetNames[0]];
     const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: null });
 
-    let currentMain = '';
-    let currentSub = '';
-    const products = [];
-
-    for (const row of rows) {
-      const [sku, name, status, wholesale, rrp] = row;
-      if (!sku) continue;
-      const skuStr = String(sku).trim();
-
-      if (MAIN_MAP[skuStr]) { currentMain = MAIN_MAP[skuStr]; continue; }
-      if (status !== 'ACTIVE' && status !== 'WHILE STOCKS LAST' && !name) {
-        currentSub = skuStr; continue;
-      }
-      if ((status === 'ACTIVE' || status === 'WHILE STOCKS LAST') && wholesale && rrp) {
-        const nameStr = String(name || '').trim();
-        const wholesaleNum = parseFloat(wholesale);
-        const rrpNum = parseFloat(rrp);
-        const markup = Math.round(((rrpNum / 1.15 - wholesaleNum) / wholesaleNum) * 10000) / 100;
-        const specs = parseSpecs(nameStr.toUpperCase());
-
-        products.push({
-          sku: skuStr,
-          name: nameStr,
-          category_main: currentMain,
-          category_sub: currentSub.charAt(0).toUpperCase() + currentSub.slice(1).toLowerCase(),
-          brand: 'Apple',
-          supplier: 'core',
-          status: status === 'ACTIVE' ? 'active' : 'while_stocks_last',
-          wholesale_ex_vat: wholesaleNum,
-          rrp_inc_vat: rrpNum,
-          price_display: rrpNum,
-          markup_percent: markup,
-          is_active: true,
-          is_enterprise_only: true,
-          specs: specs,
-        });
-      }
-    }
+    const { products, skipped } = parsePriceList(rows);
 
     if (products.length === 0) {
       return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: 'No products found in file' }) };
+    }
+
+    // An unrecognised layout must never reach the database: it would wipe categories.
+    const uncategorised = products.filter((p) => !p.category_main);
+    if (uncategorised.length > 0) {
+      return {
+        statusCode: 400,
+        headers: CORS,
+        body: JSON.stringify({ error: `Nothing imported: ${uncategorised.length} products have no recognised category heading. The price list layout may have changed.` }),
+      };
+    }
+
+    // Keep specs already on the product; only fill what is missing from the name.
+    const existing = await loadExisting();
+    for (const p of products) {
+      const merged = { ...(p.specs || {}), ...(existing.get(p.sku)?.specs || {}) };
+      p.specs = Object.keys(merged).length > 0 ? merged : null;
+    }
+
+    const listed = new Set(products.map((p) => p.sku));
+    const summary = {
+      total: products.length,
+      newProducts: products.filter((p) => !existing.has(p.sku)).length,
+      priceChanges: products.filter((p) => existing.has(p.sku) && Number(existing.get(p.sku).price_display) !== p.price_display).length,
+      notOnList: [...existing.values()].filter((row) => row.is_active && !listed.has(row.sku)).length,
+      skipped,
+      categories: [...new Set(products.map((p) => p.category_main))],
+    };
+
+    if (dryRun) {
+      return {
+        statusCode: 200,
+        headers: { ...CORS, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ success: true, dryRun: true, ...summary }),
+      };
     }
 
     // Upsert in chunks of 200
@@ -151,8 +222,7 @@ exports.handler = async (event) => {
       body: JSON.stringify({
         success: true,
         inserted,
-        total: products.length,
-        categories: [...new Set(products.map(p => p.category_main))],
+        ...summary,
         message: `Successfully imported ${inserted} Apple products from Core Group price list`,
       }),
     };

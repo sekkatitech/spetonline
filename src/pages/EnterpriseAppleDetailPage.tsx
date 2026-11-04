@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { X } from 'lucide-react'
 import { supabase } from '../lib/supabase'
+import { fetchAppleProduct } from '../lib/appleCatalogue'
 
 // ── Apple tokens (matches EnterpriseProductsPage) ──
 const A = {
@@ -58,22 +59,16 @@ export default function EnterpriseAppleDetailPage() {
     setShowFullDesc(false)
     setHeroError(false)
     setQty(1)
-    supabase.from('core_products').select('*').eq('id', id).single()
-      .then(({ data }) => {
-        const p = data as AppleProduct | null
+    fetchAppleProduct<AppleProduct>(id)
+      .then(({ product: p, related }) => {
         setProduct(p)
-        setLoading(false)
-        if (p) {
-          supabase.from('core_products')
-            .select('*')
-            .eq('category_main', p.category_main)
-            .eq('is_active', true)
-            .eq('is_enterprise_only', true)
-            .neq('id', p.id)
-            .limit(8)
-            .then(({ data: rel }) => setFeatured((rel as AppleProduct[]) || []))
-        }
+        setFeatured(related)
       })
+      .catch(() => {
+        setProduct(null)
+        setFeatured([])
+      })
+      .finally(() => setLoading(false))
   }, [id])
 
   const gallery: string[] = product

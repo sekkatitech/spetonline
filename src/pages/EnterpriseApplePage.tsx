@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Search, X, Laptop, Smartphone, Tablet, Watch, Package, Apple as AppleIcon } from 'lucide-react'
 import { supabase } from '../lib/supabase'
+import { fetchAppleCounts, fetchAppleProducts } from '../lib/appleCatalogue'
 import AppleCategoryLanding, { LANDING_CONFIGS } from '../components/AppleCategoryLanding'
 
 // ── Types ──────────────────────────────────────────────────────────────────
@@ -13,7 +14,6 @@ interface AppleProduct {
   category_main: string
   category_sub: string
   rrp_inc_vat: number
-  wholesale_ex_vat: number
   price_display: number
   status: string
   specs: Record<string, string> | null
@@ -92,6 +92,14 @@ const CATEGORIES = [
     hero: null,
     color: '#1d1d1f',
     bg: '#f5f5f7',
+  },
+  {
+    key: 'HomeView',
+    label: 'HomeView',
+    tagline: 'Welcome, HomeView.',
+    hero: null,
+    color: '#1d1d1f',
+    bg: '#ffffff',
   },
   {
     key: 'Apple TV',
@@ -556,35 +564,20 @@ export default function EnterpriseApplePage() {
   }, [])
 
   const loadCounts = async () => {
-    const { data } = await supabase
-      .from('core_products')
-      .select('category_main')
-      .eq('is_active', true)
-      .eq('is_enterprise_only', true)
-
-    if (data) {
-      const c: Record<string, number> = {}
-      for (const p of data) {
-        c[p.category_main] = (c[p.category_main] || 0) + 1
-      }
-      setCounts(c)
-    }
+    try {
+      setCounts(await fetchAppleCounts())
+    } catch (err) { console.error(err) }
   }
 
   const loadProducts = async () => {
     setLoading(true)
     setFilters({ search: '', colour: '', storage: '', status: '' })
     try {
-      const { data } = await supabase
-        .from('core_products')
-        .select('*')
-        .eq('category_main', activeCategory)
-        .eq('is_active', true)
-        .eq('is_enterprise_only', true)
-        .order('price_display', { ascending: true })
-
-      setProducts(data || [])
-    } catch (err) { console.error(err) }
+      setProducts(await fetchAppleProducts<AppleProduct>(activeCategory))
+    } catch (err) {
+      console.error(err)
+      setProducts([])
+    }
     finally { setLoading(false) }
   }
 
