@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { X } from 'lucide-react'
-import { APPLE_DELIVERY_NOTE, fetchAppleProduct } from '../lib/appleCatalogue'
+import { APPLE_DELIVERY_NOTE, fetchAppleProduct, parseAppleDescription } from '../lib/appleCatalogue'
 import { useAppleBuying } from '../lib/useAppleBuying'
+import AppleLegalModal from '../components/AppleLegalModal'
 
 // ── Apple tokens (matches EnterpriseProductsPage) ──
 const A = {
@@ -50,6 +51,7 @@ export default function EnterpriseAppleDetailPage() {
   const [loading, setLoading] = useState(true)
   const [qty, setQty] = useState(1)
   const [showFullDesc, setShowFullDesc] = useState(false)
+  const [showLegal, setShowLegal] = useState(false)
   const [heroError, setHeroError] = useState(false)
   const [zoomSrc, setZoomSrc] = useState<string | null>(null)
   const [addedToQuote, setAddedToQuote] = useState(false)
@@ -60,6 +62,7 @@ export default function EnterpriseAppleDetailPage() {
     setLoading(true)
     setAddedToQuote(false)
     setShowFullDesc(false)
+    setShowLegal(false)
     setHeroError(false)
     setQty(1)
     fetchAppleProduct<AppleProduct>(id)
@@ -94,6 +97,7 @@ export default function EnterpriseAppleDetailPage() {
 
   const specs = product.specs || {}
   const subtitle = [specs.chip, specs.ram, specs.storage].filter(Boolean).join(' · ')
+  const description = parseAppleDescription(product.full_description)
 
   return (
     <div style={{ background: A.off, minHeight: '100vh', fontFamily: FONT }}>
@@ -159,11 +163,11 @@ export default function EnterpriseAppleDetailPage() {
             <div style={{ fontSize: 12, color: A.grey, fontStyle: 'italic', marginBottom: 20 }}>All prices include VAT.</div>
 
             {product.short_description && (
-              <div style={{ fontSize: 15, color: A.dark, lineHeight: 1.6, marginBottom: 8 }}>
+              <div style={{ fontSize: 15, color: A.dark, lineHeight: 1.6, marginBottom: 8, whiteSpace: 'pre-line' }}>
                 {product.short_description}
               </div>
             )}
-            {product.full_description && (
+            {description.body && (
               <button onClick={() => setShowFullDesc(true)} style={{ background: 'none', border: 'none', color: A.blue, fontSize: 14, cursor: 'pointer', padding: 0, marginBottom: 24, fontFamily: 'inherit' }}>
                 Read full description →
               </button>
@@ -196,6 +200,15 @@ export default function EnterpriseAppleDetailPage() {
             </div>
             <p style={{ fontSize: 13, color: A.grey, lineHeight: 1.5, maxWidth: 440, margin: '14px 0 0' }}>{APPLE_DELIVERY_NOTE}</p>
 
+            {description.notes.length > 0 && (
+              <div style={{ background: A.white, borderRadius: 12, padding: '14px 16px', maxWidth: 440, marginTop: 16 }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: A.dark, marginBottom: 6 }}>Please note</div>
+                {description.notes.map(note => (
+                  <p key={note} style={{ fontSize: 13, color: A.grey, lineHeight: 1.5, margin: '0 0 6px' }}>{note}</p>
+                ))}
+              </div>
+            )}
+
             {Object.keys(specs).length > 0 && (
               <div style={{ borderTop: `1px solid ${A.line}`, paddingTop: 20, marginTop: 28 }}>
                 <div style={{ fontSize: 15, fontWeight: 600, color: A.dark, marginBottom: 12 }}>Specifications</div>
@@ -208,6 +221,12 @@ export default function EnterpriseAppleDetailPage() {
                   ))}
                 </div>
               </div>
+            )}
+
+            {description.legal.length > 0 && (
+              <button onClick={() => setShowLegal(true)} style={{ background: 'none', border: 'none', color: A.blue, fontSize: 13, cursor: 'pointer', padding: 0, marginTop: 20, fontFamily: 'inherit' }}>
+                Disclaimers
+              </button>
             )}
           </div>
         </div>
@@ -234,7 +253,15 @@ export default function EnterpriseAppleDetailPage() {
         )}
       </div>
 
-      {showFullDesc && product.full_description && (
+      {showLegal && (
+        <AppleLegalModal
+          title="Disclaimers"
+          sections={[{ title: cleanName(product.name), lines: description.legal }]}
+          onClose={() => setShowLegal(false)}
+        />
+      )}
+
+      {showFullDesc && description.body && (
         <div onClick={() => setShowFullDesc(false)}
           style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, zIndex: 1000 }}>
           <div className="ent-desc-modal" onClick={e => e.stopPropagation()}
@@ -245,7 +272,7 @@ export default function EnterpriseAppleDetailPage() {
               {cleanName(product.name)}
             </h2>
             <div style={{ fontSize: 15, color: A.dark, lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>
-              {product.full_description}
+              {description.body}
             </div>
           </div>
         </div>

@@ -7,6 +7,7 @@ import { APPLE_DELIVERY_NOTE, APPLE_QUOTE_TERMS, fetchAppleCounts, fetchApplePro
 import { useAppleBuying } from '../lib/useAppleBuying'
 import { MAX_QUOTE_QTY, useAppleQuoteStore, type AppleQuoteItem } from '../lib/appleQuoteStore'
 import AppleCategoryLanding, { LANDING_CONFIGS } from '../components/AppleCategoryLanding'
+import AppleRangeDisclaimers from '../components/AppleRangeDisclaimers'
 import AppleHome from '../components/AppleHome'
 
 // ── Types ──────────────────────────────────────────────────────────────────
@@ -935,6 +936,8 @@ export default function EnterpriseApplePage() {
         )}
         </>
         )}
+
+        {!showHome && <AppleRangeDisclaimers category={activeCategory} sub={activeSub} />}
       </div>
 
       {/* Quote sidebar */}

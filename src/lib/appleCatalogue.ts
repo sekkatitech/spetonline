@@ -7,6 +7,14 @@ export const APPLE_DELIVERY_NOTE = 'Delivery in 3 to 14 days, pending stock avai
 // Core's price list requires this qualification on quotes to customers.
 export const APPLE_QUOTE_TERMS = 'Prices remain subject to change up to delivery, and the price payable is the list price on the date of delivery. E&OE.'
 
+// A stored full description holds the selling text, then optional "Please note" and "Legal" sections.
+export function parseAppleDescription(full: string | null) {
+  const lines = (text: string) => text.split('\n').map(l => l.trim()).filter(Boolean)
+  const [beforeLegal, legal = ''] = (full || '').split(/\n+Legal\n+/)
+  const [body, notes = ''] = beforeLegal.split(/\n+Please note\n+/)
+  return { body: body.trim(), notes: lines(notes), legal: lines(legal) }
+}
+
 export interface AppleQuoteRequest {
   accessToken: string
   items: Array<{ product_id: string; qty: number }>
