@@ -1,5 +1,6 @@
 import { useState, type CSSProperties, type ReactNode } from 'react'
 import { Play } from 'lucide-react'
+import ApplePreorderBadge from './ApplePreorderBadge'
 
 // The Apple home page: products and videos first, with the shop one click away.
 // Headlines come from Apple's reseller copy documents, so keep them word for word.
@@ -131,6 +132,7 @@ export default function AppleHome({ onShop }: { onShop: (category: string) => vo
           <img src="/images/apple-home/arp-white.png" alt="Apple Reseller Program" style={{ height: 30, marginBottom: 28 }} />
           <h1 style={{ fontSize: 'clamp(36px, 6vw, 64px)', fontWeight: 700, letterSpacing: '-0.03em', margin: 0, lineHeight: 1.05 }}>MacBook Pro</h1>
           <p style={{ fontSize: 'clamp(17px, 2.4vw, 24px)', color: H.greyDark, margin: '12px 0 0' }}>PROLED XDR Display</p>
+          <div style={{ marginTop: 14 }}><ApplePreorderBadge inline /></div>
           <button
             onClick={() => onShop('Mac')}
             style={{

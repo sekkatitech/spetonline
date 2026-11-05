@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { AlertTriangle, Lock, Mail } from 'lucide-react';
-import { APPLE_DELIVERY_NOTE } from '../lib/appleCatalogue';
+import { appleDeliveryNotes } from '../lib/appleCatalogue';
 import { useCartStore } from '../lib/cartStore';
 import { useAuth } from '../lib/AuthContext';
 import { useAddresses } from '../lib/api';
@@ -445,7 +445,7 @@ export function CheckoutPage() {
 
           {items.some((i) => i.supplier === 'apple') && (
             <p className="mt-4 rounded-xl border border-spet-line-2 p-3 text-[13px] leading-snug text-spet-ink-2">
-              <strong className="font-semibold text-spet-ink">Apple products:</strong> {APPLE_DELIVERY_NOTE}
+              <strong className="font-semibold text-spet-ink">Apple products:</strong> {appleDeliveryNotes(items.filter((i) => i.supplier === 'apple').map((i) => i.name)).join(' ')}
             </p>
           )}
 

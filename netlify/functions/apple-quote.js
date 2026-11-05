@@ -34,6 +34,8 @@ const respond = (statusCode, body) => ({
 const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 const clean = (value, max) => String(value ?? '').trim().slice(0, max);
 const money = (n) => `R ${Number(n || 0).toLocaleString('en-ZA', { minimumFractionDigits: 2 })}`;
+// All PROLED models are pre-order for now. Must match isApplePreorder in src/lib/appleCatalogue.ts.
+const isPreorder = (line) => /PROLED/i.test(line.name || '');
 
 function itemRows(lines) {
   return lines.map((l) => `
@@ -54,6 +56,7 @@ function staffEmailHtml(quote, lines, total, contact) {
     ${contact.notes ? `<p><b>Notes:</b> ${esc(contact.notes)}</p>` : ''}
     <table style="width:100%;border-collapse:collapse">${itemRows(lines)}</table>
     <p style="font-size:16px"><b>Estimated total: ${money(total)}</b> incl. VAT</p>
+    ${lines.some(isPreorder) ? '<p style="color:#b64400"><b>Pre-order: this quote includes a PROLED XDR MacBook Pro. The customer has been told it is not in stock.</b></p>' : ''}
     <p style="color:#6b7280;font-size:13px">Check availability, then press Reply to answer the customer. Tell them if anything is unavailable or on order.</p>
   </div>`;
 }
@@ -67,7 +70,8 @@ function customerEmailHtml(quote, lines, total, contact) {
       <p style="color:#1f2937;font-size:14px;line-height:1.6"><b>Shop with Confidence!</b> Our team will confirm product availability and keep you informed throughout your order. If an item is temporarily out of stock, we'll gladly assist with a special order or a suitable alternative.</p>
       <table style="width:100%;border-collapse:collapse">${itemRows(lines)}</table>
       <p style="font-size:16px;color:#1f2937"><b>Estimated total: ${money(total)}</b> incl. VAT</p>
-      <p style="color:#6b7280;font-size:13px;line-height:1.6">Delivery is 3 to 14 days, pending stock availability. If an item isn't available, you can cancel for a 100% refund of anything you've paid.</p>
+      ${lines.every(isPreorder) ? '' : `<p style="color:#6b7280;font-size:13px;line-height:1.6">Delivery is 3 to 14 days, pending stock availability. If an item isn't available, you can cancel for a 100% refund of anything you've paid.</p>`}
+      ${lines.some(isPreorder) ? `<p style="color:#1f2937;font-size:13px;line-height:1.6"><b>Pre-order:</b> MacBook Pro with PROLED XDR Display isn't in stock yet, so you'll need to wait for it to arrive. We'll email you when we have a delivery date. You can cancel for a 100% refund before it's delivered.</p>` : ''}
       <p style="color:#6b7280;font-size:12px;line-height:1.6">Prices remain subject to change up to delivery, and the price payable is the list price on the date of delivery. E&amp;OE.</p>
     </div>
     <div style="background:#f9fafb;padding:16px 24px;text-align:center;border-top:1px solid #e5e7eb">

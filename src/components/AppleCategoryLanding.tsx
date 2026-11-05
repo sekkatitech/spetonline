@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { isApplePreorder } from '../lib/appleCatalogue'
+import ApplePreorderBadge from './ApplePreorderBadge'
 
 // ═══════════════════════════════════════════════════════════════════════════
 // EDIT THIS CONFIG to change the landing page content — no code knowledge
@@ -228,11 +230,13 @@ export default function AppleCategoryLanding({ config, onShop, onBrowseAll }: {
           <div
             key={tile.sub}
             style={{
+              position: 'relative',
               background: L.offwhite, borderRadius: 18, padding: '36px 28px 28px',
               display: 'flex', flexDirection: 'column', alignItems: 'center',
               textAlign: 'center',
             }}
           >
+            {isApplePreorder(tile.title) && <ApplePreorderBadge />}
             <div style={{ height: 150, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 22 }}>
               {tile.image && (
                 <img

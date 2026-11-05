@@ -126,14 +126,14 @@ export const MAC_LEGAL: AppleLegalSection[] = [
       "Macbook pro with proled xdr display"
     ],
     "lines": [
-      "¹ ²Display claims and brightness figures are as stated by Apple.",
-      "³Battery life varies by use and configuration. See apple.com/za/batteries for more information.",
-      "⁴Wi-Fi 7 available in countries and regions where supported.",
+      "Configurable options are available.",
+      "¹Screen size is 14.2 inches (14-inch MacBook Pro with PROLED XDR Display). Measured diagonally as a standard rectangular shape. Actual viewable area is less due to rounded corners.",
+      "²In temperatures less than 25°C.",
+      "³Testing conducted by Apple in September 2026 using 14-inch MacBook Pro with PROLED XDR Display systems with Apple M5 Max, 18-core CPU, 32-core GPU, 36GB of unified memory and 4TB SSD, and pre-production 14-inch MacBook Pro with PROLED XDR Display systems with Apple M5 Pro, 18-core CPU, 20-core GPU, 24GB of unified memory and 4TB SSD. Wireless web battery life tested by browsing 25 popular websites while connected to Wi-Fi. Video streaming battery life tested with 1080p content in Safari while connected to Wi-Fi. Display brightness set to 8 clicks from the bottom and keyboard backlight was off. Battery life varies by use, configuration and environmental factors. See apple.com/za/batteries for more information.",
+      "⁴Wi-Fi 7 availability varies by country. For more information, visit support.apple.com/en-za/148165.",
       "⁵Available on Mac computers with Apple silicon and Intel-based Mac computers with a T2 Security Chip. Requires that your iPhone and Mac are signed in with the same Apple Account using two-factor authentication, your iPhone and Mac are near each other and have Bluetooth and Wi-Fi turned on, and your Mac is not using AirPlay or Sidecar. Some iPhone features (e.g. camera and microphone) are not compatible with iPhone Mirroring.",
       "⁶FaceTime calling requires a FaceTime-enabled device for the caller and recipient and a Wi-Fi connection.",
-      "◊Weight varies by configuration and manufacturing process. Battery life varies by use and configuration.",
-      "Feature, app and service availability: Features are subject to change. Some features, applications and services may not be available in all regions or all languages.",
-      "App Store: Apps are available on the App Store."
+      "◊Weight varies by configuration and manufacturing process. Battery life varies by use and configuration."
     ]
   },
   {
@@ -142,12 +142,12 @@ export const MAC_LEGAL: AppleLegalSection[] = [
       "Macbook pro with proled xdr display"
     ],
     "lines": [
-      "¹ ²Display claims and brightness figures are as stated by Apple.",
-      "³Battery life varies by use and configuration. See apple.com/za/batteries for more information.",
-      "⁴Wi-Fi 7 available in countries and regions where supported.",
-      "◊Weight varies by configuration and manufacturing process. Battery life varies by use and configuration.",
-      "Feature, app and service availability: Features are subject to change. Some features, applications and services may not be available in all regions or all languages.",
-      "App Store: Apps are available on the App Store."
+      "Configurable options are available.",
+      "¹Screen size is 16.3 inches (16-inch MacBook Pro with PROLED XDR Display). Measured diagonally as a standard rectangular shape. Actual viewable area is less due to rounded corners.",
+      "²In temperatures less than 25°C.",
+      "³Testing conducted by Apple in September 2026 using 16-inch MacBook Pro with PROLED XDR Display systems with Apple M5 Max, 18-core CPU, 40-core GPU, 48GB of unified memory and 8TB SSD, and pre-production 16-inch MacBook Pro with PROLED XDR Display systems with Apple M5 Pro, 18-core CPU, 20-core GPU, 48GB of unified memory and 2TB SSD. Wireless web battery life tested by browsing 25 popular websites while connected to Wi-Fi. Video streaming battery life tested with 1080p content in Safari while connected to Wi-Fi. Display brightness set to 8 clicks from the bottom and keyboard backlight was off. Battery life varies by use, configuration and environmental factors. See apple.com/za/batteries for more information.",
+      "⁴Wi-Fi 7 availability varies by country. For more information, visit support.apple.com/en-za/148165.",
+      "◊Weight varies by configuration and manufacturing process. Battery life varies by use and configuration."
     ]
   },
   {

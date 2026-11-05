@@ -3,7 +3,8 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Search, X, Package, Apple as AppleIcon } from 'lucide-react'
 import { useAuth } from '../lib/AuthContext'
 import { canUseApple, withAppleReturn } from '../lib/appleAccess'
-import { APPLE_DELIVERY_NOTE, APPLE_QUOTE_TERMS, fetchAppleCounts, fetchAppleProducts, submitAppleQuote } from '../lib/appleCatalogue'
+import { APPLE_QUOTE_TERMS, appleDeliveryNotes, fetchAppleCounts, fetchAppleProducts, isApplePreorder, submitAppleQuote } from '../lib/appleCatalogue'
+import ApplePreorderBadge from '../components/ApplePreorderBadge'
 import { useAppleBuying } from '../lib/useAppleBuying'
 import { MAX_QUOTE_QTY, useAppleQuoteStore, type AppleQuoteItem } from '../lib/appleQuoteStore'
 import AppleCategoryLanding, { LANDING_CONFIGS } from '../components/AppleCategoryLanding'
@@ -212,6 +213,7 @@ function AppleProductCard({ product, onBuy, onAddToQuote }: {
   const navigate = useNavigate()
   const displayName = cleanName(product.name)
   const subtitle = getSubtitle(product)
+  const preorder = isApplePreorder(product.name)
 
   return (
     <div
@@ -230,7 +232,10 @@ function AppleProductCard({ product, onBuy, onAddToQuote }: {
       }}
     >
       {/* Product image */}
-     <AppleProductImage imageUrl={product.thumbnail_url || product.image_urls?.[0] || null} name={product.name} />
+      <div style={{ position: 'relative' }}>
+        <AppleProductImage imageUrl={product.thumbnail_url || product.image_urls?.[0] || null} name={product.name} />
+        {preorder && <ApplePreorderBadge />}
+      </div>
 
       {/* Info */}
       <div style={{ marginTop: 20, flex: 1 }}>
@@ -280,7 +285,7 @@ function AppleProductCard({ product, onBuy, onAddToQuote }: {
             letterSpacing: '-0.01em',
           }}
         >
-          Buy
+          {preorder ? 'Pre-order' : 'Buy'}
         </button>
         <button
           onClick={(e) => { e.stopPropagation(); onAddToQuote(product) }}
@@ -600,7 +605,7 @@ function QuoteSidebar({
           <span style={{ fontSize: 18, fontWeight: 700, color: A.black }}>{fmt(total)}</span>
         </div>
         <p style={{ fontSize: 12, color: A.grey300, marginBottom: 16, lineHeight: 1.5 }}>
-          All prices include VAT. {APPLE_DELIVERY_NOTE} {APPLE_QUOTE_TERMS}
+          All prices include VAT. {appleDeliveryNotes(items.map(i => i.name)).join(' ')} {APPLE_QUOTE_TERMS}
         </p>
         {error && (
           <p role="alert" style={{ fontSize: 13, color: A.red, marginBottom: 12, lineHeight: 1.4 }}>{error}</p>

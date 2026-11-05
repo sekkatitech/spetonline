@@ -4,6 +4,14 @@
 const ENDPOINT = '/.netlify/functions/apple-catalogue'
 
 export const APPLE_DELIVERY_NOTE = 'Delivery in 3 to 14 days, pending stock availability. If an item isn\'t available, we\'ll email you and you can cancel for a 100% refund.'
+export const APPLE_PREORDER_NOTE = 'Pre-order: MacBook Pro with PROLED XDR Display isn\'t in stock yet, so you\'ll need to wait for it to arrive. We\'ll email you when we have a delivery date. You can cancel for a 100% refund before it\'s delivered.'
+// All PROLED models are pre-order for now. netlify/functions/send-order-email.js and apple-quote.js use the same test.
+export const isApplePreorder = (name?: string | null) => /PROLED/i.test(name || '')
+// The delivery wording for a set of Apple products, by product name.
+export const appleDeliveryNotes = (names: string[]) => [
+  ...(names.some(n => !isApplePreorder(n)) ? [APPLE_DELIVERY_NOTE] : []),
+  ...(names.some(isApplePreorder) ? [APPLE_PREORDER_NOTE] : []),
+]
 // Core's price list requires this qualification on quotes to customers.
 export const APPLE_QUOTE_TERMS = 'Prices remain subject to change up to delivery, and the price payable is the list price on the date of delivery. E&OE.'
 

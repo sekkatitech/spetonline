@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { X } from 'lucide-react'
-import { APPLE_DELIVERY_NOTE, fetchAppleProduct, parseAppleDescription } from '../lib/appleCatalogue'
+import { appleDeliveryNotes, fetchAppleProduct, isApplePreorder, parseAppleDescription } from '../lib/appleCatalogue'
+import ApplePreorderBadge from '../components/ApplePreorderBadge'
 import { useAppleBuying } from '../lib/useAppleBuying'
 import AppleLegalModal from '../components/AppleLegalModal'
 
@@ -133,7 +134,8 @@ export default function EnterpriseAppleDetailPage() {
 
           {/* LEFT — hero then feature images stacked down */}
           <div>
-            <div style={imgPanel}>
+            <div style={{ ...imgPanel, position: 'relative' }}>
+              {isApplePreorder(product.name) && <ApplePreorderBadge />}
               {hero && !heroError
                 ? <img src={hero} alt={cleanName(product.name)} onError={() => setHeroError(true)} onClick={() => setZoomSrc(hero)} style={{ ...imgTag, cursor: 'zoom-in' }} />
                 : <img src={APPLE_LOGO} alt="Apple" style={{ width: '38%', height: '38%', objectFit: 'contain', opacity: 0.9 }} />}
@@ -181,7 +183,7 @@ export default function EnterpriseAppleDetailPage() {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxWidth: 440 }}>
               <button onClick={() => buy(product, qty)} style={{ ...pillBtn(true), width: '100%', padding: '14px 0', fontSize: 15 }}>
-                Buy
+                {isApplePreorder(product.name) ? 'Pre-order' : 'Buy'}
               </button>
               <button
                 onClick={() => { if (addToQuote(product, qty)) setAddedToQuote(true) }}
@@ -198,7 +200,7 @@ export default function EnterpriseAppleDetailPage() {
                 </button>
               )}
             </div>
-            <p style={{ fontSize: 13, color: A.grey, lineHeight: 1.5, maxWidth: 440, margin: '14px 0 0' }}>{APPLE_DELIVERY_NOTE}</p>
+            <p style={{ fontSize: 13, color: A.grey, lineHeight: 1.5, maxWidth: 440, margin: '14px 0 0' }}>{appleDeliveryNotes([product.name]).join(' ')}</p>
 
             {description.notes.length > 0 && (
               <div style={{ background: A.white, borderRadius: 12, padding: '14px 16px', maxWidth: 440, marginTop: 16 }}>
@@ -239,7 +241,8 @@ export default function EnterpriseAppleDetailPage() {
             <div className="ent-related-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 20 }}>
               {featured.map(f => (
                 <button key={f.id} onClick={() => navigate(`/enterprise/apple/${encodeURIComponent(f.id)}`)} style={featCard}>
-                  <div style={{ width: '100%', aspectRatio: '1/1', background: A.off, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', fontSize: 44, marginBottom: 12 }}>
+                  <div style={{ position: 'relative', width: '100%', aspectRatio: '1/1', background: A.off, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', fontSize: 44, marginBottom: 12 }}>
+                    {isApplePreorder(f.name) && <ApplePreorderBadge />}
                     {f.thumbnail_url
                       ? <img src={f.thumbnail_url} alt={cleanName(f.name)} style={{ width: '100%', height: '100%', objectFit: 'contain', padding: 12 }} loading="lazy" />
                       : <img src={APPLE_LOGO} alt="Apple" style={{ width: '42%', height: '42%', objectFit: 'contain', opacity: 0.9 }} />}
