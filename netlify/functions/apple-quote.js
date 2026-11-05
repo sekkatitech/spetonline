@@ -35,7 +35,7 @@ const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').
 const clean = (value, max) => String(value ?? '').trim().slice(0, max);
 const money = (n) => `R ${Number(n || 0).toLocaleString('en-ZA', { minimumFractionDigits: 2 })}`;
 // Pre-order ranges. Must match APPLE_PREORDER_RANGES in src/lib/appleCatalogue.ts.
-const PREORDER_RANGES = [[/PROLED/i, 'MacBook Pro with PROLED XDR Display'], [/HOMEVIEW/i, 'Apple HomeView']];
+const PREORDER_RANGES = [[/PROLED/i, 'MacBook Pro with PROLED XDR Display'], [/HOMEVIEW/i, 'Apple HomeView'], [/HOMEPOD/i, 'HomePod']];
 const isPreorder = (line) => PREORDER_RANGES.some(([test]) => test.test(line.name || ''));
 const preorderLabels = (lines) => PREORDER_RANGES.filter(([test]) => lines.some((l) => test.test(l.name || ''))).map(([, label]) => label).join(' and ');
 

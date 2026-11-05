@@ -44,7 +44,7 @@ async function hasAppleItems(items) {
 }
 
 // Pre-order ranges. Must match APPLE_PREORDER_RANGES in src/lib/appleCatalogue.ts.
-const PREORDER_RANGES = [[/PROLED/i, 'MacBook Pro with PROLED XDR Display'], [/HOMEVIEW/i, 'Apple HomeView']];
+const PREORDER_RANGES = [[/PROLED/i, 'MacBook Pro with PROLED XDR Display'], [/HOMEVIEW/i, 'Apple HomeView'], [/HOMEPOD/i, 'HomePod']];
 const isPreorder = (item) => PREORDER_RANGES.some(([test]) => test.test(item.name || ''));
 const preorderLabels = (items) => PREORDER_RANGES.filter(([test]) => items.some((i) => test.test(i.name || ''))).map(([, label]) => label).join(' and ');
 

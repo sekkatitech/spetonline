@@ -4,12 +4,13 @@
 const ENDPOINT = '/.netlify/functions/apple-catalogue'
 
 export const APPLE_DELIVERY_NOTE = 'Delivery in 3 to 14 days, pending stock availability. If an item isn\'t available, we\'ll email you and you can cancel for a 100% refund.'
-export const APPLE_QUOTE_ONLY_NOTE = 'MacBook Pro with PROLED XDR Display and Apple HomeView can only be pre-ordered by quote for now. Please remove them from your cart, then press Pre-order on the product.'
+export const APPLE_QUOTE_ONLY_NOTE = 'MacBook Pro with PROLED XDR Display, Apple HomeView and HomePod can only be pre-ordered by quote for now. Please remove them from your cart, then press Pre-order on the product.'
 // These ranges are pre-order by quote for now, with no online payment.
 // netlify/functions/create-order.js, send-order-email.js and apple-quote.js use the same tests.
 const APPLE_PREORDER_RANGES: Array<[RegExp, string]> = [
   [/PROLED/i, 'MacBook Pro with PROLED XDR Display'],
   [/HOMEVIEW/i, 'Apple HomeView'],
+  [/HOMEPOD/i, 'HomePod'],
 ]
 export const isApplePreorder = (name?: string | null) => APPLE_PREORDER_RANGES.some(([test]) => test.test(name || ''))
 const applePreorderNote = (names: string[]) => {

@@ -34,7 +34,7 @@ const CATEGORY_TILES = [
   { key: 'iPad', label: 'iPad', image: '/enterprice-images/iPad-family.png' },
   { key: 'Watch', label: 'Apple Watch', image: '/images/apple-imagies/apple-watch/Apple_Watch_Series_11.webp' },
   { key: 'AirPods', label: 'AirPods', image: '/images/apple-imagies/AirPods/AirPods_Pro_3.webp' },
-  { key: 'HomePod', label: 'HomePod', image: '/images/apple-imagies/HomePod_mini_Blue_PDP_Image_Position-5__WWEN_511da05e-c37d-46b6-940f-d66dff94ee4f_5000x.webp' },
+  { key: 'HomePod', label: 'HomePod', image: '/images/apple-imagies/HomePod_mini_Blue_PDP_Image_Position-5__WWEN_511da05e-c37d-46b6-940f-d66dff94ee4f_5000x.webp', preorder: true },
   { key: 'HomeView', label: 'HomeView', image: '/images/apple-products/homeview/rose-pink-front.webp', preorder: true },
   { key: 'Accessories', label: 'Accessories', image: 'https://cdn.shopify.com/s/files/1/0571/8340/4192/files/mq052za_3.webp?v=1749735555' },
 ]
