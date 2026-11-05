@@ -43,8 +43,10 @@ async function hasAppleItems(items) {
   return data.length > 0;
 }
 
-// All PROLED models are pre-order for now. Must match isApplePreorder in src/lib/appleCatalogue.ts.
-const isPreorder = (item) => /PROLED/i.test(item.name || '');
+// Pre-order ranges. Must match APPLE_PREORDER_RANGES in src/lib/appleCatalogue.ts.
+const PREORDER_RANGES = [[/PROLED/i, 'MacBook Pro with PROLED XDR Display'], [/HOMEVIEW/i, 'Apple HomeView']];
+const isPreorder = (item) => PREORDER_RANGES.some(([test]) => test.test(item.name || ''));
+const preorderLabels = (items) => PREORDER_RANGES.filter(([test]) => items.some((i) => test.test(i.name || ''))).map(([, label]) => label).join(' and ');
 
 function buildCustomerEmailHtml(order, items, isApple) {
   return `
@@ -96,7 +98,7 @@ function buildCustomerEmailHtml(order, items, isApple) {
       </p>` : ''}
 
       ${items.some(isPreorder) ? `<p style="color: #1f2937; font-size: 13px; margin-top: 24px; line-height: 1.6;">
-        <strong>Pre-order:</strong> MacBook Pro with PROLED XDR Display isn't in stock yet, so you'll need to wait for it to arrive. We'll email you when we have a delivery date. You can cancel for a 100% refund before it's delivered.
+        <strong>Pre-order (${preorderLabels(items)}):</strong> not in stock yet, so you'll need to wait for delivery. We'll email you when we have a delivery date. You can cancel for a 100% refund before delivery.
       </p>` : ''}
 
       <p style="color: #6b7280; font-size: 13px; margin-top: 24px;">
@@ -117,7 +119,7 @@ function buildAdminEmailHtml(order, items) {
   <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
     <h2 style="color: #1f2937;">🎉 New Paid Order — ${order.id}</h2>
     <p style="color: #6b7280;">A new order has been paid and is ready for fulfilment.</p>
-    ${items.some(isPreorder) ? '<p style="color: #b64400; font-weight: bold;">Pre-order: this order includes a PROLED XDR MacBook Pro. The customer has been told it is not in stock and that we will email a delivery date.</p>' : ''}
+    ${items.some(isPreorder) ? `<p style="color: #b64400; font-weight: bold;">Pre-order: this order includes ${preorderLabels(items)}. The customer has been told pre-order items are not in stock and that we will email a delivery date.</p>` : ''}
     <table style="width: 100%; border-collapse: collapse; margin: 16px 0;">
       <tr><td style="padding: 4px 8px; font-weight: bold;">Customer</td><td style="padding: 4px 8px;">${order.client_name}</td></tr>
       <tr><td style="padding: 4px 8px; font-weight: bold;">Email</td><td style="padding: 4px 8px;">${order.client_email}</td></tr>

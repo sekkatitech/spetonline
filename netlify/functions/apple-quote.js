@@ -34,8 +34,10 @@ const respond = (statusCode, body) => ({
 const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 const clean = (value, max) => String(value ?? '').trim().slice(0, max);
 const money = (n) => `R ${Number(n || 0).toLocaleString('en-ZA', { minimumFractionDigits: 2 })}`;
-// All PROLED models are pre-order for now. Must match isApplePreorder in src/lib/appleCatalogue.ts.
-const isPreorder = (line) => /PROLED/i.test(line.name || '');
+// Pre-order ranges. Must match APPLE_PREORDER_RANGES in src/lib/appleCatalogue.ts.
+const PREORDER_RANGES = [[/PROLED/i, 'MacBook Pro with PROLED XDR Display'], [/HOMEVIEW/i, 'Apple HomeView']];
+const isPreorder = (line) => PREORDER_RANGES.some(([test]) => test.test(line.name || ''));
+const preorderLabels = (lines) => PREORDER_RANGES.filter(([test]) => lines.some((l) => test.test(l.name || ''))).map(([, label]) => label).join(' and ');
 
 function itemRows(lines) {
   return lines.map((l) => `
@@ -56,7 +58,7 @@ function staffEmailHtml(quote, lines, total, contact) {
     ${contact.notes ? `<p><b>Notes:</b> ${esc(contact.notes)}</p>` : ''}
     <table style="width:100%;border-collapse:collapse">${itemRows(lines)}</table>
     <p style="font-size:16px"><b>Estimated total: ${money(total)}</b> incl. VAT</p>
-    ${lines.some(isPreorder) ? '<p style="color:#b64400"><b>Pre-order: this quote includes a PROLED XDR MacBook Pro. The customer has been told it is not in stock, that they pay nothing now, and that we will email the delivery date and price. Invoice only once both are confirmed.</b></p>' : ''}
+    ${lines.some(isPreorder) ? `<p style="color:#b64400"><b>Pre-order: this quote includes ${preorderLabels(lines)}. The customer has been told pre-order items are not in stock, that they pay nothing now, and that we will email the delivery date and price. Invoice only once both are confirmed.</b></p>` : ''}
     <p style="color:#6b7280;font-size:13px">Check availability, then press Reply to answer the customer. Tell them if anything is unavailable or on order.</p>
   </div>`;
 }
@@ -71,7 +73,7 @@ function customerEmailHtml(quote, lines, total, contact) {
       <table style="width:100%;border-collapse:collapse">${itemRows(lines)}</table>
       <p style="font-size:16px;color:#1f2937"><b>Estimated total: ${money(total)}</b> incl. VAT</p>
       ${lines.every(isPreorder) ? '' : `<p style="color:#6b7280;font-size:13px;line-height:1.6">Delivery is 3 to 14 days, pending stock availability. If an item isn't available, you can cancel for a 100% refund of anything you've paid.</p>`}
-      ${lines.some(isPreorder) ? `<p style="color:#1f2937;font-size:13px;line-height:1.6"><b>Pre-order by quote:</b> MacBook Pro with PROLED XDR Display isn't in stock yet, so you'll need to wait for it to arrive. You don't pay anything now. We'll email you to confirm the delivery date and price when we have them, and you can cancel for a 100% refund before it's delivered.</p>` : ''}
+      ${lines.some(isPreorder) ? `<p style="color:#1f2937;font-size:13px;line-height:1.6"><b>Pre-order by quote (${preorderLabels(lines)}):</b> not in stock yet, so you'll need to wait for delivery. You don't pay anything now. We'll email you to confirm the delivery date and price when we have them, and you can cancel for a 100% refund before delivery.</p>` : ''}
       <p style="color:#6b7280;font-size:12px;line-height:1.6">Prices remain subject to change up to delivery, and the price payable is the list price on the date of delivery. E&amp;OE.</p>
     </div>
     <div style="background:#f9fafb;padding:16px 24px;text-align:center;border-top:1px solid #e5e7eb">

@@ -102,7 +102,7 @@ const CATEGORIES = [
   {
     key: 'HomeView',
     label: 'HomeView',
-    tagline: 'Welcome, HomeView.',
+    tagline: 'Welcome, Apple HomeView.',
     hero: null,
     color: '#1d1d1f',
     bg: '#ffffff',
@@ -152,6 +152,7 @@ function cleanName(name: string): string {
     .replace(/\s*-\s*[A-Z]{2}$/, '')
     .replace(/\s+WI-FI(\s+\+\s+CELLULAR)?/i, (m) => m.includes('CELLULAR') ? ' Wi-Fi + Cellular' : ' Wi-Fi')
     .split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ')
+    .replace('Homeview', 'HomeView')
 }
 
 function getSubtitle(product: AppleProduct): string {

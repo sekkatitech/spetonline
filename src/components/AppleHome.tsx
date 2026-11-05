@@ -35,6 +35,7 @@ const CATEGORY_TILES = [
   { key: 'Watch', label: 'Apple Watch', image: '/images/apple-imagies/apple-watch/Apple_Watch_Series_11.webp' },
   { key: 'AirPods', label: 'AirPods', image: '/images/apple-imagies/AirPods/AirPods_Pro_3.webp' },
   { key: 'HomePod', label: 'HomePod', image: '/images/apple-imagies/HomePod_mini_Blue_PDP_Image_Position-5__WWEN_511da05e-c37d-46b6-940f-d66dff94ee4f_5000x.webp' },
+  { key: 'HomeView', label: 'HomeView', image: '/images/apple-products/homeview/rose-pink-front.webp', preorder: true },
   { key: 'Accessories', label: 'Accessories', image: 'https://cdn.shopify.com/s/files/1/0571/8340/4192/files/mq052za_3.webp?v=1749735555' },
 ]
 
@@ -167,7 +168,7 @@ export default function AppleHome({ onShop }: { onShop: (category: string) => vo
         <Panel dark title="MacBook Pro 14″" subtitle="Fast runs in the family." cta="Shop Mac" onShop={() => onShop('Mac')}>
           <LoopVideo src={VIDEOS.macbookPro14} poster={POSTERS.macbookPro} alt="MacBook Pro 14-inch" />
         </Panel>
-        <Panel title="Welcome, HomeView." cta="Shop HomeView" onShop={() => onShop('HomeView')}>
+        <Panel title="Welcome, Apple HomeView." subtitle={<ApplePreorderBadge inline />} cta="Shop HomeView" onShop={() => onShop('HomeView')}>
           <LoopVideo src={VIDEOS.homeView} poster={POSTERS.homeView} alt="Apple HomeView" />
         </Panel>
       </div>
@@ -181,10 +182,12 @@ export default function AppleHome({ onShop }: { onShop: (category: string) => vo
               className="apple-home-tile"
               onClick={() => onShop(tile.key)}
               style={{
+                position: 'relative',
                 background: H.white, border: 'none', borderRadius: 18, padding: '24px 18px 20px', cursor: 'pointer',
                 fontFamily: 'inherit', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, overflow: 'hidden',
               }}
             >
+              {tile.preorder && <ApplePreorderBadge />}
               <span style={{ height: 130, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <img src={tile.image} alt="" loading="lazy" style={{ maxHeight: '100%', maxWidth: '100%', objectFit: 'contain', transition: 'transform 0.3s ease' }} />
               </span>

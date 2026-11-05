@@ -4,15 +4,22 @@
 const ENDPOINT = '/.netlify/functions/apple-catalogue'
 
 export const APPLE_DELIVERY_NOTE = 'Delivery in 3 to 14 days, pending stock availability. If an item isn\'t available, we\'ll email you and you can cancel for a 100% refund.'
-export const APPLE_PREORDER_NOTE = 'Pre-order by quote: MacBook Pro with PROLED XDR Display isn\'t in stock yet, so you\'ll need to wait for it to arrive. You don\'t pay anything now. We\'ll email you to confirm the delivery date and price when we have them, and you can cancel for a 100% refund before it\'s delivered.'
-export const APPLE_QUOTE_ONLY_NOTE = 'MacBook Pro with PROLED XDR Display can only be pre-ordered by quote for now. Please remove it from your cart, then press Pre-order on the product.'
-// All PROLED models are pre-order by quote for now, with no online payment.
-// netlify/functions/create-order.js, send-order-email.js and apple-quote.js use the same test.
-export const isApplePreorder = (name?: string | null) => /PROLED/i.test(name || '')
+export const APPLE_QUOTE_ONLY_NOTE = 'MacBook Pro with PROLED XDR Display and Apple HomeView can only be pre-ordered by quote for now. Please remove them from your cart, then press Pre-order on the product.'
+// These ranges are pre-order by quote for now, with no online payment.
+// netlify/functions/create-order.js, send-order-email.js and apple-quote.js use the same tests.
+const APPLE_PREORDER_RANGES: Array<[RegExp, string]> = [
+  [/PROLED/i, 'MacBook Pro with PROLED XDR Display'],
+  [/HOMEVIEW/i, 'Apple HomeView'],
+]
+export const isApplePreorder = (name?: string | null) => APPLE_PREORDER_RANGES.some(([test]) => test.test(name || ''))
+const applePreorderNote = (names: string[]) => {
+  const ranges = APPLE_PREORDER_RANGES.filter(([test]) => names.some(n => test.test(n))).map(([, label]) => label).join(' and ')
+  return `Pre-order by quote (${ranges}): not in stock yet, so you'll need to wait for delivery. You don't pay anything now. We'll email you to confirm the delivery date and price when we have them, and you can cancel for a 100% refund before delivery.`
+}
 // The delivery wording for a set of Apple products, by product name.
 export const appleDeliveryNotes = (names: string[]) => [
   ...(names.some(n => !isApplePreorder(n)) ? [APPLE_DELIVERY_NOTE] : []),
-  ...(names.some(isApplePreorder) ? [APPLE_PREORDER_NOTE] : []),
+  ...(names.some(isApplePreorder) ? [applePreorderNote(names)] : []),
 ]
 // Core's price list requires this qualification on quotes to customers.
 export const APPLE_QUOTE_TERMS = 'Prices remain subject to change up to delivery, and the price payable is the list price on the date of delivery. E&OE.'

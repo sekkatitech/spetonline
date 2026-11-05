@@ -180,9 +180,9 @@ exports.handler = async (event) => {
         .eq('is_active', true)
         .eq('is_enterprise_only', true);
       if (error) throw new Error('Failed to fetch Apple product prices');
-      // All PROLED models are pre-order by quote for now. Must match isApplePreorder in src/lib/appleCatalogue.ts.
-      if (products.some((p) => /PROLED/i.test(p.name || ''))) {
-        return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: 'MacBook Pro with PROLED XDR Display can only be pre-ordered by quote for now. Please remove it from your cart, then press Pre-order on the product.' }) };
+      // These ranges are pre-order by quote for now. Must match APPLE_PREORDER_RANGES in src/lib/appleCatalogue.ts.
+      if (products.some((p) => /PROLED|HOMEVIEW/i.test(p.name || ''))) {
+        return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: 'MacBook Pro with PROLED XDR Display and Apple HomeView can only be pre-ordered by quote for now. Please remove them from your cart, then press Pre-order on the product.' }) };
       }
       for (const p of products) {
         // Apple sells as available: staff confirm stock after the order is placed.
