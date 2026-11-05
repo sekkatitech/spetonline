@@ -238,5 +238,20 @@ export const MAC_LEGAL: AppleLegalSection[] = [
       "²In temperatures less than 25° C.",
       "³Stand not included with VESA mount adapter."
     ]
+  },
+  {
+    "title": "iMac (24-inch, M6)",
+    "subs": [
+      "Imac 24"
+    ],
+    "lines": [
+      "Configurable options are available.",
+      "¹Actual diagonal screen size is 23.5 inches.",
+      "²Apple Intelligence is available with Siri and device language set to Chinese (Simplified), Chinese (Traditional), Danish, Dutch, English, French, German, Italian, Japanese, Korean, Norwegian, Portuguese, Spanish, Swedish, Turkish or Vietnamese. Some features may not be available in all regions or languages. Some devices may not be available in all regions. Siri AI is available in beta in macOS 27 and requires an Apple Intelligence–enabled device set to a supported language. Available in English, French, Japanese, Korean, Portuguese and Spanish to start. Siri AI will not be initially available in the EU on iOS, iPadOS and watchOS. Siri AI is not available for users under 13. Certain Apple Intelligence features that rely on server-side models are subject to daily usage limits, including but not limited to Siri AI, Intelligent Photo Editing Tools, Image Playground, and AFM 3 Cloud models in Shortcuts. Daily limits may vary by feature, request complexity, system demand, system policies and other factors. Expanded access to such features will be available for a fee in the future. Use of these features is subject to the Apple Intelligence Terms and Conditions. Learn more at support.apple.com/en-za/148587.",
+      "³In temperatures less than 25°C.",
+      "⁴Wi-Fi 7 availability varies by country. For more information, visit support.apple.com/en-za/148165.",
+      "⁵Available on Mac computers with Apple silicon and Intel-based Mac computers with a T2 Security Chip. Requires that your iPhone and Mac are signed in with the same Apple Account using two-factor authentication, your iPhone and Mac are near each other and have Bluetooth and Wi-Fi turned on, and your Mac is not using AirPlay or Sidecar. Some iPhone features (e.g. camera and microphone) are not compatible with iPhone Mirroring.",
+      "⁶FaceTime calling requires a FaceTime-enabled device for the caller and recipient and a Wi-Fi connection."
+    ]
   }
 ]

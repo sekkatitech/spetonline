@@ -108,7 +108,7 @@ const MAC_LANDING: CategoryLandingConfig = {
     { sub: 'Macbook air m5',   title: 'MacBook Air | M5',   tagline: 'Strikingly thin. Remarkably capable.', image: MACBOOK_AIR_IMAGE },
     { sub: 'Macbook pro 14"',  title: 'MacBook Pro 14″', tagline: 'Mind-blowing. Head-turning.',        image: MACBOOK_PRO_14_IMAGE },
     { sub: 'Macbook pro 16"',  title: 'MacBook Pro 16″', tagline: 'A beast of a laptop.',                image: MACBOOK_PRO_16_IMAGE },
-    { sub: 'Imac 24',          title: 'iMac 24″',       tagline: 'Say hello to the color of possibility.', image: IMAC_24_IMAGE },
+    { sub: 'Imac 24',          title: 'iMac 24″',       tagline: 'Allllll that. Plus a superfast M6 chip.', image: IMAC_24_IMAGE },
     { sub: 'Mac mini',         title: 'Mac mini',           tagline: 'More muscle. More hustle.',            image: MAC_MINI_IMAGE },
     { sub: 'Mac studio',       title: 'Mac Studio',         tagline: 'Take a big step up.',                  image: MAC_STUDIO_IMAGE },
     { sub: 'Displays',         title: 'Displays',           tagline: 'The ultimate display companion.',      image: STUDIO_DISPLAY_IMAGE },
