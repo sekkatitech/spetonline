@@ -121,6 +121,36 @@ export const MAC_LEGAL: AppleLegalSection[] = [
     ]
   },
   {
+    "title": "MacBook Pro (14-inch) with PROLED XDR Display",
+    "subs": [
+      "Macbook pro with proled xdr display"
+    ],
+    "lines": [
+      "¹ ²Display claims and brightness figures are as stated by Apple.",
+      "³Battery life varies by use and configuration. See apple.com/za/batteries for more information.",
+      "⁴Wi-Fi 7 available in countries and regions where supported.",
+      "⁵Available on Mac computers with Apple silicon and Intel-based Mac computers with a T2 Security Chip. Requires that your iPhone and Mac are signed in with the same Apple Account using two-factor authentication, your iPhone and Mac are near each other and have Bluetooth and Wi-Fi turned on, and your Mac is not using AirPlay or Sidecar. Some iPhone features (e.g. camera and microphone) are not compatible with iPhone Mirroring.",
+      "⁶FaceTime calling requires a FaceTime-enabled device for the caller and recipient and a Wi-Fi connection.",
+      "◊Weight varies by configuration and manufacturing process. Battery life varies by use and configuration.",
+      "Feature, app and service availability: Features are subject to change. Some features, applications and services may not be available in all regions or all languages.",
+      "App Store: Apps are available on the App Store."
+    ]
+  },
+  {
+    "title": "MacBook Pro (16-inch) with PROLED XDR Display",
+    "subs": [
+      "Macbook pro with proled xdr display"
+    ],
+    "lines": [
+      "¹ ²Display claims and brightness figures are as stated by Apple.",
+      "³Battery life varies by use and configuration. See apple.com/za/batteries for more information.",
+      "⁴Wi-Fi 7 available in countries and regions where supported.",
+      "◊Weight varies by configuration and manufacturing process. Battery life varies by use and configuration.",
+      "Feature, app and service availability: Features are subject to change. Some features, applications and services may not be available in all regions or all languages.",
+      "App Store: Apps are available on the App Store."
+    ]
+  },
+  {
     "title": "Mac mini (M6)",
     "subs": [
       "Mac mini"
