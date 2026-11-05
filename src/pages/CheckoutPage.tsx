@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { AlertTriangle, Lock, Mail } from 'lucide-react';
-import { appleDeliveryNotes } from '../lib/appleCatalogue';
+import { APPLE_QUOTE_ONLY_NOTE, appleDeliveryNotes, isApplePreorder } from '../lib/appleCatalogue';
 import { useCartStore } from '../lib/cartStore';
 import { useAuth } from '../lib/AuthContext';
 import { useAddresses } from '../lib/api';
@@ -36,6 +36,9 @@ export function CheckoutPage() {
   const location = useLocation();
   const { user, profile, loading: authLoading, isEmailVerified } = useAuth();
   const { items, subtotal, pendingOrder, setPendingOrder } = useCartStore();
+  const appleNames = items.filter((i) => i.supplier === 'apple').map((i) => i.name);
+  // A cart saved before pre-orders moved to quotes can still hold one of these.
+  const quoteOnly = appleNames.some(isApplePreorder);
   const { addresses, saveAddress } = useAddresses(user?.id ?? null);
 
   const promoDiscount = location.state?.promoDiscount ?? 0;
@@ -443,13 +446,20 @@ export function CheckoutPage() {
             </div>
           </dl>
 
-          {items.some((i) => i.supplier === 'apple') && (
+          {appleNames.some((n) => !isApplePreorder(n)) && (
             <p className="mt-4 rounded-xl border border-spet-line-2 p-3 text-[13px] leading-snug text-spet-ink-2">
-              <strong className="font-semibold text-spet-ink">Apple products:</strong> {appleDeliveryNotes(items.filter((i) => i.supplier === 'apple').map((i) => i.name)).join(' ')}
+              <strong className="font-semibold text-spet-ink">Apple products:</strong> {appleDeliveryNotes(appleNames.filter((n) => !isApplePreorder(n))).join(' ')}
             </p>
           )}
 
-          <Button size="lg" className="mt-5 w-full" onClick={placeOrder} loading={placing} disabled={items.length === 0}>
+          {quoteOnly && (
+            <p role="alert" className="mt-4 rounded-xl border border-red-300 bg-red-50 p-3 text-[13px] leading-snug font-medium text-red-700 dark:border-red-800 dark:bg-red-950/40 dark:text-red-300">
+              {APPLE_QUOTE_ONLY_NOTE}{' '}
+              <Link to="/cart" className="underline">Go to cart</Link>
+            </p>
+          )}
+
+          <Button size="lg" className="mt-5 w-full" onClick={placeOrder} loading={placing} disabled={items.length === 0 || quoteOnly}>
             {!placing && <Lock className="h-4 w-4" aria-hidden="true" />}
             {placing ? 'Placing order…' : `Place order: ${formatMoney(total)}`}
           </Button>

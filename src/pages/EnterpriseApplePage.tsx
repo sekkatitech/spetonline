@@ -275,7 +275,7 @@ function AppleProductCard({ product, onBuy, onAddToQuote }: {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         <button
-          onClick={(e) => { e.stopPropagation(); onBuy(product) }}
+          onClick={(e) => { e.stopPropagation(); if (preorder) onAddToQuote(product); else onBuy(product) }}
           style={{
             width: '100%', padding: '10px 0',
             background: A.blue, color: A.white,
@@ -287,19 +287,21 @@ function AppleProductCard({ product, onBuy, onAddToQuote }: {
         >
           {preorder ? 'Pre-order' : 'Buy'}
         </button>
-        <button
-          onClick={(e) => { e.stopPropagation(); onAddToQuote(product) }}
-          style={{
-            width: '100%', padding: '10px 0',
-            background: A.offwhite, color: A.blue,
-            border: 'none', borderRadius: 980,
-            fontSize: 13, fontWeight: 600,
-            cursor: 'pointer', fontFamily: 'inherit',
-            letterSpacing: '-0.01em',
-          }}
-        >
-          Add to Quote
-        </button>
+        {!preorder && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onAddToQuote(product) }}
+            style={{
+              width: '100%', padding: '10px 0',
+              background: A.offwhite, color: A.blue,
+              border: 'none', borderRadius: 980,
+              fontSize: 13, fontWeight: 600,
+              cursor: 'pointer', fontFamily: 'inherit',
+              letterSpacing: '-0.01em',
+            }}
+          >
+            Add to Quote
+          </button>
+        )}
       </div>
     </div>
   )

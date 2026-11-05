@@ -99,6 +99,8 @@ export default function EnterpriseAppleDetailPage() {
   const specs = product.specs || {}
   const subtitle = [specs.chip, specs.ram, specs.storage].filter(Boolean).join(' · ')
   const description = parseAppleDescription(product.full_description)
+  const preorder = isApplePreorder(product.name)
+  const quotePath = `/enterprise/apple?cat=${encodeURIComponent(product.category_main)}&view=shop&quote=open`
 
   return (
     <div style={{ background: A.off, minHeight: '100vh', fontFamily: FONT }}>
@@ -135,7 +137,7 @@ export default function EnterpriseAppleDetailPage() {
           {/* LEFT — hero then feature images stacked down */}
           <div>
             <div style={{ ...imgPanel, position: 'relative' }}>
-              {isApplePreorder(product.name) && <ApplePreorderBadge />}
+              {preorder && <ApplePreorderBadge />}
               {hero && !heroError
                 ? <img src={hero} alt={cleanName(product.name)} onError={() => setHeroError(true)} onClick={() => setZoomSrc(hero)} style={{ ...imgTag, cursor: 'zoom-in' }} />
                 : <img src={APPLE_LOGO} alt="Apple" style={{ width: '38%', height: '38%', objectFit: 'contain', opacity: 0.9 }} />}
@@ -182,18 +184,29 @@ export default function EnterpriseAppleDetailPage() {
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxWidth: 440 }}>
-              <button onClick={() => buy(product, qty)} style={{ ...pillBtn(true), width: '100%', padding: '14px 0', fontSize: 15 }}>
-                {isApplePreorder(product.name) ? 'Pre-order' : 'Buy'}
-              </button>
-              <button
-                onClick={() => { if (addToQuote(product, qty)) setAddedToQuote(true) }}
-                style={{ ...pillBtn(false), width: '100%', padding: '14px 0', fontSize: 15 }}
-              >
-                Add to Quote
-              </button>
+              {preorder ? (
+                <button
+                  onClick={() => { if (addToQuote(product, qty)) navigate(quotePath) }}
+                  style={{ ...pillBtn(true), width: '100%', padding: '14px 0', fontSize: 15 }}
+                >
+                  Pre-order
+                </button>
+              ) : (
+                <>
+                  <button onClick={() => buy(product, qty)} style={{ ...pillBtn(true), width: '100%', padding: '14px 0', fontSize: 15 }}>
+                    Buy
+                  </button>
+                  <button
+                    onClick={() => { if (addToQuote(product, qty)) setAddedToQuote(true) }}
+                    style={{ ...pillBtn(false), width: '100%', padding: '14px 0', fontSize: 15 }}
+                  >
+                    Add to Quote
+                  </button>
+                </>
+              )}
               {addedToQuote && (
                 <button
-                  onClick={() => navigate(`/enterprise/apple?cat=${encodeURIComponent(product.category_main)}&view=shop&quote=open`)}
+                  onClick={() => navigate(quotePath)}
                   style={{ background: 'none', border: 'none', color: A.blue, fontSize: 14, cursor: 'pointer', padding: 0, fontFamily: 'inherit' }}
                 >
                   Added to your quote. View quote →
