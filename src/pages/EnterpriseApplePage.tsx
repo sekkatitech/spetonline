@@ -153,6 +153,8 @@ function cleanName(name: string): string {
     .replace(/\s+WI-FI(\s+\+\s+CELLULAR)?/i, (m) => m.includes('CELLULAR') ? ' Wi-Fi + Cellular' : ' Wi-Fi')
     .split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ')
     .replace('Homeview', 'HomeView')
+    .replace('Homepod', 'HomePod')
+    .replace('Imac', 'iMac')
 }
 
 function getSubtitle(product: AppleProduct): string {
