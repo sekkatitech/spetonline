@@ -3,21 +3,34 @@
 // Exchanges the code for access + refresh tokens and stores them in Supabase
 
 const { createClient } = require('@supabase/supabase-js');
+const { escapeHtml, safeEqual } = require('./security-lib');
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
+const page = (statusCode, title, message) => ({
+  statusCode,
+  headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' },
+  body: `<html><body style="font-family:sans-serif;max-width:500px;margin:80px auto;text-align:center"><h2>${escapeHtml(title)}</h2><p>${escapeHtml(message)}</p></body></html>`,
+});
+
 exports.handler = async (event) => {
-  const { code, error } = event.queryStringParameters || {};
+  const { code, error, state } = event.queryStringParameters || {};
 
   if (error) {
-    return {
-      statusCode: 400,
-      body: `<html><body><h2>Authorization failed</h2><p>${error}</p></body></html>`,
-      headers: { 'Content-Type': 'text/html' },
-    };
+    return page(400, 'Authorization failed', error);
+  }
+
+  // Once connected, a new code would replace the stored Zoho account, so a stranger could
+  // connect their own Zoho organisation. Reconnecting therefore needs the state value set as
+  // ZOHO_OAUTH_STATE in Netlify, passed through Zoho's authorisation URL as &state=...
+  const expectedState = process.env.ZOHO_OAUTH_STATE;
+  const { data: existing } = await supabase.from('zoho_tokens').select('refresh_token').eq('id', 1).maybeSingle();
+  const stateOk = Boolean(expectedState) && expectedState.length >= 24 && safeEqual(state, expectedState);
+  if (existing?.refresh_token && !stateOk) {
+    return page(403, 'Already connected', 'Zoho Books is already connected. To reconnect, start from an authorisation link that carries the reconnect secret.');
   }
 
   if (!code) {
@@ -89,11 +102,7 @@ exports.handler = async (event) => {
     };
   } catch (err) {
     console.error('Zoho OAuth error:', err);
-    return {
-      statusCode: 500,
-      headers: { 'Content-Type': 'text/html' },
-      body: `<html><body><h2>Connection failed</h2><p>${err.message}</p></body></html>`,
-    };
+    return page(500, 'Connection failed', 'Zoho Books could not be connected. Please try again.');
   }
 };// cache-bust: force rebuild after env var scope fix (2026-07-12T21:49:14Z)
 // revert: env vars restored to plain (non-secret) after runtime incident

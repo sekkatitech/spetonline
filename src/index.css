@@ -41,6 +41,22 @@
   --color-spet-tint-line:   #d8e6f1;
   --color-spet-stock:       #2f7a4f;
   --color-spet-was:         #8a949c;
+
+  /* ── Apple portal surface system ──────────────────────────────────────────
+     The Apple range keeps its own light presentation, so these are
+     deliberately not overridden in .dark — the same behaviour the pages had
+     when their colours were inline. */
+  --color-apple-canvas:      #f5f5f7;
+  --color-apple-surface:     #ffffff;
+  --color-apple-surface-2:   #fafafa;
+  --color-apple-ink:         #1d1d1f;
+  --color-apple-ink-2:       #424245;
+  --color-apple-muted:       #6e6e73;
+  --color-apple-line:        #d2d2d7;
+  --color-apple-line-2:      #e8e8ed;
+  --color-apple-blue:        #0071e3;
+  --color-apple-blue-dark:   #0066cc;
+  --color-apple-alert:       #b64400;
 }
 
 .dark {

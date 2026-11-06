@@ -716,14 +716,17 @@ export default function EnterpriseRegisterPage() {
     setSubmitError('')
 
     try {
-      const response = await fetch('/.netlify/functions/create-enterprise-account', {
+      const response = await fetch('/api/enterprise-register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...data, redirect: returnPath }),
       })
 
-      const result = await response.json()
-      
+      if (response.status === 429) {
+        throw new Error('Too many attempts. Please wait a minute and try again.')
+      }
+      const result = await response.json().catch(() => ({}))
+
       if (!response.ok || !result.success) {
         throw new Error(result.error || 'Failed to register. Please try again.')
       }

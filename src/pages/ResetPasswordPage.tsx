@@ -41,8 +41,8 @@ export function ResetPasswordPage() {
       setError("Passwords don't match.");
       return;
     }
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters.');
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters.');
       return;
     }
 
@@ -77,8 +77,8 @@ export function ResetPasswordPage() {
             <p role="status" className="py-6 text-center text-[13px] text-spet-ink-2">Verifying your reset link…</p>
           ) : (
             <form onSubmit={handleSubmit} className="mt-5 space-y-4">
-              <PasswordField id="reset-password" label="New password" required minLength={6} autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} />
-              <PasswordField id="reset-confirm" label="Confirm new password" required minLength={6} autoComplete="new-password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
+              <PasswordField id="reset-password" label="New password" required minLength={8} autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} />
+              <PasswordField id="reset-confirm" label="Confirm new password" required minLength={8} autoComplete="new-password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
               <Button type="submit" size="lg" className="w-full" loading={loading}>
                 {loading ? 'Updating…' : 'Update password'}
               </Button>

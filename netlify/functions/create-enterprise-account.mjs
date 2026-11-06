@@ -1,4 +1,13 @@
+// Business (enterprise) registration. It creates a login on the server, so it is rate
+// limited and every field is checked here, not only in the form.
+import { createRequire } from 'node:module';
+
+const require = createRequire(import.meta.url);
 const { createClient } = require('@supabase/supabase-js');
+const { escapeHtml, cleanText, isEmail, legacyToV2 } = require('./security-lib.js');
+
+// Storage paths the form writes into the kyc-documents bucket: a random id and the extension.
+const DOCUMENT_PATH_RE = /^[0-9a-f-]{36}\.(pdf|jpe?g|png)$/i;
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
@@ -25,11 +34,11 @@ function buildConfirmationEmailHtml(firstName, companyName, actionLink, forApple
     <div style="padding: 32px 24px;">
       <h2 style="color: #1f2937; font-size: 20px; margin-top: 0;">Confirm your email</h2>
       <p style="color: #6b7280; font-size: 14px; line-height: 1.6;">
-        Hi ${firstName || 'there'}, thanks for registering <strong>${companyName}</strong> for a SPET Online Enterprise account.
+        Hi ${escapeHtml(firstName) || 'there'}, thanks for registering <strong>${escapeHtml(companyName)}</strong> for a SPET Online Enterprise account.
         Please confirm your email address to activate your login.
       </p>
       <div style="text-align: center; margin: 32px 0;">
-        <a href="${actionLink}" style="display: inline-block; background: #0071e3; color: #ffffff; text-decoration: none; font-size: 15px; font-weight: bold; padding: 14px 32px; border-radius: 999px;">
+        <a href="${escapeHtml(actionLink)}" style="display: inline-block; background: #0071e3; color: #ffffff; text-decoration: none; font-size: 15px; font-weight: bold; padding: 14px 32px; border-radius: 999px;">
           Confirm Email Address
         </a>
       </div>
@@ -72,7 +81,9 @@ async function sendEmail({ to, toName, subject, htmlContent }) {
   return response.json();
 }
 
-exports.handler = async (event) => {
+const badRequest = (error) => ({ statusCode: 400, headers: CORS, body: JSON.stringify({ error }) });
+
+const handler = async (event) => {
   if (event.httpMethod === 'OPTIONS') {
     return { statusCode: 200, headers: CORS, body: '' };
   }
@@ -82,13 +93,49 @@ exports.handler = async (event) => {
   }
 
   try {
-    const data = JSON.parse(event.body || '{}');
-    const {
-      company_name, registration_number, vat_number, industry, company_size, website,
-      id_document_url, company_registration_document_url, proof_of_address_document_url,
-      contact_first_name, contact_last_name, contact_email, contact_phone, contact_role,
-      physical_address, city, province, postal_code, password, redirect
-    } = data;
+    let data;
+    try {
+      data = JSON.parse(event.body || '{}');
+    } catch {
+      return badRequest('Invalid request');
+    }
+    if (!data || typeof data !== 'object') return badRequest('Invalid request');
+
+    const company_name = cleanText(data.company_name, 160);
+    const registration_number = cleanText(data.registration_number, 40);
+    const vat_number = cleanText(data.vat_number, 40);
+    const industry = cleanText(data.industry, 80);
+    const company_size = cleanText(data.company_size, 40);
+    const website = cleanText(data.website, 200);
+    const contact_first_name = cleanText(data.contact_first_name, 60);
+    const contact_last_name = cleanText(data.contact_last_name, 60);
+    const contact_email = cleanText(data.contact_email, 254).toLowerCase();
+    const physical_address = cleanText(data.physical_address, 300);
+    const city = cleanText(data.city, 100);
+    const province = cleanText(data.province, 60);
+    const postal_code = cleanText(data.postal_code, 10);
+    const password = typeof data.password === 'string' ? data.password : '';
+    const redirect = data.redirect;
+    const documentPath = (value) => (typeof value === 'string' && DOCUMENT_PATH_RE.test(value) ? value : null);
+    const id_document_url = documentPath(data.id_document_url);
+    const company_registration_document_url = documentPath(data.company_registration_document_url);
+    const proof_of_address_document_url = documentPath(data.proof_of_address_document_url);
+
+    if (!company_name || !contact_first_name || !contact_last_name || !physical_address || !city || !province) {
+      return badRequest('Please complete all the required fields.');
+    }
+    if (!isEmail(contact_email)) return badRequest('Please enter a valid email address.');
+    if (!/^\d{4}$/.test(postal_code)) return badRequest('Postal code must be 4 digits.');
+    // Supabase hashes passwords with bcrypt, which reads at most 72 bytes.
+    if (password.length < 8 || Buffer.byteLength(password) > 72) {
+      return badRequest('Your password must be 8 to 72 characters.');
+    }
+    if (website && !/^(https?:\/\/)?[a-z0-9.-]+\.[a-z]{2,}(\/\S*)?$/i.test(website)) {
+      return badRequest('Please enter a valid website address, or leave it blank.');
+    }
+    for (const field of ['id_document_url', 'company_registration_document_url', 'proof_of_address_document_url']) {
+      if (data[field] && !documentPath(data[field])) return badRequest('Please upload your documents again.');
+    }
 
     // Only Apple pages are accepted, so a crafted request can't redirect elsewhere.
     const appleReturn = typeof redirect === 'string' && /^\/enterprise\/apple(\/|\?|$)/.test(redirect) ? redirect : null;
@@ -112,7 +159,12 @@ exports.handler = async (event) => {
       },
     });
 
-    if (authError) throw new Error(`Auth Error: ${authError.message}`);
+    if (authError) {
+      console.error('create-enterprise-account auth error:', authError.message);
+      // Same wording whether or not the address is registered, so the form can't be used to
+      // find out who has an account.
+      return badRequest('We could not register this email address. If you already have an account, please sign in or reset your password.');
+    }
     const userId = authData.user.id;
     const confirmationLink = authData.properties.action_link;
 
@@ -208,9 +260,18 @@ exports.handler = async (event) => {
     return {
       statusCode: 500,
       headers: CORS,
-      body: JSON.stringify({ error: err.message || 'An unexpected error occurred.' })
+      body: JSON.stringify({ error: 'We could not complete your registration. Please try again, or contact us.' })
     };
   }
+};
+
+export default legacyToV2(handler);
+
+// Three registrations per visitor per minute: enough for typing mistakes, too few for a
+// script creating accounts or sending confirmation emails to strangers.
+export const config = {
+  path: '/api/enterprise-register',
+  rateLimit: { windowLimit: 3, windowSize: 60, aggregateBy: ['ip', 'domain'] },
 };
 // cache-bust: force rebuild after env var scope fix (2026-07-12T21:49:14Z)
 // revert: env vars restored to plain (non-secret) after runtime incident

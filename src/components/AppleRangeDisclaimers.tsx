@@ -16,17 +16,22 @@ export default function AppleRangeDisclaimers({ category, sub }: { category: str
   const load = LOADERS[category]
   if (!load) return null
 
-  const shown = (sections || []).filter(s => !sub || !s.subs || s.subs.some(x => x.toLowerCase() === sub.toLowerCase()))
+  const shown = (sections || []).filter(
+    section => !sub || !section.subs || section.subs.some(value => value.toLowerCase() === sub.toLowerCase())
+  )
 
   return (
-    <div style={{ marginTop: 40, paddingTop: 20, borderTop: '1px solid #d2d2d7', textAlign: 'center' }}>
+    <div className="mt-12 border-t border-apple-line pt-5 text-center">
       <button
+        type="button"
         onClick={() => { load().then(setSections).catch(console.error) }}
-        style={{ background: 'none', border: 'none', color: '#0071e3', fontSize: 13, cursor: 'pointer', padding: 0, fontFamily: 'inherit' }}
+        className="text-[13px] text-apple-blue transition-colors hover:underline"
       >
         {category} disclaimers
       </button>
-      {sections && <AppleLegalModal title={`${category} disclaimers`} sections={shown} onClose={() => setSections(null)} />}
+      {sections && (
+        <AppleLegalModal title={`${category} disclaimers`} sections={shown} onClose={() => setSections(null)} />
+      )}
     </div>
   )
 }

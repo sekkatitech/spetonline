@@ -58,6 +58,9 @@ function ScrollToTop() {
 function AppShell() {
   const { pathname } = useLocation();
   const isEnterprise = pathname.startsWith('/enterprise');
+  // The Apple portal carries its own return link, and the floating pill sat on
+  // top of its mobile CTAs.
+  const isApplePortal = pathname.startsWith('/enterprise/apple');
 
   // Record a page view for the admin dashboard's Site Visitors analytics
   useEffect(() => { trackPageView(pathname); }, [pathname]);
@@ -127,7 +130,7 @@ function AppShell() {
           <AIChatWidget />
         </Suspense>
       )}
-      {isEnterprise && (
+      {isEnterprise && !isApplePortal && (
         <Link
           to="/shop"
           className="fixed bottom-4 right-4 z-40 inline-flex h-11 items-center rounded-lg bg-spet-navy px-4 text-[13px] font-semibold text-white shadow-lg transition-colors hover:bg-spet-blue"

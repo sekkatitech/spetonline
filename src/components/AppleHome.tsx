@@ -1,17 +1,16 @@
-import { useState, type CSSProperties, type ReactNode } from 'react'
-import { Play } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import type { ReactNode } from 'react'
 import ApplePreorderBadge from './ApplePreorderBadge'
+import { AppleFilm } from './apple/AppleFilm'
+import { AppleLinkButton } from './apple/AppleButton'
+import { appleHref } from '../lib/appleQuery'
 
-// The Apple home page: products and videos first, with the shop one click away.
+// The Apple home page: products and films first, with the shop one click away.
 // Headlines come from Apple's reseller copy documents, so keep them word for word.
 
-const H = {
-  white: '#ffffff', offwhite: '#f5f5f7', black: '#1d1d1f', ink: '#000000',
-  grey: '#6e6e73', greyDark: '#a1a1a6', blue: '#0071e3', blueDark: '#2997ff',
-}
-
 const VIDEO_BASE = 'https://core.co.za/cdn/shop/videos/c/vp'
-const video = (id: string, version: string) => `${VIDEO_BASE}/${id}/${id}.HD-1080p-7.2Mbps-${version}.mp4?v=0`
+const video = (id: string, version: string) =>
+  `${VIDEO_BASE}/${id}/${id}.HD-1080p-7.2Mbps-${version}.mp4?v=0`
 
 const VIDEOS = {
   macbookProXdr: video('b3d26ebd7a7b4430bda4f03dcddb604c', '99285553'),
@@ -31,181 +30,203 @@ const POSTERS = {
 const CATEGORY_TILES = [
   { key: 'Mac', label: 'Mac', image: '/images/apple-imagies/MacBook_Air.jpeg' },
   { key: 'iPhone', label: 'iPhone', image: '/images/apple-products/iphone-18-pro/iphone-18-pro-silver-1.jpg' },
-  { key: 'iPad', label: 'iPad', image: '/enterprice-images/iPad-family.png' },
+  { key: 'iPad', label: 'iPad', image: '/images/apple-imagies/iPad/iPad_Pro_11-in_M5.webp' },
   { key: 'Watch', label: 'Apple Watch', image: '/images/apple-imagies/apple-watch/Apple_Watch_Series_11.webp' },
   { key: 'AirPods', label: 'AirPods', image: '/images/apple-imagies/AirPods/AirPods_Pro_3.webp' },
-  { key: 'HomePod', label: 'HomePod', image: '/images/apple-imagies/HomePod_mini_Blue_PDP_Image_Position-5__WWEN_511da05e-c37d-46b6-940f-d66dff94ee4f_5000x.webp', preorder: true },
+  {
+    key: 'HomePod',
+    label: 'HomePod',
+    image:
+      '/images/apple-imagies/HomePod_mini_Blue_PDP_Image_Position-5__WWEN_511da05e-c37d-46b6-940f-d66dff94ee4f_5000x.webp',
+    preorder: true,
+  },
   { key: 'HomeView', label: 'HomeView', image: '/images/apple-products/homeview/rose-pink-front.webp', preorder: true },
-  { key: 'Accessories', label: 'Accessories', image: 'https://cdn.shopify.com/s/files/1/0571/8340/4192/files/mq052za_3.webp?v=1749735555' },
+  { key: 'Accessories', label: 'Accessories', image: '' },
 ]
 
-const RESPONSIVE_CSS = `
-.apple-home-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
-.apple-home-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
-.apple-home-tile:hover img { transform: scale(1.04); }
-@media (max-width: 760px) {
-  .apple-home-pair { grid-template-columns: minmax(0, 1fr); }
-  .apple-home-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-}
-`
-
-const prefersReducedMotion = () =>
-  typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
-
-/** Short clip that plays silently. Falls back to its poster if it can't load. */
-function LoopVideo({ src, poster, alt }: { src: string; poster: string; alt: string }) {
-  const [failed, setFailed] = useState(false)
-  const style: CSSProperties = { width: '100%', display: 'block' }
-  if (failed || prefersReducedMotion()) return <img src={poster} alt={alt} style={style} />
-  return (
-    <video
-      src={src} poster={poster} aria-label={alt}
-      autoPlay muted loop playsInline preload="metadata"
-      onError={() => setFailed(true)}
-      style={style}
-    />
-  )
-}
-
-/** Long film: nothing downloads until the customer presses play. */
-function FilmVideo({ src, poster, alt }: { src: string; poster: string; alt: string }) {
-  const [playing, setPlaying] = useState(false)
-  if (playing) {
-    return <video src={src} poster={poster} aria-label={alt} autoPlay controls playsInline style={{ width: '100%', display: 'block' }} />
-  }
-  return (
-    <button
-      onClick={() => setPlaying(true)}
-      aria-label={`Play film: ${alt}`}
-      style={{ position: 'relative', display: 'block', width: '100%', padding: 0, border: 'none', background: 'none', cursor: 'pointer' }}
-    >
-      <img src={poster} alt="" style={{ width: '100%', display: 'block' }} />
-      <span style={{
-        position: 'absolute', left: 20, bottom: 20, display: 'flex', alignItems: 'center', gap: 8,
-        padding: '10px 18px', borderRadius: 980, background: 'rgba(0,0,0,0.72)', color: H.white,
-        fontSize: 14, fontWeight: 600,
-      }}>
-        <Play size={14} fill="currentColor" aria-hidden="true" /> Watch the film
-      </span>
-    </button>
-  )
-}
-
-function Panel({ dark, title, subtitle, cta, onShop, children }: {
+function Panel({
+  dark = false,
+  title,
+  subtitle,
+  cta,
+  ctaHref,
+  children,
+}: {
   dark?: boolean
   title: ReactNode
   subtitle?: ReactNode
   cta: string
-  onShop: () => void
+  ctaHref: string
   children: ReactNode
 }) {
   return (
-    <section style={{
-      background: dark ? H.ink : H.white, color: dark ? H.white : H.black,
-      borderRadius: 18, overflow: 'hidden', display: 'flex', flexDirection: 'column',
-    }}>
-      <div style={{ padding: '44px 24px 28px', textAlign: 'center' }}>
-        <h2 style={{ fontSize: 'clamp(28px, 4vw, 44px)', fontWeight: 700, letterSpacing: '-0.02em', margin: 0, lineHeight: 1.1 }}>{title}</h2>
-        {subtitle && <p style={{ fontSize: 'clamp(16px, 2vw, 21px)', color: dark ? H.greyDark : H.grey, margin: '10px 0 0' }}>{subtitle}</p>}
-        <button
-          onClick={onShop}
-          style={{
-            marginTop: 20, padding: '11px 24px', minHeight: 44, borderRadius: 980, border: 'none',
-            background: H.blue, color: H.white, fontSize: 15, fontWeight: 500,
-            cursor: 'pointer', fontFamily: 'inherit',
-          }}
-        >
-          {cta}
-        </button>
+    <section
+      className={`flex flex-col overflow-hidden rounded-[18px] ${
+        dark ? 'bg-black text-white' : 'bg-apple-surface text-apple-ink'
+      }`}
+    >
+      <div className="px-6 pb-6 pt-10 text-center md:px-10">
+        <h2 className="font-display text-[26px] font-semibold leading-[32px] tracking-[-0.01em] md:text-[32px] md:leading-[38px]">
+          {title}
+        </h2>
+        {subtitle && (
+          <p className={`mt-2 text-[15px] leading-[22px] ${dark ? 'text-white/70' : 'text-apple-muted'}`}>{subtitle}</p>
+        )}
+        <div className="mt-5">
+          <AppleLinkButton to={ctaHref} size="sm">
+            {cta}
+          </AppleLinkButton>
+        </div>
       </div>
-      <div style={{ marginTop: 'auto' }}>{children}</div>
+      <div className="mt-auto">{children}</div>
     </section>
   )
 }
 
-export default function AppleHome({ onShop }: { onShop: (category: string) => void }) {
+export default function AppleHome({ counts = {} }: { counts?: Record<string, number> }) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-      <style>{RESPONSIVE_CSS}</style>
-
-      <section style={{ background: H.ink, color: H.white, borderRadius: 18, overflow: 'hidden', textAlign: 'center' }}>
-        <div style={{ padding: '36px 24px 28px' }}>
-          <img src="/images/apple-home/arp-white.png" alt="Apple Reseller Program" style={{ height: 30, marginBottom: 28 }} />
-          <h1 style={{ fontSize: 'clamp(36px, 6vw, 64px)', fontWeight: 700, letterSpacing: '-0.03em', margin: 0, lineHeight: 1.05 }}>MacBook Pro</h1>
-          <p style={{ fontSize: 'clamp(17px, 2.4vw, 24px)', color: H.greyDark, margin: '12px 0 0' }}>PROLED XDR Display</p>
-          <div style={{ marginTop: 14 }}><ApplePreorderBadge inline /></div>
-          <button
-            onClick={() => onShop('Mac')}
-            style={{
-              marginTop: 22, padding: '11px 24px', minHeight: 44, borderRadius: 980, border: 'none',
-              background: H.blue, color: H.white, fontSize: 15, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit',
-            }}
-          >
-            Shop Mac
-          </button>
+    <div className="space-y-3">
+      <section className="overflow-hidden rounded-[18px] bg-black text-white">
+        <div className="grid items-center gap-6 px-6 pb-6 pt-10 md:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] md:gap-10 md:px-12 md:pb-10">
+          <div className="max-w-[440px] text-center md:text-left">
+            <h1 className="font-display text-[36px] font-semibold leading-[40px] tracking-[-0.02em] md:text-[44px] md:leading-[48px]">
+              MacBook Pro
+            </h1>
+            <p className="mt-1 text-[17px] leading-[24px] text-white/70 md:text-[19px]">PROLED XDR Display</p>
+            <div className="mt-4">
+              <ApplePreorderBadge inline />
+            </div>
+            <div className="mt-6">
+              <AppleLinkButton to={appleHref({ cat: 'Mac' })}>Shop Mac</AppleLinkButton>
+            </div>
+          </div>
+          <AppleFilm
+            src={VIDEOS.macbookProXdr}
+            poster={POSTERS.macbookPro}
+            alt="MacBook Pro with PROLED XDR Display"
+            frameClassName="h-[220px] md:h-[320px]"
+            autoplay
+          />
         </div>
-        <LoopVideo src={VIDEOS.macbookProXdr} poster={POSTERS.macbookPro} alt="MacBook Pro with PROLED XDR Display" />
       </section>
 
-      <div className="apple-home-pair">
-        <Panel title="iPhone 18 Pro" subtitle="Pro further." cta="Shop iPhone" onShop={() => onShop('iPhone')}>
-          <img
-            src="/images/apple-products/iphone-18-pro/iphone-18-pro-silver-1.jpg"
-            alt="iPhone 18 Pro in Silver"
-            style={{ width: '100%', maxHeight: 420, objectFit: 'contain', display: 'block', padding: '0 24px 24px', boxSizing: 'border-box' }}
-          />
+      <div className="grid gap-3 md:grid-cols-2">
+        <Panel title="iPhone 18 Pro" subtitle="Pro further." cta="Shop iPhone" ctaHref={appleHref({ cat: 'iPhone' })}>
+          <div className="flex h-[220px] items-end justify-center px-6 pb-6 md:h-[280px] md:px-10">
+            <img
+              src="/images/apple-products/iphone-18-pro/iphone-18-pro-silver-1.jpg"
+              alt="iPhone 18 Pro in Silver"
+              loading="lazy"
+              decoding="async"
+              className="max-h-full w-auto object-contain"
+            />
+          </div>
         </Panel>
-        <Panel title="iPhone Duo" subtitle="Hello, hello." cta="Shop iPhone" onShop={() => onShop('iPhone')}>
-          <FilmVideo src={VIDEOS.iphoneDuo} poster={POSTERS.iphoneDuo} alt="iPhone Duo" />
+
+        <Panel title="iPhone Duo" subtitle="Hello, hello." cta="Shop iPhone" ctaHref={appleHref({ cat: 'iPhone' })}>
+          <div className="px-6 pb-6 md:px-10">
+            <AppleFilm
+              src={VIDEOS.iphoneDuo}
+              poster={POSTERS.iphoneDuo}
+              alt="iPhone Duo"
+              frameClassName="h-[190px] md:h-[250px]"
+            />
+          </div>
         </Panel>
       </div>
 
-      <Panel title={<>iPad Air. Built for Apple Intelligence.<sup>1</sup></>} cta="Shop iPad" onShop={() => onShop('iPad')}>
-        <FilmVideo src={VIDEOS.ipadAir} poster={POSTERS.ipadAir} alt="iPad Air" />
+      <Panel title={<>iPad Air. Built for Apple Intelligence.<sup>1</sup></>} cta="Shop iPad" ctaHref={appleHref({ cat: 'iPad' })}>
+        <div className="px-6 pb-6 md:px-10">
+          <AppleFilm src={VIDEOS.ipadAir} poster={POSTERS.ipadAir} alt="iPad Air" frameClassName="h-[200px] md:h-[300px]" />
+        </div>
       </Panel>
 
-      <div className="apple-home-pair">
-        <Panel dark title="MacBook Pro 14″" subtitle="Fast runs in the family." cta="Shop Mac" onShop={() => onShop('Mac')}>
-          <LoopVideo src={VIDEOS.macbookPro14} poster={POSTERS.macbookPro} alt="MacBook Pro 14-inch" />
+      <div className="grid gap-3 md:grid-cols-2">
+        <Panel
+          dark
+          title="MacBook Pro 14″"
+          subtitle="Fast runs in the family."
+          cta="Shop Mac"
+          ctaHref={appleHref({ cat: 'Mac' })}
+        >
+          <div className="px-6 pb-6 md:px-10">
+            <AppleFilm
+              src={VIDEOS.macbookPro14}
+              poster={POSTERS.macbookPro}
+              alt="MacBook Pro 14-inch"
+              frameClassName="h-[190px] md:h-[250px]"
+            />
+          </div>
         </Panel>
-        <Panel title="Welcome, Apple HomeView." subtitle={<ApplePreorderBadge inline />} cta="Shop HomeView" onShop={() => onShop('HomeView')}>
-          <LoopVideo src={VIDEOS.homeView} poster={POSTERS.homeView} alt="Apple HomeView" />
+
+        <Panel
+          title="Welcome, Apple HomeView."
+          subtitle={<ApplePreorderBadge inline />}
+          cta="Shop HomeView"
+          ctaHref={appleHref({ cat: 'HomeView' })}
+        >
+          <div className="px-6 pb-6 md:px-10">
+            <AppleFilm
+              src={VIDEOS.homeView}
+              poster={POSTERS.homeView}
+              alt="Apple HomeView"
+              frameClassName="h-[190px] md:h-[250px]"
+            />
+          </div>
         </Panel>
       </div>
 
-      <section style={{ padding: '44px 0 8px' }}>
-        <h2 style={{ fontSize: 'clamp(26px, 3.4vw, 36px)', fontWeight: 700, letterSpacing: '-0.02em', margin: '0 0 20px', color: H.black }}>Shop by product</h2>
-        <div className="apple-home-tiles">
-          {CATEGORY_TILES.map(tile => (
-            <button
-              key={tile.key}
-              className="apple-home-tile"
-              onClick={() => onShop(tile.key)}
-              style={{
-                position: 'relative',
-                background: H.white, border: 'none', borderRadius: 18, padding: '24px 18px 20px', cursor: 'pointer',
-                fontFamily: 'inherit', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, overflow: 'hidden',
-              }}
-            >
-              {tile.preorder && <ApplePreorderBadge />}
-              <span style={{ height: 130, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <img src={tile.image} alt="" loading="lazy" style={{ maxHeight: '100%', maxWidth: '100%', objectFit: 'contain', transition: 'transform 0.3s ease' }} />
-              </span>
-              <span style={{ fontSize: 17, fontWeight: 600, color: H.black }}>{tile.label}</span>
-            </button>
-          ))}
+      <section className="pt-10">
+        <h2 className="font-display text-[24px] font-semibold leading-[30px] tracking-[-0.01em] text-apple-ink md:text-[28px]">
+          Shop by product
+        </h2>
+        <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-4">
+          {CATEGORY_TILES.map((tile) => {
+            const count = counts[tile.key] ?? 0
+            return (
+              <Link
+                key={tile.key}
+                to={appleHref({ cat: tile.key })}
+                className="group relative flex flex-col rounded-[18px] bg-apple-surface px-4 pb-5 pt-5 transition-colors hover:bg-apple-surface-2"
+              >
+                {tile.preorder && <ApplePreorderBadge />}
+                <span className="flex h-[110px] items-center justify-center">
+                  {tile.image ? (
+                    <img
+                      src={tile.image}
+                      alt=""
+                      loading="lazy"
+                      decoding="async"
+                      className="max-h-full max-w-full object-contain transition-transform duration-300 group-hover:scale-[1.03]"
+                    />
+                  ) : (
+                    <span className="text-[12px] text-apple-muted">View range</span>
+                  )}
+                </span>
+                <span className="mt-4 text-[15px] font-medium text-apple-ink">{tile.label}</span>
+                {count > 0 && (
+                  <span className="mt-0.5 text-[12px] text-apple-muted">
+                    {count} {count === 1 ? 'configuration' : 'configurations'}
+                  </span>
+                )}
+              </Link>
+            )
+          })}
         </div>
       </section>
 
-      <section style={{ background: H.white, borderRadius: 18, padding: '32px 28px', marginTop: 12 }}>
-        <h2 style={{ fontSize: 24, fontWeight: 700, letterSpacing: '-0.01em', margin: '0 0 8px', color: H.black }}>Shop with Confidence!</h2>
-        <p style={{ fontSize: 15, lineHeight: 1.6, color: H.grey, margin: 0, maxWidth: 720 }}>
-          Our team will confirm product availability and keep you informed throughout your order. If an item is temporarily out of stock, we'll gladly assist with a special order or a suitable alternative.
+      <section className="mt-10 border-t border-apple-line pt-10">
+        <h2 className="font-display text-[22px] font-semibold leading-[28px] text-apple-ink">Shop with Confidence</h2>
+        <p className="mt-3 max-w-[80ch] text-[14px] leading-[22px] text-apple-ink-2">
+          Our team will confirm product availability and keep you informed throughout your order. If an item is
+          temporarily out of stock, we’ll gladly assist with a special order or a suitable alternative.
         </p>
       </section>
 
-      <p style={{ fontSize: 12, lineHeight: 1.5, color: H.grey, margin: '16px 0 0' }}>
-        <sup>1</sup> Apple Intelligence is available in beta. Some features may not be available in all regions or languages. For feature and language availability and system requirements, see support.apple.com/en-za/121115.
+      <p className="mt-8 text-[12px] leading-[18px] text-apple-muted">
+        <sup>1</sup> Apple Intelligence is available in beta. Some features may not be available in all regions or
+        languages. For feature and language availability and system requirements, see
+        support.apple.com/en-za/121115.
       </p>
     </div>
   )

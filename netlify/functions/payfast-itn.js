@@ -2,6 +2,7 @@ const { createClient } = require('@supabase/supabase-js');
 const crypto = require('crypto');
 const https = require('https');
 const { createInvoiceFromOrder } = require('./zoho-lib');
+const { internalToken, isOrderId, safeEqual } = require('./security-lib');
 
 // ── Supabase admin client (server-side only) ─────────────────────────────────
 const supabase = createClient(
@@ -40,7 +41,7 @@ function verifySignature(data, passphrase = '') {
   if (passphrase) str += `&passphrase=${pfEncode(passphrase)}`;
 
   const calculatedSignature = crypto.createHash('md5').update(str).digest('hex');
-  return calculatedSignature === receivedSignature;
+  return safeEqual(calculatedSignature, receivedSignature);
 }
 
 // ── Validate the ITN with PayFast's servers (anti-spoofing check) ────────────
@@ -80,15 +81,22 @@ exports.handler = async (event) => {
     for (const [key, value] of params) data[key] = value;
 
     // ── 1. Verify signature ──────────────────────────────────────────────────
+    // Logs carry the order reference only, never the customer's details.
     if (!verifySignature(data, PF_PASSPHRASE)) {
-      console.error('PayFast ITN: signature mismatch', data);
+      console.error('PayFast ITN: signature mismatch', data.m_payment_id);
       return { statusCode: 400, body: 'Invalid signature' };
+    }
+
+    // The payment must be to our merchant account, not someone else's.
+    if (process.env.PAYFAST_MERCHANT_ID && data.merchant_id !== process.env.PAYFAST_MERCHANT_ID) {
+      console.error('PayFast ITN: wrong merchant', data.m_payment_id);
+      return { statusCode: 400, body: 'Invalid merchant' };
     }
 
     // ── 2. Validate with PayFast servers ─────────────────────────────────────
     const isValid = await validateWithPayFast(rawBody);
     if (!isValid) {
-      console.error('PayFast ITN: failed server validation', data);
+      console.error('PayFast ITN: failed server validation', data.m_payment_id);
       return { statusCode: 400, body: 'Invalid ITN' };
     }
 
@@ -97,7 +105,7 @@ exports.handler = async (event) => {
     const paymentStatus = data.payment_status; // COMPLETE, FAILED, PENDING
     const amountGross = parseFloat(data.amount_gross || '0');
 
-    if (!orderId) {
+    if (!isOrderId(orderId)) {
       console.error('PayFast ITN: missing m_payment_id');
       return { statusCode: 400, body: 'Missing order reference' };
     }
@@ -120,6 +128,13 @@ exports.handler = async (event) => {
       console.error('PayFast ITN: amount mismatch', { orderId, expectedTotal, amountGross });
       await supabase.from('orders').update({ status: 'payment_mismatch' }).eq('id', orderId);
       return { statusCode: 400, body: 'Amount mismatch' };
+    }
+
+    // A paid order is final here. PayFast resends notifications, and a repeat would send the
+    // emails and create the Zoho invoice twice, or a late PENDING/FAILED would undo the payment.
+    if (order.payment_status === 'paid') {
+      console.log('PayFast ITN: order already paid, ignoring repeat', orderId);
+      return { statusCode: 200, body: 'OK' };
     }
 
     // ── 5. Update order status based on payment_status ──────────────────────
@@ -159,7 +174,7 @@ exports.handler = async (event) => {
         await fetch(`${siteUrl}/.netlify/functions/send-order-email`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ orderId }),
+          body: JSON.stringify({ orderId, token: internalToken('order-email', orderId) }),
         });
       } catch (emailErr) {
         // Don't fail the ITN response if email fails — just log it

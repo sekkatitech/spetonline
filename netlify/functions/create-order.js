@@ -10,6 +10,12 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
+const { isUuid, isOrderId, cleanText } = require('./security-lib');
+
+const MAX_LINES = 50;
+const MAX_QTY = 100;
+const SUPPLIERS = ['esquire', 'syntech', 'axiz', 'pinnacle', 'apple'];
+
 const FREE_SHIPPING_THRESHOLD = 2500;
 const DEFAULT_SHIPPING        = 90;   // fallback if shipping calc fails
 
@@ -90,8 +96,46 @@ exports.handler = async (event) => {
     }
 
     // ── 2. Validate cart ──────────────────────────────────────────────────
-    if (!items || items.length === 0) {
+    // The browser's cart is only a list of product ids and quantities. Everything else,
+    // including every price, is read again from the database below.
+    if (!Array.isArray(items) || items.length === 0) {
       return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: 'Cart is empty' }) };
+    }
+    if (items.length > MAX_LINES) {
+      return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: `Please order at most ${MAX_LINES} different products at a time.` }) };
+    }
+    if (items.some((i) => !i || !isUuid(i.product_id) || !SUPPLIERS.includes(i.supplier) || !Number.isInteger(i.qty) || i.qty < 1 || i.qty > MAX_QTY)) {
+      return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: `Invalid cart: each quantity must be a whole number from 1 to ${MAX_QTY}.` }) };
+    }
+    if (new Set(items.map((i) => i.product_id)).size !== items.length) {
+      return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: 'Invalid cart: a product is listed twice.' }) };
+    }
+    if (previousOrderId !== undefined && previousOrderId !== null && !isOrderId(previousOrderId)) {
+      return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: 'Invalid request' }) };
+    }
+    if (promoCode !== undefined && promoCode !== null && (typeof promoCode !== 'string' || promoCode.length > 40)) {
+      return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: 'Invalid promo code' }) };
+    }
+
+    // Address fields are typed by the customer: text only, with sensible lengths.
+    const address = shippingAddress && typeof shippingAddress === 'object' ? shippingAddress : {};
+    const cleanAddress = {
+      full_name:     cleanText(address.full_name, 120),
+      first_name:    cleanText(address.first_name, 60),
+      last_name:     cleanText(address.last_name, 60),
+      phone:         cleanText(address.phone, 30),
+      address_line1: cleanText(address.address_line1, 200),
+      address_line2: cleanText(address.address_line2, 200),
+      city:          cleanText(address.city, 100),
+      province:      cleanText(address.province, 60),
+      postal_code:   cleanText(address.postal_code, 10),
+      country:       cleanText(address.country, 60) || 'South Africa',
+    };
+    if (!cleanAddress.address_line1 || !cleanAddress.city || !cleanAddress.province || !/^\d{4}$/.test(cleanAddress.postal_code)) {
+      return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: 'Incomplete shipping address' }) };
+    }
+    if (cleanAddress.phone && !/^[+\d\s()-]{9,30}$/.test(cleanAddress.phone)) {
+      return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: 'Please enter a valid phone number.' }) };
     }
 
     // ── 3. Re-fetch prices from DB ────────────────────────────────────────
@@ -233,30 +277,28 @@ exports.handler = async (event) => {
           !(promo.min_order_value && subtotal < promo.min_order_value)
         ) {
           if (promo.type === 'percentage' && promo.value) discountAmount = subtotal * (promo.value / 100);
-          if (promo.type === 'fixed' && promo.value) discountAmount = promo.value;
+          if (promo.type === 'fixed' && promo.value) discountAmount = Number(promo.value);
           validatedPromoId = promo.id;
         }
       }
     }
 
+    // A discount can never take the order below zero.
+    discountAmount = Math.min(Math.max(Number(discountAmount) || 0, 0), subtotal);
     const afterDiscount = subtotal - discountAmount;
 
     // ── 6. Calculate shipping (weight-based) ──────────────────────────────
     const shippingCost = await calculateShipping(
       items,
       afterDiscount,
-      shippingAddress?.postal_code || '2000'
+      cleanAddress.postal_code
     );
 
     const total = afterDiscount + shippingCost;
 
-    // ── 7. Validate shipping address ──────────────────────────────────────
-    if (!shippingAddress?.address_line1 || !shippingAddress?.city || !shippingAddress?.province || !shippingAddress?.postal_code) {
-      return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: 'Incomplete shipping address' }) };
-    }
-
-    const clientName  = shippingAddress.full_name || `${shippingAddress.first_name || ''} ${shippingAddress.last_name || ''}`.trim() || 'Customer';
-    const clientPhone = shippingAddress.phone || null;
+    // ── 7. The shipping address was validated with the cart (cleanAddress) ──
+    const clientName  = cleanAddress.full_name || `${cleanAddress.first_name} ${cleanAddress.last_name}`.trim() || 'Customer';
+    const clientPhone = cleanAddress.phone || null;
 
     // ── 8. Create the order ───────────────────────────────────────────────
     const { data: order, error: orderError } = await supabase
@@ -268,13 +310,13 @@ exports.handler = async (event) => {
         client_phone:            clientPhone,
         shipping_full_name:      clientName,
         shipping_phone:          clientPhone,
-        shipping_address_line1:  shippingAddress.address_line1,
-        shipping_address_line2:  shippingAddress.address_line2 || null,
-        shipping_city:           shippingAddress.city,
-        shipping_province:       shippingAddress.province,
-        shipping_postal_code:    shippingAddress.postal_code,
-        shipping_country:        shippingAddress.country || 'South Africa',
-        shipping_address:        shippingAddress,
+        shipping_address_line1:  cleanAddress.address_line1,
+        shipping_address_line2:  cleanAddress.address_line2 || null,
+        shipping_city:           cleanAddress.city,
+        shipping_province:       cleanAddress.province,
+        shipping_postal_code:    cleanAddress.postal_code,
+        shipping_country:        cleanAddress.country,
+        shipping_address:        cleanAddress,
         status:                  'pending',
         payment_status:          'unpaid',
         subtotal,
@@ -327,8 +369,8 @@ exports.handler = async (event) => {
     }
 
     // ── 10. Build PayFast payload ─────────────────────────────────────────
-    const firstName = shippingAddress.first_name?.trim() || clientName.split(' ')[0] || 'Customer';
-    const lastName  = shippingAddress.last_name?.trim()  || clientName.split(' ').slice(1).join(' ') || 'Name';
+    const firstName = cleanAddress.first_name || clientName.split(' ')[0] || 'Customer';
+    const lastName  = cleanAddress.last_name  || clientName.split(' ').slice(1).join(' ') || 'Name';
     const siteUrl   = process.env.SITE_URL || 'https://spetonline.co.za';
 
     const pfData = {

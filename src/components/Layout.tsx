@@ -31,6 +31,16 @@ const DEPARTMENTS = [
 // ── Search (used in the header and the mobile bar) ----------------------------
 function SearchForm({ id, className = '' }: { id: string; className?: string }) {
   const navigate = useNavigate();
+  const { pathname, search } = useLocation();
+
+  // On the results page the box keeps the term that produced them, so a shopper can
+  // refine a search instead of retyping it.
+  const urlQuery = pathname === '/search' ? new URLSearchParams(search).get('q') ?? '' : '';
+  const [value, setValue] = useState(urlQuery);
+
+  useEffect(() => {
+    setValue(urlQuery);
+  }, [urlQuery]);
 
   return (
     <form
@@ -38,8 +48,8 @@ function SearchForm({ id, className = '' }: { id: string; className?: string }) 
       className={`flex items-stretch ${className}`}
       onSubmit={(event) => {
         event.preventDefault();
-        const query = new FormData(event.currentTarget).get('q');
-        if (query) navigate(`/search?q=${encodeURIComponent(String(query))}`);
+        const query = String(new FormData(event.currentTarget).get('q') ?? '').trim();
+        if (query) navigate(`/search?q=${encodeURIComponent(query)}`);
       }}
     >
       <label htmlFor={id} className="sr-only">
@@ -51,6 +61,8 @@ function SearchForm({ id, className = '' }: { id: string; className?: string }) 
           id={id}
           name="q"
           type="search"
+          value={value}
+          onChange={(event) => setValue(event.target.value)}
           placeholder="Search TVs, laptops, printers"
           className="h-10 w-full rounded-l-lg border border-r-0 border-spet-line bg-spet-surface pl-10 pr-3 text-sm text-spet-ink placeholder:text-spet-was focus:border-spet-blue focus:outline-hidden"
         />

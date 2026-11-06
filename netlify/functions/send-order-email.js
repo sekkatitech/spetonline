@@ -1,4 +1,5 @@
 const { createClient } = require('@supabase/supabase-js');
+const { escapeHtml, isOrderId, verifyInternalToken } = require('./security-lib');
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
@@ -169,10 +170,14 @@ exports.handler = async (event) => {
   }
 
   try {
-    const { orderId } = JSON.parse(event.body || '{}');
+    const { orderId, token } = JSON.parse(event.body || '{}');
 
-    if (!orderId) {
+    if (!isOrderId(orderId)) {
       return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: 'orderId is required' }) };
+    }
+    // Only payfast-itn.js may trigger these emails; it signs the order id (security-lib.js).
+    if (!verifyInternalToken('order-email', orderId, token)) {
+      return { statusCode: 401, headers: CORS, body: JSON.stringify({ error: 'Unauthorised' }) };
     }
 
     // ── Fetch order with items ─────────────────────────────────────────────
@@ -188,13 +193,18 @@ exports.handler = async (event) => {
 
     const items = order.order_items || [];
     const isApple = await hasAppleItems(items);
+    // Names and addresses are typed by the customer, so they're escaped before going into HTML.
+    const escapeStrings = (row) =>
+      Object.fromEntries(Object.entries(row).map(([key, value]) => [key, typeof value === 'string' ? escapeHtml(value) : value]));
+    const safeOrder = escapeStrings(order);
+    const safeItems = items.map(escapeStrings);
 
     // ── Send customer confirmation email ─────────────────────────────────────
     await sendEmail({
       to: order.client_email,
       toName: order.client_name,
       subject: `Order Confirmed — ${order.id} | SPET Online`,
-      htmlContent: buildCustomerEmailHtml(order, items, isApple),
+      htmlContent: buildCustomerEmailHtml(safeOrder, safeItems, isApple),
     });
 
     // ── Send admin notification email ────────────────────────────────────────
@@ -202,7 +212,7 @@ exports.handler = async (event) => {
       to: SENDER_EMAIL,
       toName: 'SPET Online Admin',
       subject: `🎉 New Order Paid — ${order.id}`,
-      htmlContent: buildAdminEmailHtml(order, items),
+      htmlContent: buildAdminEmailHtml(safeOrder, safeItems),
     });
 
     // ── Apple stock is checked after payment, so alert the team that does it ─
@@ -211,7 +221,7 @@ exports.handler = async (event) => {
         to: APPLE_ALERT_EMAIL,
         toName: 'SPET Online Apple Orders',
         subject: `Apple order paid: check stock — ${order.id}`,
-        htmlContent: buildAdminEmailHtml(order, items),
+        htmlContent: buildAdminEmailHtml(safeOrder, safeItems),
       });
     }
 
@@ -226,7 +236,7 @@ exports.handler = async (event) => {
     return {
       statusCode: 500,
       headers: CORS,
-      body: JSON.stringify({ error: 'Failed to send email', details: err.message }),
+      body: JSON.stringify({ error: 'Failed to send email' }),
     };
   }
 };// cache-bust: force rebuild after env var scope fix (2026-07-12T21:49:14Z)

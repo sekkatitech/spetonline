@@ -33,21 +33,18 @@ export function useAppleBuying() {
 
   const buy = (product: AppleBuyable, qty = 1) => {
     if (!signedIn(product.id)) return;
-    const cart = useCartStore.getState();
-    if (cart.items.some((i) => i.product_id === product.id)) {
-      cart.updateQty(product.id, qty);
-    } else {
-      cart.addItem({
-        id: product.id,
-        product_id: product.id,
-        name: productName(product),
-        brand: 'Apple',
-        price: Number(product.price_display),
-        image: productImage(product) ?? '',
-        sku: product.sku,
-        supplier: 'apple',
-      }, qty);
-    }
+    // Adds to the quantity already in the cart, the same way every other
+    // supplier's add-to-cart works — buying a second one shouldn't overwrite it.
+    useCartStore.getState().addItem({
+      id: product.id,
+      product_id: product.id,
+      name: productName(product),
+      brand: 'Apple',
+      price: Number(product.price_display),
+      image: productImage(product) ?? '',
+      sku: product.sku,
+      supplier: 'apple',
+    }, qty);
     navigate('/checkout');
   };
 

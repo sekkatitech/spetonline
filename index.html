@@ -31,17 +31,7 @@
     <link rel="apple-touch-icon" href="/logo-icon.png" />
 
     <!-- Restore the saved theme before first paint to avoid a light flash. -->
-    <script>
-      (function () {
-        try {
-          if (localStorage.getItem('theme') === 'dark') {
-            document.documentElement.classList.add('dark');
-          }
-        } catch (error) {
-          /* storage unavailable — keep the light default */
-        }
-      })();
-    </script>
+    <script src="/theme-init.js"></script>
 
     <title>SPET Online | Premium Electronics Store</title>
   </head>

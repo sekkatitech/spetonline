@@ -8,6 +8,10 @@ interface VisitorMapProps {
   timeframe: string;
 }
 
+// Visitor data (city, page visited) ends up in marker HTML, so it is escaped first.
+const esc = (value: unknown) =>
+  String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+
 const DEFAULT_MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN || '';
 
 export const VisitorMap: React.FC<VisitorMapProps> = ({ locations, timeframe }) => {
@@ -128,7 +132,7 @@ export const VisitorMap: React.FC<VisitorMapProps> = ({ locations, timeframe }) 
           <span class="absolute inline-flex h-full w-full rounded-full ${colorClass} opacity-75 animate-ping"></span>
           <span class="relative inline-flex rounded-full ${sizeClass} ${colorClass} border-2 border-white"></span>
           <div class="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 whitespace-nowrap bg-lago-900 border border-lago-600 text-white text-[11px] font-bold px-2 py-0.5 rounded shadow-lg pointer-events-none opacity-90 group-hover:opacity-100 transition-opacity">
-            ${loc.city} (${loc.visitsCount.toLocaleString()})
+            ${esc(loc.city)} (${loc.visitsCount.toLocaleString()})
           </div>
         </div>
       `;
@@ -137,19 +141,19 @@ export const VisitorMap: React.FC<VisitorMapProps> = ({ locations, timeframe }) 
       const popupHtml = `
         <div class="p-2 bg-[#0a141d] text-white rounded-lg min-w-[200px]">
           <div class="flex items-center justify-between border-b border-lago-700 pb-1.5 mb-2">
-            <span class="font-bold text-sm text-white">${loc.city}</span>
-            <span class="text-[10px] font-bold uppercase tracking-wider text-accent-orange px-1.5 py-0.5 rounded bg-lago-800">${loc.province}</span>
+            <span class="font-bold text-sm text-white">${esc(loc.city)}</span>
+            <span class="text-[10px] font-bold uppercase tracking-wider text-accent-orange px-1.5 py-0.5 rounded bg-lago-800">${esc(loc.province)}</span>
           </div>
-          <p class="text-xs text-lago-300 mb-1">Visits (${timeframe}): <strong class="text-white font-mono">${loc.visitsCount.toLocaleString()}</strong> (${loc.percentage}%)</p>
-          <p class="text-xs text-lago-300 mb-2">Top Interest: <strong class="text-accent-cyan">${loc.topInterest}</strong></p>
+          <p class="text-xs text-lago-300 mb-1">Visits (${esc(timeframe)}): <strong class="text-white font-mono">${loc.visitsCount.toLocaleString()}</strong> (${Number(loc.percentage) || 0}%)</p>
+          <p class="text-xs text-lago-300 mb-2">Top Interest: <strong class="text-accent-cyan">${esc(loc.topInterest)}</strong></p>
           <div class="text-[10px] text-lago-400">
             <div class="flex justify-between mb-0.5">
-              <span>Desktop ${loc.deviceSplit.desktop}%</span>
-              <span>Mobile ${loc.deviceSplit.mobile}%</span>
+              <span>Desktop ${Number(loc.deviceSplit.desktop) || 0}%</span>
+              <span>Mobile ${Number(loc.deviceSplit.mobile) || 0}%</span>
             </div>
             <div class="w-full h-1.5 bg-lago-800 rounded-full overflow-hidden flex">
-              <div style="width: ${loc.deviceSplit.desktop}%" class="bg-accent-cyan h-full"></div>
-              <div style="width: ${loc.deviceSplit.mobile}%" class="bg-accent-orange h-full"></div>
+              <div style="width: ${Number(loc.deviceSplit.desktop) || 0}%" class="bg-accent-cyan h-full"></div>
+              <div style="width: ${Number(loc.deviceSplit.mobile) || 0}%" class="bg-accent-orange h-full"></div>
             </div>
           </div>
         </div>

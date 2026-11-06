@@ -12,6 +12,8 @@ interface SEOOptions {
   image?: string;
   /** Skip appending "| SPET Online" — use for the homepage's own full title. */
   bare?: boolean;
+  /** Overrides the canonical path, for pages whose state lives in the query string. */
+  canonicalPath?: string;
   /** Keep this page out of search results (account/checkout/admin/enterprise, etc). */
   noindex?: boolean;
   /** Structured data (schema.org) to embed as a JSON-LD script tag. */
@@ -53,12 +55,12 @@ function upsertJsonLd(data: Record<string, unknown> | undefined) {
 
 /** Sets per-page title, meta description, Open Graph/Twitter tags, canonical URL,
  *  robots directive, and optional JSON-LD — the SPA equivalent of per-page <head> tags. */
-export function useSEO({ title, description, image, bare, noindex, jsonLd }: SEOOptions) {
+export function useSEO({ title, description, image, bare, canonicalPath, noindex, jsonLd }: SEOOptions) {
   const { pathname } = useLocation();
 
   useEffect(() => {
     const fullTitle = bare ? title : `${title} | ${SITE_NAME}`;
-    const canonicalUrl = `${SITE_URL}${pathname}`;
+    const canonicalUrl = `${SITE_URL}${canonicalPath ?? pathname}`;
     const ogImage = image ?? DEFAULT_IMAGE;
 
     document.title = fullTitle;
@@ -73,5 +75,5 @@ export function useSEO({ title, description, image, bare, noindex, jsonLd }: SEO
     upsertMeta('name', 'robots', noindex ? 'noindex, nofollow' : 'index, follow');
     upsertCanonical(canonicalUrl);
     upsertJsonLd(jsonLd);
-  }, [pathname, title, description, image, bare, noindex, jsonLd]);
+  }, [pathname, title, description, image, bare, canonicalPath, noindex, jsonLd]);
 }

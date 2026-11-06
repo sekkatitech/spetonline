@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../lib/AuthContext';
 import type { LegalKey } from '../lib/legalContent';
@@ -24,31 +24,69 @@ export function AuthPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [legalDoc, setLegalDoc] = useState<LegalKey | null>(null);
-  const { signIn, signUp } = useAuth();
+  // The address waiting for its confirmation email, so it can be sent again.
+  const [unconfirmedEmail, setUnconfirmedEmail] = useState('');
+  const [resending, setResending] = useState(false);
+  const { user, loading: authLoading, signIn, signUp, resendConfirmation } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Where to go after login — default to /account, but honour ?redirect= param
+  // Where to go after login: /account by default. Only paths on this site are accepted, so a
+  // crafted link can't send someone to another website after they sign in.
   const params = new URLSearchParams(location.search);
-  const redirectTo = params.get('redirect') || '/account';
+  const requested = params.get('redirect') || '';
+  const redirectTo = requested.startsWith('/') && !requested.startsWith('//') ? requested : '/account';
+
+  // The confirmation link in the email signs the customer in and lands here: carry on.
+  useEffect(() => {
+    if (!authLoading && user && mode !== 'forgot') navigate(redirectTo, { replace: true });
+  }, [authLoading, user, mode, redirectTo, navigate]);
 
   function changeMode(next: typeof mode) {
     setMode(next);
     setError('');
     setSuccess('');
+    setUnconfirmedEmail('');
+  }
+
+  async function handleResend() {
+    setResending(true);
+    setError('');
+    const { error } = await resendConfirmation(unconfirmedEmail);
+    setResending(false);
+    if (error) {
+      setError(/rate|seconds|too many/i.test(error.message)
+        ? 'Please wait a minute before asking for another email.'
+        : 'We could not send the email. Please try again shortly.');
+      return;
+    }
+    setSuccess(`We've sent a new confirmation link to ${unconfirmedEmail}. Check your inbox and spam folder.`);
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setError(''); setSuccess(''); setLoading(true);
+    setError(''); setSuccess(''); setUnconfirmedEmail(''); setLoading(true);
+    const address = email.trim();
 
     if (mode === 'login') {
-      const { error } = await signIn(email, password);
-      if (error) { setError(error.message); setLoading(false); return; }
+      const { error } = await signIn(address, password);
+      if (error) {
+        if (/not confirmed/i.test(error.message)) {
+          setError('Please confirm your email address first. Open the link we emailed you when you signed up.');
+          setUnconfirmedEmail(address);
+        } else if (/invalid login credentials/i.test(error.message)) {
+          setError('Incorrect email or password. Please try again.');
+        } else {
+          setError(error.message);
+        }
+        setLoading(false);
+        return;
+      }
       // Go back to where the user came from (e.g. /checkout)
       navigate(redirectTo);
     } else if (mode === 'register') {
-      const { error } = await signUp(email, password, firstName, lastName);
+      if (password.length < 8) { setError('Please choose a password of at least 8 characters.'); setLoading(false); return; }
+      const { error } = await signUp(address, password, firstName.trim(), lastName.trim());
       if (error) { setError(error.message); setLoading(false); return; }
 
       // Trigger Welcome Email
@@ -60,7 +98,11 @@ export function AuthPage() {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) { navigate(redirectTo); return; }
 
-      setSuccess('Account created! Please check your email to verify your account, then log in.');
+      // Same message whether or not the address already had an account, so the form can't be
+      // used to find out who is registered.
+      setSuccess(`Almost done: we've emailed a confirmation link to ${address}. Open it to activate your account. It may take a few minutes, and can land in spam.`);
+      setUnconfirmedEmail(address);
+      setPassword('');
       setMode('login');
     } else if (mode === 'forgot') {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
@@ -105,6 +147,11 @@ export function AuthPage() {
                 {success}
               </p>
             )}
+            {unconfirmedEmail && mode === 'login' && (
+              <Button type="button" variant="ghost" className="mt-2 w-full" loading={resending} onClick={handleResend}>
+                Send the confirmation email again
+              </Button>
+            )}
 
             <form onSubmit={handleSubmit} className="mt-5 space-y-4">
               {mode === 'register' && (
@@ -122,7 +169,7 @@ export function AuthPage() {
                     id="auth-password"
                     label="Password"
                     required
-                    minLength={6}
+                    minLength={mode === 'register' ? 8 : undefined}
                     autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}

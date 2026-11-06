@@ -33,6 +33,11 @@
 [functions."cancel-stale-orders"]
   schedule = "0 5 * * *"
 
+# The Apple reader swaps supplier image URLs for the WebP copies mirrored into Supabase
+# Storage (scripts/mirror-apple-images.mjs), so the manifest ships with the function.
+[functions."apple-catalogue"]
+  included_files = ["netlify/functions/apple-images.json"]
+
 # Security headers — applied to every response
 [[headers]]
   for = "/*"
@@ -42,7 +47,10 @@
     Referrer-Policy            = "strict-origin-when-cross-origin"
     Permissions-Policy         = "camera=(), microphone=(), geolocation=()"
     Strict-Transport-Security  = "max-age=63072000; includeSubDomains"
-    Content-Security-Policy    = "default-src 'self'; media-src 'self' https://core.co.za; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://api.mapbox.com; worker-src 'self' blob:; style-src 'self' 'unsafe-inline' https://api.mapbox.com https://fonts.googleapis.com; img-src 'self' data: blob: https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.mapbox.com https://events.mapbox.com https://firestore.googleapis.com; font-src 'self' data: https://api.mapbox.com https://fonts.gstatic.com; frame-ancestors 'none';"
+    Cross-Origin-Opener-Policy = "same-origin"
+    # Scripts only from this site and Mapbox: no inline scripts and no eval, so injected
+    # HTML can't run code. Checkout posts its form to PayFast, hence form-action.
+    Content-Security-Policy    = "default-src 'self'; script-src 'self' https://api.mapbox.com; worker-src 'self' blob:; child-src blob:; style-src 'self' 'unsafe-inline' https://api.mapbox.com https://fonts.googleapis.com; img-src 'self' data: blob: https:; media-src 'self' https://core.co.za; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.mapbox.com https://events.mapbox.com; font-src 'self' data: https://api.mapbox.com https://fonts.gstatic.com; object-src 'none'; base-uri 'self'; form-action 'self' https://www.payfast.co.za https://sandbox.payfast.co.za; frame-ancestors 'none'; upgrade-insecure-requests"
 
 # Long-lived cache for hashed assets (JS, CSS, images built by Vite)
 [[headers]]

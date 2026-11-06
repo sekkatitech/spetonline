@@ -10,6 +10,7 @@ interface AuthContextType {
   isEmailVerified: boolean;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signUp: (email: string, password: string, firstName: string, lastName: string) => Promise<{ error: any }>;
+  resendConfirmation: (email: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
 }
 
@@ -72,12 +73,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error };
   }
 
+  // Sends the confirmation email again, for a customer who lost the first one.
+  async function resendConfirmation(email: string) {
+    const { error } = await supabase.auth.resend({
+      type: 'signup',
+      email,
+      options: { emailRedirectTo: `${window.location.origin}/auth${window.location.search}` },
+    });
+    return { error };
+  }
+
   async function signOut() {
     await supabase.auth.signOut();
   }
 
   return (
-    <AuthContext.Provider value={{ user, session, profile, loading, isEmailVerified, signIn, signUp, signOut }}>
+    <AuthContext.Provider value={{ user, session, profile, loading, isEmailVerified, signIn, signUp, resendConfirmation, signOut }}>
       {children}
     </AuthContext.Provider>
   );

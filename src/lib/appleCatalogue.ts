@@ -1,6 +1,8 @@
 // Storefront access to the Apple catalogue. Goes through a server function, which returns
 // customer-safe columns only, so never query core_products directly from the browser.
 
+import type { AppleProduct } from './appleTypes'
+
 const ENDPOINT = '/.netlify/functions/apple-catalogue'
 
 export const APPLE_DELIVERY_NOTE = 'Delivery in 3 to 14 days, pending stock availability. If an item isn\'t available, we\'ll email you and you can cancel for a 100% refund.'
@@ -55,9 +57,20 @@ export async function submitAppleQuote(request: AppleQuoteRequest): Promise<{ re
   return { reference: result.reference, customerEmailed: result.customerEmailed === true }
 }
 
+/** Carries the HTTP status so the pages can tell "not in the range" from "request failed". */
+export class AppleCatalogueError extends Error {
+  status: number
+
+  constructor(status: number) {
+    super(`Apple catalogue request failed: ${status}`)
+    this.name = 'AppleCatalogueError'
+    this.status = status
+  }
+}
+
 async function request<T>(query: string): Promise<T> {
   const response = await fetch(`${ENDPOINT}?${query}`)
-  if (!response.ok) throw new Error(`Apple catalogue request failed: ${response.status}`)
+  if (!response.ok) throw new AppleCatalogueError(response.status)
   return response.json() as Promise<T>
 }
 
@@ -66,6 +79,21 @@ export const fetchAppleCounts = () =>
 
 export const fetchAppleProducts = <T>(category: string) =>
   request<{ products: T[] }>(`category=${encodeURIComponent(category)}`).then((r) => r.products)
+
+export interface AppleSearchResponse<T> {
+  products: T[]
+  /** Total matches in the range, which can be more than the page of products returned. */
+  total: number
+}
+
+/**
+ * The range is matched by product name, model and SKU on the server, so a search does not
+ * have to pull every category into the browser first.
+ */
+export const fetchAppleSearch = (term: string, limit = 24): Promise<AppleSearchResponse<AppleProduct>> =>
+  request<{ products: AppleProduct[]; total?: number | null }>(
+    `search=${encodeURIComponent(term)}&limit=${limit}`
+  ).then((r) => ({ products: r.products, total: r.total ?? r.products.length }))
 
 export const fetchAppleProduct = <T>(id: string) =>
   request<{ product: T; related: T[] }>(`id=${encodeURIComponent(id)}`)

@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import DOMPurify, { type Config as PurifyConfig } from 'dompurify';
 import { Check, ChevronLeft, Heart, RefreshCw, ShieldCheck, ShoppingCart, Truck } from 'lucide-react';
 import { useCartStore } from '../../lib/cartStore';
 import { useProductDetail, useRelatedProducts, type ProductDetail } from '../../lib/productAdapters';
@@ -243,8 +244,18 @@ function ProductDetailContent({ detail }: { detail: ProductDetail }) {
   );
 }
 
+// Supplier feeds and AI drafts supply this HTML, so scripts, event handlers, forms and
+// frames are removed before it reaches the page.
+const DESCRIPTION_PURIFY: PurifyConfig = {
+  FORBID_TAGS: ['style', 'form', 'input', 'button', 'iframe', 'object', 'embed'],
+};
+
 function DescriptionPanel({ detail }: { detail: ProductDetail }) {
   const { description } = detail;
+  const safeHtml = useMemo(
+    () => (description && description.kind !== 'text' ? String(DOMPurify.sanitize(description.value, DESCRIPTION_PURIFY)) : ''),
+    [description],
+  );
 
   if (!description) {
     return <p className="text-[14px] text-spet-muted">No description is available for this product. Contact us for more information.</p>;
@@ -252,7 +263,7 @@ function DescriptionPanel({ detail }: { detail: ProductDetail }) {
   if (description.kind === 'text') {
     return <p className="max-w-3xl whitespace-pre-wrap text-[14px] leading-relaxed text-spet-ink-2">{description.value}</p>;
   }
-  return <div className="product-description max-w-3xl" dangerouslySetInnerHTML={{ __html: description.value }} />;
+  return <div className="product-description max-w-3xl" dangerouslySetInnerHTML={{ __html: safeHtml }} />;
 }
 
 function SpecsPanel({ detail }: { detail: ProductDetail }) {
