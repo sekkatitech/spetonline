@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import {
-  ArrowRight, Building2, ChevronDown, Clock, Heart, Instagram, Facebook,
+  ArrowRight, Building2, ChevronDown, Clock, Heart, Instagram, Facebook, Linkedin,
   Mail, MapPin, Menu, MessageCircle, MessageSquarePlus, Phone, Search, ShoppingCart, Truck, User, X,
 } from 'lucide-react';
 import { ThemeToggle } from './ThemeToggle';
@@ -276,7 +276,13 @@ export function Navbar() {
     el.textContent = JSON.stringify({
       '@context': 'https://schema.org',
       '@graph': [
-        { '@type': 'Organization', name: 'SPET Online', url: 'https://spetonline.co.za', logo: 'https://spetonline.co.za/logo-main.png' },
+        { '@type': 'Organization', name: 'SPET Online', url: 'https://spetonline.co.za', logo: 'https://spetonline.co.za/logo-main.png',
+          sameAs: [
+            'https://www.facebook.com/SPET.GROUP/',
+            'https://www.linkedin.com/in/sekkati-technology/',
+            'https://www.instagram.com/sekkatitech/',
+          ],
+        },
         {
           '@type': 'WebSite',
           name: 'SPET Online',
@@ -579,7 +585,7 @@ export function Footer() {
 
               <div className="mt-4 flex gap-2.5">
                 <a
-                  href="https://facebook.com"
+                  href="https://www.facebook.com/SPET.GROUP/"
                   target="_blank"
                   rel="noreferrer"
                   aria-label="SPET Online on Facebook"
@@ -588,7 +594,16 @@ export function Footer() {
                   <Facebook className="h-4 w-4" aria-hidden="true" />
                 </a>
                 <a
-                  href="https://instagram.com"
+                  href="https://www.linkedin.com/in/sekkati-technology/"
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label="SPET Online on LinkedIn"
+                  className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-white/70 transition-colors hover:bg-spet-blue hover:text-white"
+                >
+                  <Linkedin className="h-4 w-4" aria-hidden="true" />
+                </a>
+                <a
+                  href="https://www.instagram.com/sekkatitech/"
                   target="_blank"
                   rel="noreferrer"
                   aria-label="SPET Online on Instagram"
