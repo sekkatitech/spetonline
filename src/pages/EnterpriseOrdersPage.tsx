@@ -365,7 +365,6 @@ function OrderCard({ order, expanded, onToggle }: {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {[
                   { label: 'Subtotal',  val: fmt(order.subtotal) },
-                  { label: 'VAT (15%)', val: fmt(order.vat_amount) },
                   { label: 'Total',     val: fmt(order.total), bold: true },
                 ].map(row => (
                   <div key={row.label} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>

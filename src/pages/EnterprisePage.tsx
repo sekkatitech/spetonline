@@ -413,7 +413,7 @@ function StatsSection() {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginTop: 16 }}>
               {[
                 { val: 'R0',  desc: 'Subscription fee' },
-                { val: '15%', desc: 'VAT included', orange: true },
+                { val: '7-day', desc: 'Returns', orange: true },
                 { val: 'PDF', desc: 'Formal quotes' },
               ].map(item => (
                 <div key={item.desc} style={{ textAlign: 'center', padding: '16px 8px', background: E.surfaceLow, borderRadius: 8 }}>

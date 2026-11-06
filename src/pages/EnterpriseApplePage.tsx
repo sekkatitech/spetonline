@@ -107,10 +107,10 @@ export default function EnterpriseApplePage() {
           : `Apple ${nav.label} for business`,
     description:
       mode === 'search'
-        ? `Apple configurations matching “${term}” from SPET Online, with prices including VAT.`
+        ? `Apple configurations matching “${term}” from SPET Online.`
         : mode === 'home'
-          ? 'The Apple range for business from SPET Online: Mac, iPhone, iPad, Apple Watch and AirPods, with prices including VAT.'
-          : `Apple ${nav.label} configurations for business from SPET Online. Prices include VAT. Buy online or request a quote.`,
+          ? 'The Apple range for business from SPET Online: Mac, iPhone, iPad, Apple Watch and AirPods.'
+          : `Apple ${nav.label} configurations for business from SPET Online. Buy online or request a quote.`,
     // A search result page is thin content and shouldn't be indexed.
     noindex: mode === 'search',
     canonicalPath:
@@ -283,7 +283,6 @@ export default function EnterpriseApplePage() {
                     ? 'Loading configurations'
                     : 'Configurations unavailable'}
               </p>
-              <p className="text-[12px] text-apple-muted">Prices include VAT</p>
             </div>
 
             <div className="mt-8">

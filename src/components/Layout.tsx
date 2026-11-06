@@ -493,7 +493,6 @@ const DELIVERY_FACTS = [
   'R90 flat rate under R2 500',
   '3–7 business days',
   '7-day returns',
-  'Prices include 15% VAT',
 ];
 
 export function Footer() {

@@ -521,7 +521,7 @@ export default function EnterpriseProductDetailPage() {
                   borderRadius: 12, padding: '20px 24px',
                 }}>
                   <div style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: E.outline, marginBottom: 6 }}>
-                    Enterprise Price (excl. VAT)
+                    Enterprise Price
                   </div>
                   <div style={{ fontSize: 36, fontWeight: 800, color: E.primary, letterSpacing: '-0.03em', fontVariantNumeric: 'tabular-nums', marginBottom: 8 }}>
                     {formatPrice(product.price)}
@@ -576,7 +576,7 @@ export default function EnterpriseProductDetailPage() {
                 {/* Line total */}
                 {!outOfStock && qty > 1 && (
                   <div style={{ fontSize: 13, color: E.onSurfaceVariant }}>
-                    Line total: <strong style={{ color: E.primary }}>{formatPrice(product.price * qty)}</strong> excl. VAT
+                    Line total: <strong style={{ color: E.primary }}>{formatPrice(product.price * qty)}</strong>
                   </div>
                 )}
 

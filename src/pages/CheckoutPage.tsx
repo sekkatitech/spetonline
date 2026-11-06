@@ -439,7 +439,6 @@ export function CheckoutPage() {
                 {shippingLoading ? 'Calculating…' : shipping === 0 ? <span className="font-semibold text-spet-stock">Free</span> : formatMoney(shipping)}
               </dd>
             </div>
-            <p className="text-[12px] text-spet-muted">Prices include 15% VAT.</p>
             <div className="flex justify-between gap-3 border-t border-spet-line-2 pt-3 text-[18px] font-semibold text-spet-ink">
               <dt>Total</dt>
               <dd className="tabular-nums">{formatMoney(total)}</dd>

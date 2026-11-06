@@ -176,7 +176,6 @@ function ProductDetailContent({ detail }: { detail: ProductDetail }) {
           </dl>
 
           <PriceTag price={view.price} wasPrice={view.wasPrice} saving={view.saving} size="lg" className="mt-5" />
-          <p className="mt-1 text-[12px] text-spet-muted">Includes 15% VAT</p>
 
           <StockPill inStock={view.inStock} className="mt-3 text-[13px]" />
 

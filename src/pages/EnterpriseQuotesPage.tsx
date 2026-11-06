@@ -304,7 +304,7 @@ function QuoteCard({ quote, expanded, onToggle, onNewQuote }: {
                 background: E.surfaceLow,
                 borderTop: `1px solid ${E.outlineVariant}`,
               }}>
-                <span style={{ fontSize: 13, fontWeight: 600, color: E.primary, gridColumn: '1 / 4' }}>Total (excl. VAT)</span>
+                <span style={{ fontSize: 13, fontWeight: 600, color: E.primary, gridColumn: '1 / 4' }}>Total</span>
                 <span style={{ fontSize: 15, fontWeight: 700, color: E.primary, fontVariantNumeric: 'tabular-nums' }}>{formatPrice(quote.final_amount)}</span>
               </div>
             </div>

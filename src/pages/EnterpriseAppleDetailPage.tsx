@@ -92,7 +92,7 @@ export default function EnterpriseAppleDetailPage() {
     description:
       product && product.short_description
         ? `${name}. ${product.short_description.replace(/\s+/g, ' ').trim()}`.slice(0, 300)
-        : `${name} from the Apple range at SPET Online. Prices include VAT.`,
+        : `${name} from the Apple range at SPET Online.`,
     image: images[0],
     canonicalPath: product ? appleProductHref(product.id) : '/enterprise/apple',
     jsonLd,
@@ -193,7 +193,6 @@ export default function EnterpriseAppleDetailPage() {
                       <span className="text-[13px] text-apple-muted">Save {applePrice(appleSaving(product)!)} on RRP</span>
                     )}
                   </div>
-                  <p className="mt-1 text-[12px] leading-[16px] text-apple-muted">Price includes VAT</p>
 
                   {shortDescription && (
                     <p className="mt-4 max-w-[52ch] text-[14px] leading-[22px] text-apple-ink-2">{shortDescription}</p>

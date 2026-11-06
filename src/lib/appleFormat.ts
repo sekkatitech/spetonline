@@ -98,7 +98,7 @@ export function formatAppleTitle(raw: string | null | undefined): string {
   return head || full
 }
 
-/** Prices are VAT-inclusive rand; cents only appear when the price actually has them. */
+/** Prices are in rand; cents only appear when the price actually has them. */
 export function applePrice(value: number): string {
   return value > 0 ? formatMoney(value) : 'Price unavailable'
 }

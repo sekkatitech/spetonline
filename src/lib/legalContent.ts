@@ -58,7 +58,7 @@ export const LEGAL_DOCS = {
     sections: [
       {
         heading: '3.1 Price Display',
-        body: '• All prices are displayed in South African Rand (ZAR).\n• Prices include VAT at the current applicable rate (15%) unless otherwise stated.\n• Delivery/shipping fees are calculated separately and displayed at checkout.',
+        body: '• All prices are displayed in South African Rand (ZAR).\n• SPET Online is not registered for VAT, so no VAT is charged and our invoices do not show VAT.\n• Delivery/shipping fees are calculated separately and displayed at checkout.',
       },
       {
         heading: '3.2 Price Accuracy',

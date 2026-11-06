@@ -94,7 +94,7 @@ Apple products (MacBooks, iPhones, iPads, AirPods, Apple Watch) are available th
 
 ### 3.1 Currency & Tax
 - All prices are displayed in **South African Rand (ZAR)**.
-- Prices **include VAT at 15%** unless otherwise stated.
+- SPET Online is **not registered for VAT**, so no VAT is charged and invoices do not show VAT. The price shown is the full price. A business that needs a VAT invoice to claim input tax cannot get one from us at the moment.
 - SPET Online **does not accept foreign currency**.
 - Delivery/shipping fees are calculated separately at checkout.
 

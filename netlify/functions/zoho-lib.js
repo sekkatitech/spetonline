@@ -117,15 +117,11 @@ async function createInvoiceFromOrder(order) {
         name:       item.name || 'Product',
         rate:       Number(item.unit_price) || 0,
         quantity:   Number(item.qty) || 1,
-        tax_name:   'VAT',
-        tax_percentage: 15,
       }))
     : [{
         name:       `Order ${order.id}`,
         rate:       Number(order.subtotal) || Number(order.total) || 0,
         quantity:   1,
-        tax_name:   'VAT',
-        tax_percentage: 15,
       }];
 
   const invoiceData = {

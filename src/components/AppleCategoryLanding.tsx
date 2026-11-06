@@ -213,7 +213,6 @@ export default function AppleCategoryLanding({
                 </span>
               )}
               {fromPrice !== null && <span>From {applePrice(fromPrice)}</span>}
-              <span className="text-apple-muted">Prices include VAT</span>
             </p>
           )}
 

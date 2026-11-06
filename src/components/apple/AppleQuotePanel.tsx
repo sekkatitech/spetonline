@@ -221,7 +221,7 @@ export function AppleQuotePanel({
               </div>
 
               <p className="mt-2 text-[12px] leading-[18px] text-apple-muted">
-                All prices include VAT. {deliveries.join(' ')} {APPLE_QUOTE_TERMS}
+                {deliveries.join(' ')} {APPLE_QUOTE_TERMS}
               </p>
 
               {error && (

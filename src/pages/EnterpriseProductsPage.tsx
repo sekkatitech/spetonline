@@ -158,7 +158,7 @@ function QuoteCart({ items, onRemove, onQtyChange, onSubmit, onClear }: {
           <span style={{fontSize:12,color:E.onSurfaceVariant}}>Subtotal ({items.reduce((s,i)=>s+i.qty,0)} items)</span>
           <span style={{fontSize:16,fontWeight:700,color:E.primary,fontVariantNumeric:'tabular-nums'}}>{formatPrice(total)}</span>
         </div>
-        <div style={{fontSize:11,color:E.outline,marginBottom:12,lineHeight:1.5}}>Excl. VAT and delivery. Prices valid for 15 business days.</div>
+        <div style={{fontSize:11,color:E.outline,marginBottom:12,lineHeight:1.5}}>Excludes delivery. Prices valid for 15 business days.</div>
         <button onClick={onSubmit} style={{width:'100%',background:E.primary,color:E.onPrimary,fontSize:13,fontWeight:600,padding:'11px 16px',borderRadius:8,border:'none',cursor:'pointer',fontFamily:'inherit'}}>Submit Quote Request →</button>
       </div>
     </div>

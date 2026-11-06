@@ -88,7 +88,7 @@ export function AppleProductCard({ product, onBuy, onAddToQuote, priority = fals
           {applePrice(product.price_display)}
         </p>
         <p className="mt-0.5 text-[12px] leading-[16px] text-apple-muted">
-          {saving !== null ? `Save ${applePrice(saving)} on RRP` : 'Price includes VAT'}
+          {saving !== null ? `Save ${applePrice(saving)} on RRP` : '\u00a0'}
         </p>
       </div>
 
