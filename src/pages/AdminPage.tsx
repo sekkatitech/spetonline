@@ -3,8 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import {
   Upload, Database, Settings, BarChart3, Users, Sparkles, AlertCircle, CheckCircle2,
   Image as ImageIcon, Plus, Pencil, Trash2, ArrowUp, ArrowDown, X, Globe, TrendingUp,
-  MapPin, Laptop, Smartphone, Download, ArrowRight, Compass, RefreshCw
+  MapPin, Laptop, Smartphone, Download, ArrowRight, Compass, RefreshCw, MessageSquarePlus
 } from 'lucide-react';
+import { EngagementTab } from '../components/admin/EngagementTab';
 import { supabase } from '../lib/supabase';
 import type { DealBanner } from '../lib/api';
 import { useSEO } from '../lib/useSEO';
@@ -135,6 +136,12 @@ export function AdminPage() {
                <ImageIcon className={`w-5 h-5 ${activeTab === 'banners' ? 'text-lago-400' : 'text-lago-500'}`} /> Deals &amp; Banners
              </button>
              <button
+               onClick={() => setActiveTab('engagement')}
+               className={`flex items-center gap-3 p-3 rounded-xl font-semibold transition-colors ${activeTab === 'engagement' ? 'bg-lago-800 text-white border border-lago-600' : 'text-lago-200 hover:bg-lago-900 hover:text-white'}`}
+             >
+               <MessageSquarePlus className={`w-5 h-5 ${activeTab === 'engagement' ? 'text-lago-400' : 'text-lago-500'}`} /> Feedback &amp; Newsletter
+             </button>
+             <button
                onClick={() => setActiveTab('import')}
                className={`flex items-center gap-3 p-3 rounded-xl font-semibold transition-colors ${activeTab === 'import' ? 'bg-lago-800 text-white border border-lago-600' : 'text-lago-200 hover:bg-lago-900 hover:text-white'}`}
              >
@@ -165,6 +172,7 @@ export function AdminPage() {
         <div className="flex-grow min-w-0">
           {activeTab === 'visitors' && <VisitorsTab onNavigateToBanners={() => setActiveTab('banners')} />}
           {activeTab === 'banners' && <BannersTab />}
+          {activeTab === 'engagement' && <EngagementTab />}
 
           {activeTab === 'import' && (
             <div>

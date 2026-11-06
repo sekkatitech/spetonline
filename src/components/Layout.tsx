@@ -1,12 +1,14 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   ArrowRight, Building2, ChevronDown, Clock, Heart, Instagram, Facebook,
-  Mail, MapPin, Menu, MessageCircle, Phone, Search, ShoppingCart, Truck, User, X,
+  Mail, MapPin, Menu, MessageCircle, MessageSquarePlus, Phone, Search, ShoppingCart, Truck, User, X,
 } from 'lucide-react';
 import { ThemeToggle } from './ThemeToggle';
 import { LegalModal } from './LegalModal';
-import { LegalKey } from '../lib/legalContent';
+import { LEGAL_DOCS, LegalKey } from '../lib/legalContent';
+import { useEngagement } from '../lib/engagement';
+import { NewsletterBand } from './engagement/NewsletterBand';
 import { useCartStore } from '../lib/cartStore';
 import { supabase } from '../lib/supabase';
 
@@ -495,9 +497,31 @@ const DELIVERY_FACTS = [
   '7-day returns',
 ];
 
+// Pages where the newsletter section would get in the way of finishing a task.
+const NO_NEWSLETTER_BAND = [/^\/checkout/, /^\/payment-/, /^\/admin/, /^\/newsletter\//];
+
 export function Footer() {
   const [legalDoc, setLegalDoc] = useState<LegalKey | null>(null);
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { pathname } = useLocation();
+  const openPanel = useEngagement((state) => state.setOpen);
+  const showBand = !NO_NEWSLETTER_BAND.some((re) => re.test(pathname));
+
+  // Emails link to /?legal=privacy, so a policy can be opened from outside the site.
+  const legalParam = searchParams.get('legal');
+  useEffect(() => {
+    if (legalParam && legalParam in LEGAL_DOCS) setLegalDoc(legalParam as LegalKey);
+  }, [legalParam]);
+
+  function closeLegal() {
+    setLegalDoc(null);
+    if (legalParam) {
+      const next = new URLSearchParams(searchParams);
+      next.delete('legal');
+      setSearchParams(next, { replace: true });
+    }
+  }
 
   useEffect(() => {
     const handleScroll = () => setShowScrollTop(window.scrollY > 600);
@@ -515,7 +539,9 @@ export function Footer() {
 
   return (
     <>
-      <LegalModal docKey={legalDoc} onClose={() => setLegalDoc(null)} />
+      <LegalModal docKey={legalDoc} onClose={closeLegal} />
+
+      {showBand && <NewsletterBand />}
 
       <footer className="mt-12 w-full bg-spet-navy text-white">
         <div className="mx-auto max-w-[1400px] px-4 pb-8 pt-10 md:px-6 md:pt-12">
@@ -620,6 +646,16 @@ export function Footer() {
                 </li>
                 <li>
                   <Link to="/contact" className="transition-colors hover:text-white">Contact us</Link>
+                </li>
+                <li>
+                  <button
+                    type="button"
+                    data-engagement-open
+                    onClick={() => openPanel('feedback')}
+                    className="inline-flex items-center gap-1.5 text-white transition-colors hover:text-spet-orange"
+                  >
+                    Share feedback <MessageSquarePlus className="h-3.5 w-3.5" aria-hidden="true" />
+                  </button>
                 </li>
               </ul>
             </nav>

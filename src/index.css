@@ -122,6 +122,16 @@
 }
 .animate-fade-in { animation: fadeIn 0.3s ease-out both; }
 
+/* Feedback / newsletter side panels (src/components/engagement) */
+@keyframes engagement-slide {
+  from { opacity: 0; transform: translateX(-28px); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes engagement-pop {
+  from { opacity: 0; transform: scale(0.6); }
+  to   { opacity: 1; transform: none; }
+}
+
 /* ─── Line clamp utilities ────────────────────────────────────────────────────── */
 .line-clamp-1 { overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 1; }
 .line-clamp-2 { overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }

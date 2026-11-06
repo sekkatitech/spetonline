@@ -10,7 +10,6 @@ import { DealShelf } from '../components/home/DealShelf';
 import { NewArrivals } from '../components/home/NewArrivals';
 import { PortalLinks } from '../components/home/PortalLinks';
 import { ContactStrip } from '../components/home/ContactStrip';
-import { NewsletterBand } from '../components/home/NewsletterBand';
 
 const NO_DEPARTMENT_FILTER = '__no_department__';
 
@@ -74,7 +73,6 @@ export function HomePage() {
 
         <PortalLinks />
         <ContactStrip />
-        <NewsletterBand />
       </PageShell>
     </WishlistProvider>
   );

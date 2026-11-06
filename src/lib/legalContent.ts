@@ -153,6 +153,10 @@ export const LEGAL_DOCS = {
         body: 'SPET ONLINE collects and processes personal information solely for the purpose of fulfilling your orders and improving your shopping experience. Your information is handled in accordance with the Protection of Personal Information Act 4 of 2013 (POPIA).\n\n• We do not sell or share your personal data with third parties, except as required to fulfil your order.\n• You have the right to access, correct, or request deletion of your personal data.\n• For data requests, contact us directly via our contact page.',
       },
       {
+        heading: '7.4 Newsletter and Website Feedback',
+        body: 'Newsletter: if you sign up and tick the consent box, we use your email address only to send you SPET ONLINE newsletters, product updates and special offers. Your subscription starts only after you confirm it from the email we send you. We keep a record of when and where you agreed and when you confirmed, so we can show your consent. Every newsletter has an unsubscribe link, and you can also ask us to remove you at sales@spetonline.co.za. We never add you to the newsletter because you placed an order, created an account, contacted us or sent feedback.\n\nFeedback: the "Share feedback" form needs no account. We store your answers, the page you were on and the type of device, and your email address only if you give it so we can reply. Feedback is read only by the SPET ONLINE team and is never published.\n\nResponsible party: Sekkati Petroleum Energy and Technology (Pty) Ltd, trading as SPET ONLINE, Pretoria. Contact: sales@spetonline.co.za, 0870 881 483.',
+      },
+      {
         heading: '7.1 Business Information',
         body: '• Trading Name: SPET ONLINE\n• Legal Name: Sekkati Petroleum Energy and Technology Trading\n• Business Type: Authorised Dropshipping Reseller\n• Country of Operation: Republic of South Africa',
       },

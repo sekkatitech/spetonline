@@ -27,6 +27,9 @@ import { PaymentCancel }    from './pages/PaymentCancel';
 import { ResetPasswordPage } from './pages/ResetPasswordPage';
 import { NotFoundPage }     from './pages/NotFoundPage';
 import { SearchPage }       from './pages/SearchPage';
+import { TesterPage }       from './pages/TesterPage';
+import { NewsletterPage }   from './pages/NewsletterPage';
+import { EngagementDock }   from './components/engagement/EngagementDock';
 
 // Admin, enterprise and the chat widget carry heavy dependencies most shoppers never need.
 const AdminPage = lazy(() => import('./pages/AdminPage').then((module) => ({ default: module.AdminPage })));
@@ -117,6 +120,9 @@ function AppShell() {
           <Route path="/payment-cancel"  element={<PaymentCancel />} />
           <Route path="/search"          element={<SearchPage />} />
           <Route path="/contact"         element={<ContactPage />} />
+          <Route path="/test-our-website" element={<TesterPage />} />
+          <Route path="/newsletter/confirm"     element={<NewsletterPage mode="confirm" />} />
+          <Route path="/newsletter/unsubscribe" element={<NewsletterPage mode="unsubscribe" />} />
 
           {/* Catch-all 404 */}
           <Route path="*" element={<NotFoundPage />} />
@@ -124,6 +130,7 @@ function AppShell() {
         </Suspense>
       </main>
       {!isEnterprise && <Footer />}
+      {!isEnterprise && <EngagementDock />}
       {!isEnterprise && <WhatsAppButton />}
       {!isEnterprise && (
         <Suspense fallback={null}>
