@@ -215,7 +215,7 @@ export default function EnterpriseProductsPage() {
       }
 
       if(source==='all'||source==='syntech'){
-        let q = supabase.from('syntech_products').select('id,name,sku,brand,category,price_display,stock_qty,stock_status,thumbnail_url,short_description',{count:'exact'}).eq('is_active',true)
+        let q = supabase.from('syntech_products_public').select('id,name,sku,brand,category,price_display,stock_qty,stock_status,thumbnail_url,short_description',{count:'exact'}).eq('is_active',true)
         if(search) q=q.ilike('name',`%${search}%`)
         if(stockFilter==='in_stock') q=q.gt('stock_qty',0)
         if(sortBy==='price_asc') q=q.order('price_display',{ascending:true})
@@ -231,7 +231,7 @@ export default function EnterpriseProductsPage() {
       }
 
       if(source==='all'||source==='axiz'){
-        let q = supabase.from('axiz_products').select('id,name,sku,brand,category,price_display,stock_qty,stock_status,short_description,thumbnail_url',{count:'exact'}).eq('is_active',true)
+        let q = supabase.from('axiz_products_public').select('id,name,sku,brand,category,price_display,stock_qty,stock_status,short_description,thumbnail_url',{count:'exact'}).eq('is_active',true)
         if(search) q=q.ilike('name',`%${search}%`)
         if(stockFilter==='in_stock') q=q.gt('stock_qty',0)
         if(sortBy==='price_asc') q=q.order('price_display',{ascending:true})
@@ -247,7 +247,7 @@ export default function EnterpriseProductsPage() {
       }
 
       if(source==='all'||source==='pinnacle'){
-        let q = supabase.from('pinnacle_products').select('id,name,sku,brand,category,price_display,stock_qty,stock_status,short_description,thumbnail_url',{count:'exact'}).eq('is_active',true)
+        let q = supabase.from('pinnacle_products_public').select('id,name,sku,brand,category,price_display,stock_qty,stock_status,short_description,thumbnail_url',{count:'exact'}).eq('is_active',true)
         if(search) q=q.ilike('name',`%${search}%`)
         if(stockFilter==='in_stock') q=q.gt('stock_qty',0)
         if(sortBy==='price_asc') q=q.order('price_display',{ascending:true})

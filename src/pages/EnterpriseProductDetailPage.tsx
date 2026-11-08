@@ -155,7 +155,7 @@ export default function EnterpriseProductDetailPage() {
 
       } else if (source === 'syntech') {
         const { data } = await supabase
-          .from('syntech_products')
+          .from('syntech_products_public')
           .select('*')
           .eq('id', id)
           .eq('is_active', true)
@@ -189,7 +189,7 @@ export default function EnterpriseProductDetailPage() {
         }
       } else if (source === 'axiz') {
         const { data } = await supabase
-          .from('axiz_products')
+          .from('axiz_products_public')
           .select('*')
           .eq('id', id)
           .eq('is_active', true)
@@ -224,7 +224,7 @@ export default function EnterpriseProductDetailPage() {
         }
       } else if (source === 'pinnacle') {
         const { data } = await supabase
-          .from('pinnacle_products')
+          .from('pinnacle_products_public')
           .select('*')
           .eq('id', id)
           .eq('is_active', true)

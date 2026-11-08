@@ -39,7 +39,7 @@ export const SUPPLIERS: Record<SupplierKey, SupplierConfig> = {
     seoTitle: 'Gaming & Computing Gear',
     seoDescription:
       'Shop gaming PCs, components, peripherals and computing gear from SPET Online’s Gaming & Computing range, with fast delivery across South Africa.',
-    table: 'syntech_products',
+    table: 'syntech_products_public',
     route: '/shop/tech',
     brandOptions: 'tiles',
     specSource: 'specifications',
@@ -88,7 +88,7 @@ export const SUPPLIERS: Record<SupplierKey, SupplierConfig> = {
     seoTitle: 'Business Computing',
     seoDescription:
       'Shop business laptops, desktops, memory and accessories on SPET Online, with fast delivery across South Africa.',
-    table: 'axiz_products',
+    table: 'axiz_products_public',
     route: '/shop/axiz',
     brandOptions: 'live',
     specSource: 'raw_data',
@@ -110,7 +110,7 @@ export const SUPPLIERS: Record<SupplierKey, SupplierConfig> = {
     seoTitle: 'Computing Accessories',
     seoDescription:
       'Shop computing accessories, peripherals, networking and security on SPET Online, with fast delivery across South Africa.',
-    table: 'pinnacle_products',
+    table: 'pinnacle_products_public',
     route: '/shop/pinnacle',
     brandOptions: 'live',
     specSource: 'specifications',
